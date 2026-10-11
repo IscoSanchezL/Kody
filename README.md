@@ -37,6 +37,10 @@ Kody **no se puede abrir haciendo doble clic en `index.html`** de la carpeta del
 - Propiedades del actor (nombre, posición, dirección, tamaño, visibilidad, disfraz, personaje), deshacer / rehacer, y **guardar / abrir proyectos** como archivo `.kody.json` (con validación de archivos dañados).
 - Pendiente de esta fase: clones de actores.
 
+### Escenario 3D
+
+El escenario se puede ver en **3D** (por defecto) o en 2D con el botón `3D / 2D` del escenario. En 3D los actores son modelos construidos con formas simples (Three.js, sin descargar archivos) que respiran, se inclinan al moverse y giran hacia donde miran; el fondo pintado queda detrás como en un teatro de títeres, y la cámara se balancea suavemente con el puntero (se desactiva si el sistema pide reducir movimiento). Las coordenadas `x` e `y` significan lo mismo que en 2D. Si el equipo no puede mostrar 3D, Kody vuelve solo al 2D.
+
 ## Qué incluía la Fase 1
 
 - Editor de bloques con **Blockly** (renderer `zelos`, redondeado como Scratch 3) y tema propio.

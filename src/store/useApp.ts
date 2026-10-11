@@ -18,6 +18,8 @@ interface EstadoApp {
   escenarioGrande: boolean;
   /** Cuadrícula de coordenadas sobre el escenario. */
   cuadricula: boolean;
+  /** Escenario en 3D (si no, 2D). */
+  modo3d: boolean;
   /** Ventana de la biblioteca de personajes. */
   bibliotecaAbierta: boolean;
   /** Posición del puntero sobre el escenario (null si está fuera). */
@@ -25,6 +27,7 @@ interface EstadoApp {
   setPanel: (p: 'actores' | 'fondos') => void;
   alternarEscenarioGrande: () => void;
   alternarCuadricula: () => void;
+  setModo3d: (v: boolean) => void;
   abrirBiblioteca: (abierta: boolean) => void;
   setPuntero: (p: { x: number; y: number } | null) => void;
   setTema: (t: Tema) => void;
@@ -59,6 +62,7 @@ export const useApp = create<EstadoApp>((set, get) => ({
   panel: 'actores',
   escenarioGrande: leer<boolean>('kody.grande', false),
   cuadricula: false,
+  modo3d: leer<boolean>('kody.3d', true),
   bibliotecaAbierta: false,
   puntero: null,
   setPanel: (panel) => set({ panel }),
@@ -68,6 +72,10 @@ export const useApp = create<EstadoApp>((set, get) => ({
     set({ escenarioGrande: v });
   },
   alternarCuadricula: () => set((s) => ({ cuadricula: !s.cuadricula })),
+  setModo3d: (modo3d) => {
+    guardar('kody.3d', modo3d);
+    set({ modo3d });
+  },
   abrirBiblioteca: (bibliotecaAbierta) => set({ bibliotecaAbierta }),
   setPuntero: (puntero) => set({ puntero }),
   mensaje: '¡Hola! Soy Kody 🦊 Arrastra bloques y presiona ▶ para ver la magia.',

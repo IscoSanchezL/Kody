@@ -118,6 +118,14 @@ type Nivel = {
 4. **Watchdog**: un bucle sin `yield` o con demasiados pasos por tick se corta con un aviso amable.
 5. **Paso a paso**: cada tick solo avanza un bloque y resalta el bloque activo.
 
+## Escenario 2D y 3D
+
+El motor no cambia: `Runtime` solo guarda el estado de los actores. Dos dibujantes lo muestran con la misma interfaz (`montar`, `destruir`, `PuenteEscenario`):
+
+- `stage/Escenario.ts`: PixiJS (2D).
+- `stage/Escenario3D.ts` + `stage/modelos3d.ts`: Three.js, "teatro de títeres". Fondo pintado en z = -90 y actores 3D en z = 0, de modo que x e y se mantienen. Los modelos se construyen en código (sin archivos), cargan bajo demanda y tienen 2 disfraces.
+- Los SVG se rasterizan a lienzos de tamaño fijo (`stage/rasterizar.ts`) para que Chrome, Edge y Safari den el mismo resultado.
+
 ## Plan por fases
 
 | Fase | Contenido                                                                                                 | Estado     |
