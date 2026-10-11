@@ -11,7 +11,15 @@ npm install
 npm run dev        # http://localhost:5173
 npm test           # pruebas del motor (Vitest)
 npm run build      # compilación de producción
+npm run build:local  # versión de un solo archivo: dist-local/index.html
 ```
+
+### ¿Pantalla en blanco?
+
+Kody **no se puede abrir haciendo doble clic en `index.html`** de la carpeta del proyecto ni de `dist/`: el navegador bloquea los scripts de módulos desde archivos locales. Usa una de estas opciones:
+
+1. `npm run dev` y abre http://localhost:5173 (para desarrollar).
+2. `npm run build:local` y abre `dist-local/index.html` con doble clic (versión de un solo archivo; mantén junta la carpeta `dist-local`).
 
 ## Qué incluye la Fase 1
 
