@@ -11,8 +11,11 @@ import type { Runtime } from '../engine/runtime';
 import { ESCENARIO, RADIO_ACTOR, type Dialogo, type EstadoActor } from '../engine/tipos';
 import { alDataUri } from './disfraces';
 import { fondoPorId, personajePorId } from './biblioteca';
+import { rasterizar } from './rasterizar';
 
 const TAM_BASE = 96; // px del actor al 100 %
+const TEX_ACTOR = 240; // tamaño (px) con el que se rasteriza cada personaje
+const TEX_FONDO = { ancho: 960, alto: 720 };
 
 /** Lo que el escenario necesita saber de la aplicación (sin depender de React). */
 export interface PuenteEscenario {
@@ -76,8 +79,6 @@ export class Escenario {
     this.app.canvas.style.touchAction = 'none';
 
     this.fondo.position.set(-ESCENARIO.mitadX, -ESCENARIO.mitadY);
-    this.fondo.width = ESCENARIO.ancho;
-    this.fondo.height = ESCENARIO.alto;
     this.construirCuadricula();
     this.mundo.addChild(this.fondo, this.capaCuadricula, this.capaActores);
     this.app.stage.addChild(this.mundo);
@@ -124,18 +125,19 @@ export class Escenario {
 
   // ---------------------------------------------------------- Texturas
 
-  /** Devuelve la textura si ya está lista; si no, empieza a cargarla. */
-  private textura(clave: string, svg: () => string): Texture | null {
+  /**
+   * Devuelve la textura si ya está lista; si no, empieza a cargarla.
+   * El SVG se convierte primero en un lienzo de tamaño fijo: así el resultado no depende
+   * de cómo cada navegador (sobre todo Safari) calcula el tamaño de una imagen SVG.
+   */
+  private textura(clave: string, svg: () => string, ancho: number, alto: number): Texture | null {
     const lista = this.texturas.get(clave);
     if (lista) return lista;
     if (!this.cargando.has(clave)) {
       this.cargando.add(clave);
-      const img = new Image();
-      img.src = alDataUri(svg());
-      img
-        .decode()
-        .then(() => {
-          if (!this.destruido) this.texturas.set(clave, Texture.from(img));
+      rasterizar(alDataUri(svg()), ancho, alto)
+        .then((lienzo) => {
+          if (!this.destruido) this.texturas.set(clave, Texture.from(lienzo));
         })
         .catch(() => this.cargando.delete(clave));
     }
@@ -144,11 +146,10 @@ export class Escenario {
 
   private dibujarFondo(id: string) {
     if (id === this.fondoId) return;
-    const t = this.textura(`f:${id}`, () => fondoPorId(id).svg);
+    const t = this.textura(`f:${id}`, () => fondoPorId(id).svg, TEX_FONDO.ancho, TEX_FONDO.alto);
     if (!t) return; // se mantiene el anterior hasta que cargue el nuevo
     this.fondo.texture = t;
-    this.fondo.width = ESCENARIO.ancho;
-    this.fondo.height = ESCENARIO.alto;
+    this.fondo.scale.set(ESCENARIO.ancho / TEX_FONDO.ancho, ESCENARIO.alto / TEX_FONDO.alto);
     this.fondoId = id;
   }
 
@@ -263,11 +264,16 @@ export class Escenario {
 
     const pers = personajePorId(this.puente.personajeDe(a.id));
     const disfraz = (a.disfrazActual % 2) as 0 | 1;
-    const tex = this.textura(`p:${pers.id}:${disfraz}`, () => pers.svg(disfraz));
+    const tex = this.textura(
+      `p:${pers.id}:${disfraz}`,
+      () => pers.svg(disfraz),
+      TEX_ACTOR,
+      TEX_ACTOR,
+    );
     if (tex) {
       v.sprite.texture = tex;
       const lado = (TAM_BASE * a.tamano) / 100;
-      const s = lado / tex.width;
+      const s = lado / TEX_ACTOR;
       // Mira a la izquierda si su dirección es negativa (giro "izquierda-derecha").
       v.sprite.scale.set(a.direccion < 0 ? -s : s, s);
     }
