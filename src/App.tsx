@@ -20,6 +20,11 @@ export default function App() {
 
   useEffect(() => conectarTeclado(), []);
 
+  // Avisa a la red de seguridad de index.html que la aplicación sí arrancó.
+  useEffect(() => {
+    (window as unknown as { __kodyListo?: boolean }).__kodyListo = true;
+  }, []);
+
   return (
     <div className="flex h-full flex-col">
       <BarraSuperior />

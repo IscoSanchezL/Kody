@@ -10,6 +10,56 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>Kody necesita JavaScript. Actívalo en tu navegador para jugar.</noscript>
+    <script>
+      /* Red de seguridad: si Kody no logra iniciar, en vez de una pantalla en blanco
+         se muestra el motivo para poder arreglarlo. */
+      (function () {
+        function mostrar(detalle) {
+          var raiz = document.getElementById('root');
+          if (!raiz || raiz.childNodes.length) return;
+          var caja = document.createElement('div');
+          caja.style.cssText =
+            'font-family:system-ui,sans-serif;max-width:34rem;margin:12vh auto;padding:1.5rem;' +
+            'border:3px solid #c7d2fe;border-radius:20px;color:#1e1b4b;background:#fff';
+          var t = document.createElement('h1');
+          t.textContent = 'Kody no pudo iniciar 🦊';
+          var p = document.createElement('p');
+          p.textContent =
+            'Prueba recargar con Cmd+Shift+R (o Ctrl+Shift+R). Si sigue igual, abre Kody en Chrome o Edge y avísale a tu docente.';
+          var d = document.createElement('pre');
+          d.style.cssText =
+            'white-space:pre-wrap;font-size:.8rem;background:#eef2ff;padding:.75rem;border-radius:10px';
+          d.textContent = 'Detalle técnico: ' + detalle + '\n' + navigator.userAgent;
+          caja.appendChild(t);
+          caja.appendChild(p);
+          caja.appendChild(d);
+          raiz.appendChild(caja);
+        }
+        window.addEventListener(
+          'error',
+          function (e) {
+            var t = e.target;
+            if (t && t !== window && t.tagName) {
+              // Fallo al cargar un archivo (script, estilo, imagen...)
+              mostrar('No se pudo cargar ' + (t.src || t.href || t.tagName));
+              return;
+            }
+            mostrar(
+              (e.message || 'error') + (e.filename ? ' (' + e.filename + ':' + e.lineno + ')' : ''),
+            );
+          },
+          true,
+        );
+        window.addEventListener('unhandledrejection', function (e) {
+          mostrar(String((e.reason && (e.reason.message || e.reason)) || 'promesa rechazada'));
+        });
+        setTimeout(function () {
+          if (!window.__kodyListo)
+            mostrar('Kody tardó demasiado en iniciar (¿falló la carga de archivos?)');
+        }, 10000);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
