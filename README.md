@@ -4,6 +4,12 @@ Plataforma web de **programación por bloques** para estudiantes de grado 4 (9�
 
 > Estado: **Fase 2** (varios actores y escenarios, eventos, sensores, sonido, interfaz renovada). La Fase 1 sentó las bases (layout, tema, Blockly, escenario, intérprete). Ver [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
+## Versión web
+
+Kody se publica solo en **GitHub Pages**: https://iscosanchezl.github.io/Kody/
+
+Cada vez que se sube código a `main`, el flujo `.github/workflows/pages.yml` ejecuta las pruebas, compila y publica. Si no abre, revisa que en el repositorio esté activado **Settings → Pages → Source: GitHub Actions**.
+
 ## Requisitos
 
 - **Node.js 20.19 o superior** (recomendado 22 LTS; el repo trae `.nvmrc`). Con Node 18 fallan `npm run dev` y `npm run build:local`.
