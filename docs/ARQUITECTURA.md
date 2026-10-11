@@ -11,7 +11,7 @@ Kody es una plataforma web de programación por bloques para estudiantes de grad
 | Bloques      | Blockly con renderer `zelos` (redondeado, tipo Scratch) y tema propio | Motor probado (Scratch, Code.org, MakeCode)   |
 | Escenario    | PixiJS v8 (WebGL)                                                     | 60 fps con muchos actores                     |
 | Estado       | Zustand                                                               | Simple y sin boilerplate                      |
-| Persistencia | IndexedDB (`idb`) + autoguardado                                      | Funciona offline                              |
+| Persistencia | localStorage (Fase 1) → IndexedDB (`idb`) en Fase 3                   | Funciona offline                              |
 | Ejecución    | Intérprete propio con generadores (hilos cooperativos)                | Sin `eval`; pausa, paso a paso y detener      |
 | Pruebas      | Vitest + Testing Library + Playwright                                 | Motor testeable sin navegador                 |
 
@@ -27,7 +27,7 @@ Kody es una plataforma web de programación por bloques para estudiantes de grad
 │                │                                              │
 │        Zustand (src/store): proyecto, ajustes, ejecución      │
 │                │                                              │
-│  Compilador: workspace Blockly ──► AST (src/engine/compile)   │
+│  Compilador: workspace Blockly ──► AST (src/engine/compilar)   │
 │  Intérprete: AST ──► hilos (generadores) (src/engine/runtime) │
 │                │ comandos tipados (mover, decir, ...)         │
 │                ▼                                              │
@@ -35,7 +35,7 @@ Kody es una plataforma web de programación por bloques para estudiantes de grad
 └───────────────────────────────────────────────────────────────┘
 ```
 
-Regla de oro: **el motor no conoce Pixi ni React**. Solo modifica el estado de los actores (`ActorState`); el escenario lo dibuja. Así el motor se prueba con Vitest.
+Regla de oro: **el motor no conoce Pixi ni React**. Solo modifica el estado de los actores (`EstadoActor`); el escenario lo dibuja. Así el motor se prueba con Vitest.
 
 ## Estructura de carpetas
 
@@ -112,7 +112,7 @@ type Nivel = {
 
 ## Intérprete
 
-1. `compile(workspace)` recorre los bloques y produce un AST por cada sombrero (`evento_al_ejecutar`, etc.).
+1. `compilar(espacio)` recorre los bloques y produce un AST por cada sombrero (`evento_al_ejecutar`, etc.).
 2. Cada AST se ejecuta como un **hilo**: una función generadora que hace `yield` en esperas, en cada vuelta de bucle y en cada bloque cuando está en modo paso a paso.
 3. El `Runtime` reparte un "tick" por fotograma: avanza todos los hilos hasta su próximo `yield`.
 4. **Watchdog**: un bucle sin `yield` o con demasiados pasos por tick se corta con un aviso amable.
@@ -120,13 +120,13 @@ type Nivel = {
 
 ## Plan por fases
 
-| Fase | Contenido                                                                                                 | Estado    |
-| ---- | --------------------------------------------------------------------------------------------------------- | --------- |
-| 1    | Layout, tema, Blockly personalizado, escenario con 1 actor, bloques de movimiento/apariencia ejecutándose | En curso  |
-| 2    | Intérprete completo (eventos, clones, mensajes), paso a paso                                              | Pendiente |
-| 3    | Editor de disfraces/sonidos, variables, Mis bloques, lápiz                                                | Pendiente |
-| 4    | Aventura: 2 mundos, motor de niveles, mascota, estrellas                                                  | Pendiente |
-| 5    | Mundos 3–6, modo docente, PWA offline, accesibilidad, pruebas                                             | Pendiente |
+| Fase | Contenido                                                                                                 | Estado     |
+| ---- | --------------------------------------------------------------------------------------------------------- | ---------- |
+| 1    | Layout, tema, Blockly personalizado, escenario con 1 actor, bloques de movimiento/apariencia ejecutándose | Completada |
+| 2    | Intérprete completo (eventos, clones, mensajes), paso a paso                                              | Pendiente  |
+| 3    | Editor de disfraces/sonidos, variables, Mis bloques, lápiz                                                | Pendiente  |
+| 4    | Aventura: 2 mundos, motor de niveles, mascota, estrellas                                                  | Pendiente  |
+| 5    | Mundos 3–6, modo docente, PWA offline, accesibilidad, pruebas                                             | Pendiente  |
 
 ## Decisiones tomadas sin preguntar
 
