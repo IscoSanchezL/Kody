@@ -1,0 +1,196 @@
+@import 'tailwindcss';
+@import '@fontsource/nunito/600.css';
+@import '@fontsource/nunito/800.css';
+@import '@fontsource/baloo-2/700.css';
+@import '@fontsource/baloo-2/800.css';
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+
+/* ---------- Tokens de diseño ---------- */
+:root {
+  --fondo: #eef2ff;
+  --panel: #ffffff;
+  --texto: #1e1b4b;
+  --texto-suave: #4c4a7a;
+  --borde: #c7d2fe;
+  --primario: #4f46e5;
+  --primario-texto: #ffffff;
+  --exito: #15803d;
+  --peligro: #b91c1c;
+  --aviso: #b45309;
+  --sombra: 0 6px 0 rgb(30 27 75 / 0.12), 0 10px 24px rgb(30 27 75 / 0.1);
+  --radio: 20px;
+  --fuente-titulo: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+  --fuente-texto: 'Atkinson Hyperlegible', 'Nunito', system-ui, sans-serif;
+}
+:root[data-tema='oscuro'] {
+  --fondo: #14123a;
+  --panel: #231f5c;
+  --texto: #eef2ff;
+  --texto-suave: #c7d2fe;
+  --borde: #4338ca;
+  --primario: #818cf8;
+  --primario-texto: #14123a;
+  --exito: #22c55e;
+  --peligro: #f87171;
+  --aviso: #fbbf24;
+  --sombra: 0 6px 0 rgb(0 0 0 / 0.35), 0 10px 24px rgb(0 0 0 / 0.3);
+}
+:root[data-tema='contraste'] {
+  --fondo: #000000;
+  --panel: #000000;
+  --texto: #ffffff;
+  --texto-suave: #ffffff;
+  --borde: #ffff00;
+  --primario: #ffff00;
+  --primario-texto: #000000;
+  --exito: #00ff66;
+  --peligro: #ff6b6b;
+  --aviso: #ffd000;
+  --sombra: none;
+}
+
+html {
+  font-size: calc(16px * var(--escala, 1));
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente-texto);
+  overflow: hidden;
+}
+h1,
+h2,
+h3,
+.titulo {
+  font-family: var(--fuente-titulo);
+}
+
+/* Foco visible para teclado */
+:focus-visible {
+  outline: 4px solid var(--primario);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+/* ---------- Botones grandes y táctiles ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  min-width: 3rem;
+  padding: 0 1.1rem;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  font-family: var(--fuente-titulo);
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--btn-texto, #fff);
+  background: var(--btn, var(--primario));
+  box-shadow: 0 5px 0 rgb(0 0 0 / 0.22);
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
+    filter 0.15s;
+}
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.22);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-ejecutar {
+  --btn: var(--exito);
+  --btn-texto: #fff;
+  font-size: 1.35rem;
+  padding: 0 1.6rem;
+}
+.btn-detener {
+  --btn: var(--peligro);
+  --btn-texto: #fff;
+}
+.btn-suave {
+  --btn: var(--panel);
+  --btn-texto: var(--texto);
+  border-color: var(--borde);
+}
+:root[data-tema='contraste'] .btn {
+  border-color: #fff;
+}
+:root[data-tema='contraste'] .btn-ejecutar,
+:root[data-tema='contraste'] .btn-detener {
+  --btn-texto: #000;
+}
+
+.tarjeta {
+  background: var(--panel);
+  border: 3px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+/* ---------- Ajustes de Blockly ---------- */
+.blocklyToolboxDiv {
+  padding: 0.5rem 0.4rem;
+  border-right: 3px solid var(--borde);
+  min-width: 11.5rem;
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+}
+.blocklyToolboxCategory {
+  margin: 0.25rem 0;
+  border-radius: 14px;
+  min-height: 3rem;
+  padding: 0.2rem 0.4rem;
+  display: flex;
+  align-items: center;
+}
+.blocklyToolboxCategory .blocklyTreeRow {
+  height: auto;
+  min-height: 2.6rem;
+  display: flex;
+  align-items: center;
+  border-radius: 14px;
+  padding: 0 0.6rem;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.blocklyToolboxCategory .blocklyTreeRow:hover {
+  background: color-mix(in srgb, var(--primario) 14%, transparent);
+}
+.blocklyToolboxSelected .blocklyTreeRow {
+  background: var(--primario) !important;
+  color: var(--primario-texto) !important;
+}
+.blocklyTreeLabel {
+  font-family: var(--fuente-titulo);
+}
+.blocklyFlyoutBackground {
+  fill-opacity: 1;
+}
+.blocklyHighlightedConnectionPath {
+  stroke: #facc15;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
