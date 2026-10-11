@@ -7,7 +7,7 @@ import type {
   Programa,
   Sentencia,
 } from './tipos';
-import { ESCENARIO } from './tipos';
+import { ESCENARIO, RADIO_ACTOR } from './tipos';
 
 /** Máximo de bloques por hilo y por cuadro antes de cortar (protege contra bucles locos). */
 const PRESUPUESTO_PASOS = 5000;
@@ -18,9 +18,12 @@ const normalizar = (g: number) => {
 };
 const limitarNumero = (n: number) => (Number.isFinite(n) ? n : 0);
 
+type Valor = number | string | boolean;
+
 interface Hilo {
   id: number;
   actorId: string;
+  programaId: string;
   gen: Generator<Cesion, void, void>;
   /** Tiempo (ms del reloj interno) hasta el que duerme. */
   duermeHasta: number;
@@ -28,17 +31,30 @@ interface Hilo {
   terminado: boolean;
 }
 
+interface Manejador {
+  actorId: string;
+  programa: Programa;
+}
+
 /**
  * Runtime de Kody: ejecuta programas como hilos cooperativos (generadores).
  * El reloj es interno y se avanza con `tick(dt)`, lo que lo hace determinista y testeable.
+ *
+ * Programas con sombrero "al hacer clic en ▶" arrancan al ejecutar; los demás sombreros
+ * (tecla, clic en actor, mensaje) quedan escuchando mientras el proyecto está corriendo.
  */
 export class Runtime {
   readonly actores = new Map<string, EstadoActor>();
   private inicial = new Map<string, EstadoActor>();
   private hilos: Hilo[] = [];
+  private manejadores: Manejador[] = [];
+  private teclas = new Set<string>();
   private reloj = 0;
   private siguienteHilo = 1;
   modo: ModoEjecucion = 'detenido';
+  /** Escenario actual (id de fondo). */
+  fondo = '';
+  private fondoInicial = '';
   private aleatorio: () => number;
 
   constructor(
@@ -48,38 +64,62 @@ export class Runtime {
     this.aleatorio = aleatorio;
   }
 
+  // ---------- Actores y escenario ----------
+
   /** Registra un actor y guarda su estado inicial (para reiniciar al ejecutar). */
   agregarActor(actor: EstadoActor) {
     this.actores.set(actor.id, { ...actor });
     this.inicial.set(actor.id, { ...actor });
   }
 
+  /** Reemplaza todos los actores (al cambiar el proyecto). */
+  reemplazarActores(lista: EstadoActor[]) {
+    this.actores.clear();
+    this.inicial.clear();
+    for (const a of lista) this.agregarActor(a);
+  }
+
+  /** Cambia el estado inicial y actual de un actor (arrastrar, editar propiedades). */
+  fijarInicial(actor: EstadoActor) {
+    this.actores.set(actor.id, { ...actor, dialogo: null });
+    this.inicial.set(actor.id, { ...actor, dialogo: null });
+  }
+
+  fijarFondoInicial(id: string) {
+    this.fondo = id;
+    this.fondoInicial = id;
+  }
+
+  // ---------- Ciclo de vida ----------
+
   private cambiarModo(m: ModoEjecucion) {
     this.modo = m;
     this.oyentes.alCambiarModo?.(m);
   }
 
-  private reiniciarActores() {
+  private reiniciarEscena() {
     for (const [id, ini] of this.inicial) this.actores.set(id, { ...ini, dialogo: null });
+    if (this.fondo !== this.fondoInicial) {
+      this.fondo = this.fondoInicial;
+      this.oyentes.alCambiarFondo?.(this.fondo);
+    }
   }
 
-  /** Inicia la ejecución: un hilo por programa, para el actor indicado. */
-  iniciar(programas: Programa[], actorId: string, paso = false) {
+  /** Inicia la ejecución con los programas de cada actor (por id). */
+  iniciar(porActor: Record<string, Programa[]>, paso = false) {
     this.detener();
-    this.reiniciarActores();
+    this.reiniciarEscena();
     this.reloj = 0;
-    for (const p of programas) {
-      this.hilos.push({
-        id: this.siguienteHilo++,
-        actorId,
-        gen: this.ejecutarPila(p.cuerpo, actorId),
-        duermeHasta: 0,
-        bloqueActivo: null,
-        terminado: false,
-      });
+    this.teclas.clear();
+    for (const [actorId, programas] of Object.entries(porActor)) {
+      if (!this.actores.has(actorId)) continue;
+      for (const p of programas) {
+        if (p.sombrero === 'evento_al_ejecutar') this.arrancarHilo(actorId, p);
+        else this.manejadores.push({ actorId, programa: p });
+      }
     }
     this.cambiarModo(paso ? 'paso-a-paso' : 'corriendo');
-    if (paso) this.avisarBloques();
+    if (this.hilos.length === 0 && this.manejadores.length === 0) this.cambiarModo('detenido');
   }
 
   pausar() {
@@ -92,16 +132,78 @@ export class Runtime {
 
   detener() {
     this.hilos = [];
+    this.manejadores = [];
+    this.teclas.clear();
     for (const a of this.actores.values()) a.dialogo = null;
     this.oyentes.alActivarBloques?.([]);
     if (this.modo !== 'detenido') this.cambiarModo('detenido');
   }
 
+  /** ¿Hay programas escuchando teclas, clics o mensajes? */
+  get escuchando() {
+    return this.manejadores.length > 0;
+  }
+
+  get activo() {
+    return this.hilos.length > 0;
+  }
+
+  // ---------- Eventos externos ----------
+
+  private arrancarHilo(actorId: string, p: Programa) {
+    // Si el mismo programa ya corre, se reinicia (como en Scratch).
+    this.hilos = this.hilos.filter((h) => h.programaId !== p.id);
+    this.hilos.push({
+      id: this.siguienteHilo++,
+      actorId,
+      programaId: p.id,
+      gen: this.ejecutarPila(p.cuerpo, actorId),
+      duermeHasta: 0,
+      bloqueActivo: null,
+      terminado: false,
+    });
+  }
+
+  presionarTecla(tecla: string) {
+    if (this.modo !== 'corriendo') return;
+    const nueva = !this.teclas.has(tecla);
+    this.teclas.add(tecla);
+    if (!nueva) return; // la repetición automática del teclado no relanza programas
+    for (const m of this.manejadores) {
+      if (m.programa.sombrero === 'evento_tecla' && m.programa.campos.TECLA === tecla) {
+        this.arrancarHilo(m.actorId, m.programa);
+      }
+    }
+  }
+
+  soltarTecla(tecla: string) {
+    this.teclas.delete(tecla);
+  }
+
+  clicActor(actorId: string) {
+    if (this.modo !== 'corriendo') return;
+    for (const m of this.manejadores) {
+      if (m.programa.sombrero === 'evento_clic_actor' && m.actorId === actorId) {
+        this.arrancarHilo(m.actorId, m.programa);
+      }
+    }
+  }
+
+  enviar(mensaje: string) {
+    for (const m of this.manejadores) {
+      if (m.programa.sombrero === 'evento_mensaje' && m.programa.campos.MENSAJE === mensaje) {
+        this.arrancarHilo(m.actorId, m.programa);
+      }
+    }
+  }
+
+  // ---------- Planificador ----------
+
   /** Avanza un fotograma. `dt` en milisegundos. */
   tick(dt: number) {
     if (this.modo !== 'corriendo') return;
     this.reloj += dt;
-    for (const h of this.hilos) this.avanzarHilo(h, false);
+    for (const h of [...this.hilos]) this.avanzarHilo(h, false);
     this.limpiarTerminados();
   }
 
@@ -115,14 +217,10 @@ export class Runtime {
     this.limpiarTerminados();
   }
 
-  get activo() {
-    return this.hilos.length > 0;
-  }
-
   private limpiarTerminados() {
     this.hilos = this.hilos.filter((h) => !h.terminado);
     this.avisarBloques();
-    if (this.hilos.length === 0 && this.modo !== 'detenido') {
+    if (this.hilos.length === 0 && this.manejadores.length === 0 && this.modo !== 'detenido') {
       this.cambiarModo('detenido');
     }
   }
@@ -137,7 +235,7 @@ export class Runtime {
    * En `unPaso`, se detiene tras ejecutar un solo bloque.
    */
   private avanzarHilo(h: Hilo, unPaso: boolean) {
-    if (h.terminado || this.reloj < h.duermeHasta) return;
+    if (h.terminado || this.modo === 'detenido' || this.reloj < h.duermeHasta) return;
     let gastados = 0;
     let primerPaso = true;
     for (;;) {
@@ -173,34 +271,123 @@ export class Runtime {
     }
   }
 
-  // ---------- Intérprete ----------
+  // ---------- Evaluación de expresiones ----------
 
-  private evaluar(e: Expr): number | string {
+  private radio(a: EstadoActor) {
+    return (RADIO_ACTOR * a.tamano) / 100;
+  }
+
+  /** Límite máximo de x e y para que el actor siga visible. */
+  private limites(a: EstadoActor) {
+    const r = this.radio(a);
+    return { maxX: ESCENARIO.mitadX - r, maxY: ESCENARIO.mitadY - r };
+  }
+
+  private sensor(nombre: string, param: string | undefined, a: EstadoActor): Valor {
+    switch (nombre) {
+      case 'tecla':
+        return this.teclas.has(param ?? '');
+      case 'borde': {
+        const { maxX, maxY } = this.limites(a);
+        return Math.abs(a.x) >= maxX - 0.5 || Math.abs(a.y) >= maxY - 0.5;
+      }
+      case 'tocando': {
+        const otro = this.actores.get(param ?? '');
+        if (!otro || otro.id === a.id || !otro.visible || !a.visible) return false;
+        return Math.hypot(a.x - otro.x, a.y - otro.y) < this.radio(a) + this.radio(otro);
+      }
+      case 'x':
+        return a.x;
+      case 'y':
+        return a.y;
+      case 'dir':
+        return a.direccion;
+      default:
+        return 0;
+    }
+  }
+
+  private evaluar(e: Expr, a: EstadoActor): Valor {
     switch (e.tipo) {
       case 'num':
       case 'txt':
         return e.valor;
-      case 'aleatorio': {
-        const a = Math.round(Number(this.evaluar(e.desde)) || 0);
-        const b = Math.round(Number(this.evaluar(e.hasta)) || 0);
-        const [min, max] = a <= b ? [a, b] : [b, a];
-        return min + Math.floor(this.aleatorio() * (max - min + 1));
+      case 'no':
+        return !this.aBooleano(this.evaluar(e.a, a));
+      case 'sensor':
+        return this.sensor(e.nombre, e.param, a);
+      case 'bin': {
+        const x = this.evaluar(e.a, a);
+        const y = this.evaluar(e.b, a);
+        switch (e.op) {
+          case '+':
+            return limitarNumero(this.aNumero(x) + this.aNumero(y));
+          case '-':
+            return limitarNumero(this.aNumero(x) - this.aNumero(y));
+          case '*':
+            return limitarNumero(this.aNumero(x) * this.aNumero(y));
+          case '/':
+            return limitarNumero(this.aNumero(x) / this.aNumero(y));
+          case '>':
+            return this.aNumero(x) > this.aNumero(y);
+          case '<':
+            return this.aNumero(x) < this.aNumero(y);
+          case '=':
+            return this.iguales(x, y);
+          case 'y':
+            return this.aBooleano(x) && this.aBooleano(y);
+          case 'o':
+            return this.aBooleano(x) || this.aBooleano(y);
+          case 'azar': {
+            const p = Math.round(this.aNumero(x));
+            const q = Math.round(this.aNumero(y));
+            const [min, max] = p <= q ? [p, q] : [q, p];
+            return min + Math.floor(this.aleatorio() * (max - min + 1));
+          }
+        }
       }
     }
   }
 
-  private num(s: Sentencia, nombre: string): number {
-    const e = s.entradas[nombre];
-    return e ? limitarNumero(Number(this.evaluar(e))) : 0;
+  private aNumero(v: Valor): number {
+    if (typeof v === 'boolean') return v ? 1 : 0;
+    return limitarNumero(Number(v));
   }
 
-  private txt(s: Sentencia, nombre: string): string {
-    const e = s.entradas[nombre];
-    return e ? String(this.evaluar(e)) : '';
+  private aBooleano(v: Valor): boolean {
+    if (typeof v === 'string') return v !== '' && v !== '0' && v.toLowerCase() !== 'false';
+    return !!v;
   }
+
+  private iguales(x: Valor, y: Valor): boolean {
+    const nx = Number(x);
+    const ny = Number(y);
+    if (typeof x !== 'string' && typeof y !== 'string') return this.aNumero(x) === this.aNumero(y);
+    if (x !== '' && y !== '' && !Number.isNaN(nx) && !Number.isNaN(ny)) return nx === ny;
+    return String(x).toLowerCase() === String(y).toLowerCase();
+  }
+
+  private num(s: Sentencia, nombre: string, a: EstadoActor): number {
+    const e = s.entradas[nombre];
+    return e ? this.aNumero(this.evaluar(e, a)) : 0;
+  }
+
+  private txt(s: Sentencia, nombre: string, a: EstadoActor): string {
+    const e = s.entradas[nombre];
+    return e ? String(this.evaluar(e, a)) : '';
+  }
+
+  /** Condición vacía = falsa (igual que Scratch). */
+  private cond(s: Sentencia, nombre: string, a: EstadoActor): boolean {
+    const e = s.entradas[nombre];
+    return e ? this.aBooleano(this.evaluar(e, a)) : false;
+  }
+
+  // ---------- Intérprete ----------
 
   private *ejecutarPila(pila: Sentencia[], actorId: string): Generator<Cesion, void, void> {
     for (const s of pila) {
+      if (this.modo === 'detenido') return; // "detener todo" o botón ■
       yield { k: 'paso', id: s.id };
       yield* this.ejecutar(s, actorId);
     }
@@ -213,43 +400,43 @@ export class Runtime {
       // ----- Movimiento -----
       case 'mov_mover': {
         const rad = (a.direccion * Math.PI) / 180;
-        const pasos = this.num(s, 'PASOS');
+        const pasos = this.num(s, 'PASOS', a);
         a.x += pasos * Math.sin(rad);
         a.y += pasos * Math.cos(rad);
         this.mantenerDentro(a, false);
         break;
       }
       case 'mov_girar_der':
-        a.direccion = normalizar(a.direccion + this.num(s, 'GRADOS'));
+        a.direccion = normalizar(a.direccion + this.num(s, 'GRADOS', a));
         break;
       case 'mov_girar_izq':
-        a.direccion = normalizar(a.direccion - this.num(s, 'GRADOS'));
+        a.direccion = normalizar(a.direccion - this.num(s, 'GRADOS', a));
         break;
       case 'mov_ir_a':
-        a.x = this.num(s, 'X');
-        a.y = this.num(s, 'Y');
+        a.x = this.num(s, 'X', a);
+        a.y = this.num(s, 'Y', a);
         this.mantenerDentro(a, false);
         break;
       case 'mov_apuntar':
-        a.direccion = normalizar(this.num(s, 'DIR'));
+        a.direccion = normalizar(this.num(s, 'DIR', a));
         break;
       case 'mov_cambiar_x':
-        a.x += this.num(s, 'N');
+        a.x += this.num(s, 'N', a);
         this.mantenerDentro(a, false);
         break;
       case 'mov_cambiar_y':
-        a.y += this.num(s, 'N');
+        a.y += this.num(s, 'N', a);
         this.mantenerDentro(a, false);
         break;
       case 'mov_rebotar':
         this.mantenerDentro(a, true);
         break;
       case 'mov_deslizar': {
-        const dur = Math.max(0, this.num(s, 'SEG')) * 1000;
+        const dur = Math.max(0, this.num(s, 'SEG', a)) * 1000;
         const x0 = a.x;
         const y0 = a.y;
-        const x1 = this.num(s, 'X');
-        const y1 = this.num(s, 'Y');
+        const x1 = this.num(s, 'X', a);
+        const y1 = this.num(s, 'Y', a);
         const inicio = this.reloj;
         if (dur === 0) {
           a.x = x1;
@@ -268,19 +455,19 @@ export class Runtime {
 
       // ----- Apariencia -----
       case 'ap_decir':
-        a.dialogo = { texto: this.txt(s, 'TEXTO'), tipo: 'decir' };
+        a.dialogo = { texto: this.txt(s, 'TEXTO', a), tipo: 'decir' };
         break;
       case 'ap_pensar':
-        a.dialogo = { texto: this.txt(s, 'TEXTO'), tipo: 'pensar' };
+        a.dialogo = { texto: this.txt(s, 'TEXTO', a), tipo: 'pensar' };
         break;
       case 'ap_decir_seg':
       case 'ap_pensar_seg': {
         const d = {
-          texto: this.txt(s, 'TEXTO'),
+          texto: this.txt(s, 'TEXTO', a),
           tipo: s.tipo === 'ap_decir_seg' ? ('decir' as const) : ('pensar' as const),
         };
         a.dialogo = d;
-        yield { k: 'espera', ms: Math.max(0, this.num(s, 'SEG')) * 1000 };
+        yield { k: 'espera', ms: Math.max(0, this.num(s, 'SEG', a)) * 1000 };
         if (a.dialogo === d) a.dialogo = null;
         break;
       }
@@ -288,10 +475,10 @@ export class Runtime {
         a.disfrazActual = (a.disfrazActual + 1) % Math.max(1, a.totalDisfraces);
         break;
       case 'ap_cambiar_tamano':
-        a.tamano = Math.min(500, Math.max(10, a.tamano + this.num(s, 'N')));
+        a.tamano = Math.min(500, Math.max(10, a.tamano + this.num(s, 'N', a)));
         break;
       case 'ap_fijar_tamano':
-        a.tamano = Math.min(500, Math.max(10, this.num(s, 'N')));
+        a.tamano = Math.min(500, Math.max(10, this.num(s, 'N', a)));
         break;
       case 'ap_mostrar':
         a.visible = true;
@@ -299,13 +486,37 @@ export class Runtime {
       case 'ap_ocultar':
         a.visible = false;
         break;
+      case 'ap_fondo': {
+        const id = s.campos.FONDO ?? '';
+        if (id && id !== this.fondo) {
+          this.fondo = id;
+          this.oyentes.alCambiarFondo?.(id);
+        }
+        break;
+      }
+
+      // ----- Sonido -----
+      case 'son_tocar':
+        this.oyentes.alSonido?.('sonido', s.campos.SONIDO ?? 'pop', 0.3);
+        break;
+      case 'son_nota': {
+        const seg = Math.min(4, Math.max(0.05, this.num(s, 'SEG', a)));
+        this.oyentes.alSonido?.('nota', Number(s.campos.NOTA ?? 60), seg);
+        yield { k: 'espera', ms: seg * 1000 };
+        break;
+      }
+
+      // ----- Eventos -----
+      case 'ev_enviar':
+        this.enviar(s.campos.MENSAJE ?? '');
+        break;
 
       // ----- Control -----
       case 'ctrl_esperar':
-        yield { k: 'espera', ms: Math.max(0, this.num(s, 'SEG')) * 1000 };
+        yield { k: 'espera', ms: Math.max(0, this.num(s, 'SEG', a)) * 1000 };
         break;
       case 'ctrl_repetir': {
-        const veces = Math.max(0, Math.floor(this.num(s, 'VECES')));
+        const veces = Math.max(0, Math.floor(this.num(s, 'VECES', a)));
         for (let i = 0; i < veces; i++) {
           yield* this.ejecutarPila(s.hijos.CUERPO ?? [], actorId);
           yield { k: 'cuadro' };
@@ -317,27 +528,47 @@ export class Runtime {
           yield* this.ejecutarPila(s.hijos.CUERPO ?? [], actorId);
           yield { k: 'cuadro' };
         }
+      case 'ctrl_repetir_hasta':
+        while (!this.cond(s, 'COND', a)) {
+          yield* this.ejecutarPila(s.hijos.CUERPO ?? [], actorId);
+          yield { k: 'cuadro' };
+        }
+        break;
+      case 'ctrl_si':
+        if (this.cond(s, 'COND', a)) yield* this.ejecutarPila(s.hijos.CUERPO ?? [], actorId);
+        break;
+      case 'ctrl_si_sino':
+        if (this.cond(s, 'COND', a)) yield* this.ejecutarPila(s.hijos.CUERPO ?? [], actorId);
+        else yield* this.ejecutarPila(s.hijos.CUERPO_SINO ?? [], actorId);
+        break;
+      case 'ctrl_esperar_hasta':
+        while (!this.cond(s, 'COND', a)) yield { k: 'cuadro' };
+        break;
+      case 'ctrl_detener':
+        this.detener();
+        return;
     }
   }
 
-  /** Mantiene al actor visible en el escenario; si `rebotar`, también invierte la dirección. */
+  /**
+   * Mantiene al actor visible en el escenario. Con `rebotar`, si está tocando el borde
+   * también invierte su dirección (el actor ya fue recortado al borde por el movimiento).
+   */
   private mantenerDentro(a: EstadoActor, rebotar: boolean) {
-    const m = 20 * (a.tamano / 100); // margen: el actor nunca desaparece del todo
-    const { mitadX, mitadY } = ESCENARIO;
-    const maxX = mitadX - m;
-    const maxY = mitadY - m;
-    if (a.x > maxX) {
-      a.x = maxX;
+    const { maxX, maxY } = this.limites(a);
+    const tol = rebotar ? 0.5 : 0;
+    if (a.x > maxX - tol) {
+      a.x = Math.min(a.x, maxX);
       if (rebotar) a.direccion = normalizar(-a.direccion);
-    } else if (a.x < -maxX) {
-      a.x = -maxX;
+    } else if (a.x < -maxX + tol) {
+      a.x = Math.max(a.x, -maxX);
       if (rebotar) a.direccion = normalizar(-a.direccion);
     }
-    if (a.y > maxY) {
-      a.y = maxY;
+    if (a.y > maxY - tol) {
+      a.y = Math.min(a.y, maxY);
       if (rebotar) a.direccion = normalizar(180 - a.direccion);
-    } else if (a.y < -maxY) {
-      a.y = -maxY;
+    } else if (a.y < -maxY + tol) {
+      a.y = Math.max(a.y, -maxY);
       if (rebotar) a.direccion = normalizar(180 - a.direccion);
     }
   }

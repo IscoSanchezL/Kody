@@ -2,7 +2,7 @@
 
 Plataforma web de **programación por bloques** para estudiantes de grado 4 (9–10 años), en español. Mascota guía: **Kody**, un zorro robot.
 
-> Estado: **Fase 1** (layout, tema visual, Blockly personalizado, escenario con 1 actor, bloques de movimiento/apariencia/control ejecutándose). Ver [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
+> Estado: **Fase 2** (varios actores y escenarios, eventos, sensores, sonido, interfaz renovada). La Fase 1 sentó las bases (layout, tema, Blockly, escenario, intérprete). Ver [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
 ## Requisitos
 
@@ -26,7 +26,18 @@ Kody **no se puede abrir haciendo doble clic en `index.html`** de la carpeta del
 1. `npm run dev` y abre http://localhost:5173 (para desarrollar).
 2. `npm run build:local` y abre `dist-local/index.html` con doble clic (versión de un solo archivo; mantén junta la carpeta `dist-local`).
 
-## Qué incluye la Fase 1
+## Qué incluye la Fase 2
+
+- **Varios actores** (hasta 8), cada uno con su propio programa; se elige a quién programar en el panel de actores.
+- **Biblioteca de 8 personajes** con 2 disfraces (Kody, Robo, Gato, Dino, Cohete, Pez, Abeja, Estrella) y **8 escenarios** (pradera, espacio, océano, ciudad de noche, desierto, montañas con nieve, cuadrícula, en blanco). Se pueden cambiar en cualquier momento, también desde los bloques.
+- **Arrastrar actores** en el escenario para posicionarlos, cuadrícula de coordenadas, escenario grande y pantalla completa.
+- **Eventos:** al presionar una tecla, al hacer clic en el actor, enviar y recibir mensajes entre actores.
+- **Control y lógica:** si / si no, repetir hasta que, esperar hasta que, detener todo; sensores (tecla, borde, tocando a otro actor, posición) y operadores (+ − × ÷, > < =, y / o / no, al azar).
+- **Sonido:** 6 efectos y notas musicales, sintetizados con Web Audio.
+- Propiedades del actor (nombre, posición, dirección, tamaño, visibilidad, disfraz, personaje), deshacer / rehacer, y **guardar / abrir proyectos** como archivo `.kody.json` (con validación de archivos dañados).
+- Pendiente de esta fase: clones de actores.
+
+## Qué incluía la Fase 1
 
 - Editor de bloques con **Blockly** (renderer `zelos`, redondeado como Scratch 3) y tema propio.
 - Categorías: Eventos, Movimiento, Apariencia, Control, Operadores (19 bloques).
@@ -39,7 +50,7 @@ Kody **no se puede abrir haciendo doble clic en `index.html`** de la carpeta del
 
 ## Próximas fases
 
-2. Intérprete completo: eventos de teclado/clic, mensajes, clones.
+2. ✅ Eventos de teclado/clic, mensajes, condicionales, sensores, sonido, varios actores (clones pendientes).
 3. Editor de disfraces/sonidos, variables, "Mis bloques", lápiz.
 4. Modo Aventura (2 mundos), motor de niveles, estrellas.
 5. Mundos 3–6, modo docente, PWA offline, accesibilidad, Playwright e2e.

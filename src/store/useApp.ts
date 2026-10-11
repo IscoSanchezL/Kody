@@ -12,6 +12,21 @@ interface EstadoApp {
   mensaje: string;
   /** Cambia en cada mensaje para re-animar el globo. */
   mensajeId: number;
+  /** Pestaña del panel derecho. */
+  panel: 'actores' | 'fondos';
+  /** Escenario ampliado. */
+  escenarioGrande: boolean;
+  /** Cuadrícula de coordenadas sobre el escenario. */
+  cuadricula: boolean;
+  /** Ventana de la biblioteca de personajes. */
+  bibliotecaAbierta: boolean;
+  /** Posición del puntero sobre el escenario (null si está fuera). */
+  puntero: { x: number; y: number } | null;
+  setPanel: (p: 'actores' | 'fondos') => void;
+  alternarEscenarioGrande: () => void;
+  alternarCuadricula: () => void;
+  abrirBiblioteca: (abierta: boolean) => void;
+  setPuntero: (p: { x: number; y: number } | null) => void;
   setTema: (t: Tema) => void;
   ciclarTema: () => void;
   cambiarEscala: (delta: number) => void;
@@ -41,6 +56,20 @@ export const useApp = create<EstadoApp>((set, get) => ({
   tema: leer<Tema>('kody.tema', 'claro'),
   escala: leer<number>('kody.escala', 1),
   modo: 'detenido',
+  panel: 'actores',
+  escenarioGrande: leer<boolean>('kody.grande', false),
+  cuadricula: false,
+  bibliotecaAbierta: false,
+  puntero: null,
+  setPanel: (panel) => set({ panel }),
+  alternarEscenarioGrande: () => {
+    const v = !get().escenarioGrande;
+    guardar('kody.grande', v);
+    set({ escenarioGrande: v });
+  },
+  alternarCuadricula: () => set((s) => ({ cuadricula: !s.cuadricula })),
+  abrirBiblioteca: (bibliotecaAbierta) => set({ bibliotecaAbierta }),
+  setPuntero: (puntero) => set({ puntero }),
   mensaje: '¡Hola! Soy Kody 🦊 Arrastra bloques y presiona ▶ para ver la magia.',
   mensajeId: 0,
   setTema: (tema) => {

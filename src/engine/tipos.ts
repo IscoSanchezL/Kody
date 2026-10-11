@@ -3,6 +3,9 @@
 /** Medidas del escenario (coordenadas estilo Scratch: centro = 0,0). */
 export const ESCENARIO = { ancho: 480, alto: 360, mitadX: 240, mitadY: 180 } as const;
 
+/** Radio aproximado de un actor al 100 % (para choques y bordes). */
+export const RADIO_ACTOR = 40;
+
 /** Globo de texto sobre un actor. */
 export interface Dialogo {
   texto: string;
@@ -25,18 +28,25 @@ export interface EstadoActor {
   dialogo: Dialogo | null;
 }
 
+export type OpBinaria = '+' | '-' | '*' | '/' | '>' | '<' | '=' | 'y' | 'o' | 'azar';
+export type NombreSensor = 'tecla' | 'borde' | 'tocando' | 'x' | 'y' | 'dir';
+
 /** Expresión (valor) ya compilada. */
 export type Expr =
   | { tipo: 'num'; valor: number }
   | { tipo: 'txt'; valor: string }
-  | { tipo: 'aleatorio'; desde: Expr; hasta: Expr };
+  | { tipo: 'bin'; op: OpBinaria; a: Expr; b: Expr }
+  | { tipo: 'no'; a: Expr }
+  | { tipo: 'sensor'; nombre: NombreSensor; param?: string };
 
 /** Sentencia (bloque apilable) ya compilada. */
 export interface Sentencia {
   id: string;
   tipo: string;
+  /** Campos del bloque (listas desplegables, texto). */
+  campos: Record<string, string>;
   entradas: Record<string, Expr>;
-  /** Cuerpos de bloques en forma de "C" (repetir, por siempre...). */
+  /** Cuerpos de bloques en forma de "C" (repetir, si, por siempre...). */
   hijos: Record<string, Sentencia[]>;
 }
 
@@ -44,6 +54,7 @@ export interface Sentencia {
 export interface Programa {
   sombrero: string;
   id: string;
+  campos: Record<string, string>;
   cuerpo: Sentencia[];
 }
 
@@ -59,4 +70,8 @@ export interface Oyentes {
   /** Mensaje amable (nunca un "error" técnico). */
   alAviso?: (mensaje: string) => void;
   alCambiarModo?: (modo: ModoEjecucion) => void;
+  /** Un bloque pidió un sonido o una nota. */
+  alSonido?: (tipo: 'sonido' | 'nota', dato: string | number, segundos: number) => void;
+  /** Un bloque cambió el escenario. */
+  alCambiarFondo?: (id: string) => void;
 }

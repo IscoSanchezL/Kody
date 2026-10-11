@@ -194,3 +194,129 @@ h3,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Componentes de la Fase 2 ---------- */
+.btn-icono {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 12px;
+  border: 2px solid var(--borde);
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  color: var(--texto);
+  font-size: 1.15rem;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+.btn-icono:hover {
+  border-color: var(--primario);
+}
+.btn-icono[aria-pressed='true'] {
+  background: var(--primario);
+  color: var(--primario-texto);
+  border-color: var(--primario);
+}
+
+.tarjeta-boton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.6rem;
+  border: 3px solid var(--borde);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--texto);
+  cursor: pointer;
+  transition:
+    transform 0.1s ease,
+    border-color 0.15s;
+}
+.tarjeta-boton:hover {
+  border-color: var(--primario);
+  transform: translateY(-2px);
+}
+.tarjeta-boton[aria-pressed='true'] {
+  border-color: var(--primario);
+  background: color-mix(in srgb, var(--primario) 14%, var(--panel));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primario) 35%, transparent);
+}
+
+.pestana {
+  flex: 1;
+  min-height: 2.75rem;
+  border: 3px solid var(--borde);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--texto);
+  font-family: var(--fuente-titulo);
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.pestana[aria-selected='true'] {
+  background: var(--primario);
+  color: var(--primario-texto);
+  border-color: var(--primario);
+}
+
+.campo {
+  min-height: 2.4rem;
+  width: 100%;
+  padding: 0 0.5rem;
+  border: 2px solid var(--borde);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--texto);
+  font-family: var(--fuente-texto);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.campo:disabled {
+  opacity: 0.7;
+  background: var(--fondo);
+}
+
+.menu-flotante {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  z-index: 40;
+  min-width: 16rem;
+  padding: 0.4rem;
+  border: 3px solid var(--borde);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: var(--sombra);
+}
+.opcion-menu {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 0.8rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--texto);
+  font-family: var(--fuente-titulo);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.opcion-menu:hover {
+  background: color-mix(in srgb, var(--primario) 16%, transparent);
+}
+
+/* Pantalla completa del escenario */
+.escenario-wrap:fullscreen {
+  display: grid;
+  place-items: center;
+  background: #000;
+  border: 0;
+  border-radius: 0;
+}
+.escenario-wrap:fullscreen .escenario-host {
+  width: min(100vw, calc(100vh * 4 / 3));
+}

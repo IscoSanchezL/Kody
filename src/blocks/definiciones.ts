@@ -1,12 +1,22 @@
 import * as Blockly from 'blockly';
+import { MENSAJES, NOTAS, OPCIONES_FONDOS, SONIDOS, TECLAS } from './opciones';
 
 /**
- * Definición de los bloques de Kody (Fase 1).
+ * Definición de los bloques de Kody.
  * Los campos numéricos son entradas con "sombra" para poder encajar otros bloques encima.
  */
 
 const num = (name: string) => ({ type: 'input_value', name, check: 'Number' });
 const txt = (name: string) => ({ type: 'input_value', name, check: ['String', 'Number'] });
+const cualquiera = (name: string) => ({ type: 'input_value', name, check: ['Number', 'String'] });
+const bool = (name: string) => ({ type: 'input_value', name, check: 'Boolean' });
+const lista = (name: string, options: [string, string][]) => ({
+  type: 'field_dropdown',
+  name,
+  options,
+});
+const aqui = { type: 'input_dummy' };
+const cuerpo = (name = 'CUERPO') => ({ type: 'input_statement', name });
 
 const pila = { previousStatement: null, nextStatement: null };
 
@@ -154,6 +164,42 @@ const bloques = [
     style: 'apariencia',
     tooltip: 'Esconde al actor.',
   },
+  {
+    type: 'ap_fondo',
+    message0: 'cambiar escenario a %1',
+    args0: [lista('FONDO', OPCIONES_FONDOS)],
+    ...pila,
+    style: 'apariencia',
+    tooltip: 'Cambia el fondo del escenario.',
+  },
+
+  // ---------- Sonido ----------
+  {
+    type: 'son_tocar',
+    message0: 'tocar sonido %1',
+    args0: [lista('SONIDO', SONIDOS)],
+    ...pila,
+    style: 'sonido',
+    tooltip: 'Reproduce un efecto de sonido.',
+  },
+  {
+    type: 'son_nota',
+    message0: 'tocar nota %1 por %2 seg',
+    args0: [lista('NOTA', NOTAS), num('SEG')],
+    ...pila,
+    style: 'sonido',
+    tooltip: 'Toca una nota musical.',
+  },
+
+  // ---------- Eventos (los que no son sombrero) ----------
+  {
+    type: 'ev_enviar',
+    message0: 'enviar mensaje %1',
+    args0: [lista('MENSAJE', MENSAJES)],
+    ...pila,
+    style: 'eventos',
+    tooltip: 'Avisa a todos los actores.',
+  },
 
   // ---------- Control ----------
   {
@@ -167,7 +213,7 @@ const bloques = [
   {
     type: 'ctrl_repetir',
     message0: 'repetir %1 veces %2 %3',
-    args0: [num('VECES'), { type: 'input_dummy' }, { type: 'input_statement', name: 'CUERPO' }],
+    args0: [num('VECES'), aqui, cuerpo()],
     ...pila,
     style: 'control',
     tooltip: 'Repite los bloques de adentro.',
@@ -175,13 +221,122 @@ const bloques = [
   {
     type: 'ctrl_por_siempre',
     message0: 'por siempre %1 %2',
-    args0: [{ type: 'input_dummy' }, { type: 'input_statement', name: 'CUERPO' }],
+    args0: [aqui, cuerpo()],
     previousStatement: null,
     style: 'control',
     tooltip: 'Repite sin parar hasta que presiones ■.',
   },
+  {
+    type: 'ctrl_repetir_hasta',
+    message0: 'repetir hasta que %1 %2 %3',
+    args0: [bool('COND'), aqui, cuerpo()],
+    ...pila,
+    style: 'control',
+    tooltip: 'Repite hasta que se cumpla la condición.',
+  },
+  {
+    type: 'ctrl_si',
+    message0: 'si %1 entonces %2 %3',
+    args0: [bool('COND'), aqui, cuerpo()],
+    ...pila,
+    style: 'control',
+    tooltip: 'Hace algo solo si se cumple la condición.',
+  },
+  {
+    type: 'ctrl_si_sino',
+    message0: 'si %1 entonces %2 %3 si no %4 %5',
+    args0: [bool('COND'), aqui, cuerpo(), aqui, cuerpo('CUERPO_SINO')],
+    ...pila,
+    style: 'control',
+    tooltip: 'Elige entre dos caminos.',
+  },
+  {
+    type: 'ctrl_esperar_hasta',
+    message0: 'esperar hasta que %1',
+    args0: [bool('COND')],
+    ...pila,
+    style: 'control',
+    tooltip: 'Espera a que se cumpla la condición.',
+  },
+  {
+    type: 'ctrl_detener',
+    message0: 'detener todo',
+    previousStatement: null,
+    style: 'control',
+    tooltip: 'Detiene todos los programas.',
+  },
+
+  // ---------- Sensores ----------
+  {
+    type: 'sen_tecla',
+    message0: '¿tecla %1 presionada?',
+    args0: [lista('TECLA', TECLAS)],
+    output: 'Boolean',
+    style: 'sensores',
+    tooltip: 'Es verdadero mientras sostienes la tecla.',
+  },
+  {
+    type: 'sen_borde',
+    message0: '¿tocando el borde?',
+    output: 'Boolean',
+    style: 'sensores',
+    tooltip: 'Es verdadero si llegó al borde del escenario.',
+  },
+  {
+    type: 'sen_x',
+    message0: 'posición x',
+    output: 'Number',
+    style: 'sensores',
+    tooltip: 'Dónde está, de lado a lado.',
+  },
+  {
+    type: 'sen_y',
+    message0: 'posición y',
+    output: 'Number',
+    style: 'sensores',
+    tooltip: 'Dónde está, de arriba a abajo.',
+  },
+  {
+    type: 'sen_dir',
+    message0: 'dirección',
+    output: 'Number',
+    style: 'sensores',
+    tooltip: 'Hacia dónde mira, en grados.',
+  },
 
   // ---------- Operadores ----------
+  {
+    type: 'op_suma',
+    message0: '%1 + %2',
+    args0: [num('A'), num('B')],
+    output: 'Number',
+    style: 'operadores',
+    tooltip: 'Suma.',
+  },
+  {
+    type: 'op_resta',
+    message0: '%1 − %2',
+    args0: [num('A'), num('B')],
+    output: 'Number',
+    style: 'operadores',
+    tooltip: 'Resta.',
+  },
+  {
+    type: 'op_mult',
+    message0: '%1 × %2',
+    args0: [num('A'), num('B')],
+    output: 'Number',
+    style: 'operadores',
+    tooltip: 'Multiplica.',
+  },
+  {
+    type: 'op_div',
+    message0: '%1 ÷ %2',
+    args0: [num('A'), num('B')],
+    output: 'Number',
+    style: 'operadores',
+    tooltip: 'Divide.',
+  },
   {
     type: 'op_aleatorio',
     message0: 'número al azar entre %1 y %2',
@@ -190,21 +345,71 @@ const bloques = [
     style: 'operadores',
     tooltip: 'Elige un número al azar.',
   },
+  {
+    type: 'cmp_mayor',
+    message0: '%1 > %2',
+    args0: [cualquiera('A'), cualquiera('B')],
+    output: 'Boolean',
+    style: 'operadores',
+    tooltip: '¿El primero es mayor?',
+  },
+  {
+    type: 'cmp_menor',
+    message0: '%1 < %2',
+    args0: [cualquiera('A'), cualquiera('B')],
+    output: 'Boolean',
+    style: 'operadores',
+    tooltip: '¿El primero es menor?',
+  },
+  {
+    type: 'cmp_igual',
+    message0: '%1 = %2',
+    args0: [cualquiera('A'), cualquiera('B')],
+    output: 'Boolean',
+    style: 'operadores',
+    tooltip: '¿Son iguales?',
+  },
+  {
+    type: 'op_y',
+    message0: '%1 y %2',
+    args0: [bool('A'), bool('B')],
+    output: 'Boolean',
+    style: 'operadores',
+    tooltip: 'Verdadero si se cumplen las dos.',
+  },
+  {
+    type: 'op_o',
+    message0: '%1 o %2',
+    args0: [bool('A'), bool('B')],
+    output: 'Boolean',
+    style: 'operadores',
+    tooltip: 'Verdadero si se cumple al menos una.',
+  },
+  {
+    type: 'op_no',
+    message0: 'no %1',
+    args0: [bool('A')],
+    output: 'Boolean',
+    style: 'operadores',
+    tooltip: 'Cambia verdadero por falso.',
+  },
 ];
 
 /** Bloque sombrero con "gorro" (zelos dibuja el gorro con hat = 'cap'). */
-const sombrero = {
-  init(this: Blockly.Block) {
-    this.jsonInit({
-      type: 'evento_al_ejecutar',
-      message0: 'al hacer clic en ▶',
-      nextStatement: null,
-      style: 'eventos',
-      tooltip: 'Aquí empieza tu programa.',
-    });
-    (this as unknown as { hat: string }).hat = 'cap';
-  },
-};
+function sombrero(definicion: object) {
+  return {
+    init(this: Blockly.Block) {
+      this.jsonInit({ nextStatement: null, style: 'eventos', ...definicion });
+      (this as unknown as { hat: string }).hat = 'cap';
+    },
+  };
+}
+
+/** Quién da la lista de actores para "¿tocando a …?" (la configura la aplicación). */
+let proveedorActores: () => [string, string][] = () => [];
+export function configurarActores(fn: () => [string, string][]) {
+  proveedorActores = fn;
+}
 
 let registrado = false;
 
@@ -213,5 +418,41 @@ export function registrarBloques() {
   if (registrado) return;
   registrado = true;
   Blockly.common.defineBlocksWithJsonArray(bloques);
-  Blockly.Blocks['evento_al_ejecutar'] = sombrero;
+
+  Blockly.Blocks['evento_al_ejecutar'] = sombrero({
+    message0: 'al hacer clic en ▶',
+    tooltip: 'Aquí empieza tu programa.',
+  });
+  Blockly.Blocks['evento_tecla'] = sombrero({
+    message0: 'al presionar la tecla %1',
+    args0: [lista('TECLA', TECLAS)],
+    tooltip: 'Se ejecuta cuando presionas esa tecla.',
+  });
+  Blockly.Blocks['evento_clic_actor'] = sombrero({
+    message0: 'al hacer clic en este actor',
+    tooltip: 'Se ejecuta cuando tocas al actor en el escenario.',
+  });
+  Blockly.Blocks['evento_mensaje'] = sombrero({
+    message0: 'al recibir %1',
+    args0: [lista('MENSAJE', MENSAJES)],
+    tooltip: 'Se ejecuta cuando otro actor envía ese mensaje.',
+  });
+
+  Blockly.Blocks['sen_tocando'] = {
+    init(this: Blockly.Block) {
+      this.appendDummyInput()
+        .appendField('¿tocando a')
+        .appendField(
+          new Blockly.FieldDropdown(() => {
+            const o = proveedorActores();
+            return o.length ? o : [['(no hay otros actores)', '']];
+          }),
+          'ACTOR',
+        )
+        .appendField('?');
+      this.setOutput(true, 'Boolean');
+      this.setStyle('sensores');
+      this.setTooltip('Es verdadero si choca con ese actor.');
+    },
+  };
 }

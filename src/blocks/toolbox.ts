@@ -10,7 +10,13 @@ const bloque = (type: string, inputs?: Record<string, unknown>) => ({
 });
 
 const contenido: Partial<Record<IdCategoria, object[]>> = {
-  eventos: [bloque('evento_al_ejecutar')],
+  eventos: [
+    bloque('evento_al_ejecutar'),
+    bloque('evento_tecla'),
+    bloque('evento_clic_actor'),
+    bloque('evento_mensaje'),
+    bloque('ev_enviar'),
+  ],
   movimiento: [
     bloque('mov_mover', { PASOS: n(50) }),
     bloque('mov_girar_der', { GRADOS: n(90) }),
@@ -32,20 +38,55 @@ const contenido: Partial<Record<IdCategoria, object[]>> = {
     bloque('ap_fijar_tamano', { N: n(100) }),
     bloque('ap_mostrar'),
     bloque('ap_ocultar'),
+    bloque('ap_fondo'),
   ],
+  sonido: [bloque('son_tocar'), bloque('son_nota', { SEG: n(0.5) })],
   control: [
     bloque('ctrl_esperar', { SEG: n(1) }),
     bloque('ctrl_repetir', { VECES: n(10) }),
     bloque('ctrl_por_siempre'),
+    bloque('ctrl_repetir_hasta'),
+    bloque('ctrl_si'),
+    bloque('ctrl_si_sino'),
+    bloque('ctrl_esperar_hasta'),
+    bloque('ctrl_detener'),
   ],
-  operadores: [bloque('op_aleatorio', { DESDE: n(1), HASTA: n(10) })],
+  sensores: [
+    bloque('sen_tecla'),
+    bloque('sen_borde'),
+    bloque('sen_tocando'),
+    bloque('sen_x'),
+    bloque('sen_y'),
+    bloque('sen_dir'),
+  ],
+  operadores: [
+    bloque('op_suma', { A: n(1), B: n(1) }),
+    bloque('op_resta', { A: n(1), B: n(1) }),
+    bloque('op_mult', { A: n(2), B: n(2) }),
+    bloque('op_div', { A: n(10), B: n(2) }),
+    bloque('op_aleatorio', { DESDE: n(1), HASTA: n(10) }),
+    bloque('cmp_mayor', { A: n(50), B: n(10) }),
+    bloque('cmp_menor', { A: n(10), B: n(50) }),
+    bloque('cmp_igual', { A: n(10), B: n(10) }),
+    bloque('op_y'),
+    bloque('op_o'),
+    bloque('op_no'),
+  ],
 };
+
+const ORDEN: IdCategoria[] = [
+  'eventos',
+  'movimiento',
+  'apariencia',
+  'sonido',
+  'control',
+  'sensores',
+  'operadores',
+];
 
 /** Toolbox por categorías; solo muestra las que ya tienen bloques. */
 export function crearToolbox(permitidas?: IdCategoria[]) {
-  const ids = (Object.keys(contenido) as IdCategoria[]).filter(
-    (id) => !permitidas || permitidas.includes(id),
-  );
+  const ids = ORDEN.filter((id) => contenido[id] && (!permitidas || permitidas.includes(id)));
   return {
     kind: 'categoryToolbox',
     contents: ids.map((id) => ({

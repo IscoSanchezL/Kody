@@ -1,24 +1,17 @@
-import type * as Blockly from 'blockly';
-import { serialization } from 'blockly';
+import * as Blockly from 'blockly';
 import { compilar } from '../engine/compilar';
 import { Runtime } from '../engine/runtime';
-import type { EstadoActor } from '../engine/tipos';
-import { sonidoExito, sonidoInicio } from '../audio';
+import type { Programa } from '../engine/tipos';
+import { sonidoExito, sonidoInicio, tocarEfecto, tocarNota } from '../audio';
+import { teclaABloque } from '../blocks/opciones';
+import { instantanea, proyectoInicial, useProyecto } from './proyecto';
+import { aEstado, validarProyecto } from './proyectoModelo';
 import { useApp } from './useApp';
 
-/** Actor inicial de la Fase 1: Kody el zorro robot. */
-export const ACTOR_INICIAL: EstadoActor = {
-  id: 'kody',
-  nombre: 'Kody',
-  x: -120,
-  y: -40,
-  direccion: 90,
-  tamano: 100,
-  visible: true,
-  disfrazActual: 0,
-  totalDisfraces: 2,
-  dialogo: null,
-};
+/**
+ * Controlador: une el proyecto (store), el editor de Blockly y el runtime.
+ * Es el único lugar que conoce a los tres.
+ */
 
 let espacio: Blockly.WorkspaceSvg | null = null;
 let resaltados: string[] = [];
@@ -34,6 +27,10 @@ function resaltar(ids: string[]) {
 export const runtime = new Runtime({
   alActivarBloques: resaltar,
   alAviso: (m) => useApp.getState().decir(m),
+  alSonido: (tipo, dato, seg) => {
+    if (tipo === 'sonido') tocarEfecto(String(dato));
+    else tocarNota(Number(dato), seg);
+  },
   alCambiarModo: (modo) => {
     const anterior = useApp.getState().modo;
     useApp.getState().setModo(modo);
@@ -43,18 +40,74 @@ export const runtime = new Runtime({
     }
   },
 });
-runtime.agregarActor(ACTOR_INICIAL);
+
+// ---------------------------------------------------- Proyecto -> runtime
+
+/** Copia los actores y el fondo del proyecto al runtime (cuando no se está ejecutando). */
+function sincronizar() {
+  const { actores, fondo } = useProyecto.getState();
+  runtime.reemplazarActores(actores.map(aEstado));
+  runtime.fijarFondoInicial(fondo);
+}
+sincronizar();
+
+let anteriores = useProyecto.getState().actores;
+let fondoAnterior = useProyecto.getState().fondo;
+useProyecto.subscribe((s) => {
+  if (s.actores === anteriores && s.fondo === fondoAnterior) return;
+  anteriores = s.actores;
+  fondoAnterior = s.fondo;
+  // Cambiar actores o escenario mientras corre el programa lo detiene: así nada queda a medias.
+  if (runtime.modo !== 'detenido') {
+    detenidoAMano = true;
+    runtime.detener();
+  }
+  sincronizar();
+});
+
+// ------------------------------------------------------------- Editor
 
 export function registrarEspacio(w: Blockly.WorkspaceSvg | null) {
   espacio = w;
   resaltados = [];
 }
 
-/** Compila los bloques actuales y los ejecuta. */
-export function ejecutar(paso = false) {
+/** Guarda en el proyecto lo que hay ahora en el editor (para el actor que se está editando). */
+export function guardarScriptActual() {
   if (!espacio) return;
-  const programas = compilar(serialization.workspaces.save(espacio));
-  if (programas.length === 0) {
+  const { seleccionado, guardarScript } = useProyecto.getState();
+  guardarScript(seleccionado, Blockly.serialization.workspaces.save(espacio));
+}
+
+/** Cambia de actor guardando antes lo que se estaba editando. */
+export function seleccionarActor(id: string) {
+  if (id === useProyecto.getState().seleccionado) return;
+  guardarScriptActual();
+  useProyecto.getState().seleccionar(id);
+}
+
+/** Clic sobre un actor en el escenario (activa "al hacer clic en este actor"). */
+export function clicEnActor(id: string) {
+  runtime.clicActor(id);
+}
+
+export function deshacer(rehacer = false) {
+  espacio?.undo(rehacer);
+}
+
+// ---------------------------------------------------------- Ejecución
+
+/** Compila los programas de todos los actores y los ejecuta. */
+export function ejecutar(paso = false) {
+  guardarScriptActual();
+  const { actores, scripts } = useProyecto.getState();
+  const porActor: Record<string, Programa[]> = {};
+  let total = 0;
+  for (const a of actores) {
+    porActor[a.id] = compilar(scripts[a.id] ?? {});
+    total += porActor[a.id].length;
+  }
+  if (total === 0) {
     useApp
       .getState()
       .decir('Necesito un bloque amarillo 🚩 "al hacer clic en ▶" para empezar. ¡Arrástralo!');
@@ -62,10 +115,17 @@ export function ejecutar(paso = false) {
   }
   detenidoAMano = false;
   sonidoInicio();
-  runtime.iniciar(programas, ACTOR_INICIAL.id, paso);
+  runtime.iniciar(porActor, paso);
+  const escucha = runtime.escuchando;
   useApp
     .getState()
-    .decir(paso ? 'Paso a paso: toca 👣 para avanzar un bloque.' : '¡Allá vamos! 🚀');
+    .decir(
+      paso
+        ? 'Paso a paso: toca 👣 para avanzar un bloque.'
+        : escucha
+          ? '¡En marcha! Prueba tus teclas o haz clic en un actor. Presiona ■ para parar.'
+          : '¡Allá vamos! 🚀',
+    );
 }
 
 export function detener() {
@@ -77,4 +137,68 @@ export function detener() {
 export function siguientePaso() {
   if (runtime.modo === 'paso-a-paso') runtime.paso();
   else ejecutar(true);
+}
+
+// ---------------------------------------------------------- Teclado
+
+const escribiendo = (t: EventTarget | null) =>
+  t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+
+/** Conecta el teclado con el runtime (devuelve la función para desconectar). */
+export function conectarTeclado() {
+  const abajo = (e: KeyboardEvent) => {
+    if (escribiendo(e.target) || runtime.modo !== 'corriendo') return;
+    const t = teclaABloque(e);
+    if (!t) return;
+    if (['espacio', 'arriba', 'abajo', 'izquierda', 'derecha'].includes(t)) e.preventDefault();
+    runtime.presionarTecla(t);
+  };
+  const arriba = (e: KeyboardEvent) => {
+    const t = teclaABloque(e);
+    if (t) runtime.soltarTecla(t);
+  };
+  window.addEventListener('keydown', abajo);
+  window.addEventListener('keyup', arriba);
+  return () => {
+    window.removeEventListener('keydown', abajo);
+    window.removeEventListener('keyup', arriba);
+  };
+}
+
+// ----------------------------------------------------- Archivos de proyecto
+
+/** Descarga el proyecto como archivo .json. */
+export function guardarArchivo() {
+  guardarScriptActual();
+  const blob = new Blob([JSON.stringify(instantanea(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mi-proyecto.kody.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  useApp.getState().decir('¡Proyecto guardado! Lo encuentras en tu carpeta de descargas 📁');
+}
+
+/** Abre un proyecto desde un archivo .json. Devuelve true si funcionó. */
+export async function abrirArchivo(archivo: File): Promise<boolean> {
+  try {
+    if (archivo.size > 20_000_000) throw new Error('grande');
+    const p = validarProyecto(JSON.parse(await archivo.text()));
+    if (!p) throw new Error('invalido');
+    runtime.detener();
+    useProyecto.getState().reemplazar(p);
+    useApp.getState().decir('¡Proyecto abierto! Presiona ▶ para verlo en acción.');
+    return true;
+  } catch {
+    useApp.getState().decir('Ese archivo no es un proyecto de Kody 🤔 Prueba con otro.');
+    return false;
+  }
+}
+
+/** Empieza de cero con el proyecto de ejemplo. */
+export function proyectoNuevo() {
+  runtime.detener();
+  useProyecto.getState().reemplazar(proyectoInicial());
+  useApp.getState().decir('Proyecto nuevo listo. ¡A crear! ✨');
 }
