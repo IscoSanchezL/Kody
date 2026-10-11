@@ -62,6 +62,8 @@ export function EditorBloques() {
       media: `${import.meta.env.BASE_URL}blockly-media/`,
     });
     ws.current = w;
+    // Solo en desarrollo: facilita depurar el editor desde la consola y en las pruebas.
+    if (import.meta.env.DEV) (window as unknown as { __kodyWs?: unknown }).__kodyWs = w;
     registrarEspacio(w);
 
     let pendiente: ReturnType<typeof setTimeout> | undefined;

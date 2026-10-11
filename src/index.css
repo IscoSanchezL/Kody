@@ -320,3 +320,13 @@ h3,
 .escenario-wrap:fullscreen .escenario-host {
   width: min(100vw, calc(100vh * 4 / 3));
 }
+
+/*
+ * Tailwind pone `display: block` a todos los <svg>, y eso pisa el atributo display="none"
+ * con el que Blockly esconde sus piezas (por ejemplo la barra de desplazamiento de la paleta
+ * de bloques, que se quedaba suelta sobre el espacio de trabajo).
+ */
+.injectionDiv svg[display='none'],
+.injectionDiv [display='none'] {
+  display: none;
+}
