@@ -4,6 +4,11 @@ Plataforma web de **programación por bloques** para estudiantes de grado 4 (9�
 
 > Estado: **Fase 1** (layout, tema visual, Blockly personalizado, escenario con 1 actor, bloques de movimiento/apariencia/control ejecutándose). Ver [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
+## Requisitos
+
+- **Node.js 20.19 o superior** (recomendado 22 LTS; el repo trae `.nvmrc`). Con Node 18 fallan `npm run dev` y `npm run build:local`.
+- En Mac: `brew install node@22` o `nvm install 22 && nvm use`.
+
 ## Ejecutar
 
 ```bash
