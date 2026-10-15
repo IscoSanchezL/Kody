@@ -58,7 +58,7 @@ El escenario se puede ver en **3D** (por defecto) o en 2D con el botón `3D / 2D
 - **Escenario PixiJS** con fondo ilustrado y actor Kody (2 disfraces SVG propios), globos de "decir/pensar".
 - **Intérprete propio** con hilos cooperativos (generadores), sin `eval`: ejecutar, detener, **paso a paso** con el bloque activo resaltado, y vigilante contra bucles infinitos con aviso amable.
 - Mascota Kody que da mensajes; panel del actor con x, y, dirección y tamaño en vivo.
-- Temas claro / cristal (oscuro), tamaño de letra A− / A+, foco visible, botones táctiles grandes.
+- Temas claro / gris / cristal (azul), tamaño de letra A− / A+, foco visible, botones táctiles grandes.
 - Sonidos de encaje y éxito sintetizados con Web Audio (sin archivos externos).
 - Autoguardado cada 10 s (localStorage en esta fase; IndexedDB llega en la Fase 3).
 

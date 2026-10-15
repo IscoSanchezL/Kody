@@ -62,7 +62,7 @@ const guardar = (clave: string, valor: unknown) => {
   }
 };
 
-/** El tema de alto contraste se retiró: quien lo tenía guardado pasa al negro. */
+/** El tema de alto contraste se retiró: quien lo tenía guardado pasa a Cristal. */
 function leerTema(): Tema {
   const t = leer<string>('kody.tema', 'oscuro');
   return t === 'claro' || t === 'gris' ? t : 'oscuro';

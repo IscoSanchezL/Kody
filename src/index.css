@@ -25,20 +25,20 @@
   --fuente-texto: 'Atkinson Hyperlegible', 'Nunito', system-ui, sans-serif;
 }
 :root[data-tema='oscuro'] {
-  --fondo: #050506;
-  --panel: rgb(255 255 255 / 0.045);
-  --texto: #ececf1;
-  --texto-suave: #a3a3b2;
-  --borde: rgb(255 255 255 / 0.12);
-  --primario: #8b9dff;
-  --primario-texto: #050506;
+  --fondo: #080c22;
+  --panel: rgb(20 28 70 / 0.55);
+  --texto: #e9eeff;
+  --texto-suave: #aab4e6;
+  --borde: rgb(150 170 255 / 0.2);
+  --primario: #7b92ff;
+  --primario-texto: #080c22;
   --exito: #34d3a0;
   --peligro: #ff7b92;
   --aviso: #f5c065;
-  --brillo: rgb(255 255 255 / 0.14);
-  --aurora1: rgb(255 255 255 / 0.05);
-  --aurora2: rgb(139 157 255 / 0.07);
-  --sombra: 0 18px 50px -20px rgb(0 0 0 / 0.9);
+  --brillo: rgb(255 255 255 / 0.16);
+  --aurora1: rgb(99 102 241 / 0.32);
+  --aurora2: rgb(34 211 238 / 0.16);
+  --sombra: 0 18px 50px -20px rgb(0 0 0 / 0.75);
 }
 
 :root[data-tema='gris'] {
