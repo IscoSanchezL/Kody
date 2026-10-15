@@ -75,10 +75,10 @@ export function Inicio() {
         </p>
 
         <motion.img
-          src={alDataUri(PERSONAJES[0].svg(0))}
+          src={`${import.meta.env.BASE_URL}kody-logo.svg`}
           alt="Kody, el zorro robot"
-          width={168}
-          height={168}
+          width={208}
+          height={208}
           className="mt-6 drop-shadow-[0_12px_30px_rgba(0,0,0,0.5)]"
           animate={flota(0)}
         />
