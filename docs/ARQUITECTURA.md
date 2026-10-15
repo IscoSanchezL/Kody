@@ -1,6 +1,6 @@
 # Kody · Plan de arquitectura
 
-Kody es una plataforma web de programación por bloques para estudiantes de grado 4 (9–10 años, hispanohablantes). La mascota es **Kody**, un zorro robot que guía, da pistas y celebra.
+Kody es una plataforma web de programación por bloques para estudiantes de primaria y más allá (hispanohablantes). La mascota es **Kody**, un zorro robot que guía, da pistas y celebra.
 
 ## Decisiones técnicas
 

@@ -197,7 +197,7 @@ export function Inicio() {
             className={`m-0 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold text-indigo-100 ${cristal}`}
           >
             <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_10px_#67e8f9]" />
-            Programación por bloques · 4.º grado
+            Programación por bloques · para estudiantes
           </motion.p>
 
           <motion.div {...sube(1)} className="mt-5 flex items-center justify-center gap-4 lg:justify-start">
