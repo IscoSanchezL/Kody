@@ -20,6 +20,12 @@ interface EstadoApp {
   cuadricula: boolean;
   /** Escenario en 3D (si no, 2D). */
   modo3d: boolean;
+  /** Ventanas de la cuenta. */
+  accesoAbierto: boolean;
+  proyectosAbierto: boolean;
+  apodoAbierto: boolean;
+  nombreAbierto: boolean;
+  abrirVentana: (v: 'acceso' | 'proyectos' | 'apodo' | 'nombre', abierta: boolean) => void;
   /** Ventana de la biblioteca de personajes. */
   bibliotecaAbierta: boolean;
   /** Posición del puntero sobre el escenario (null si está fuera). */
@@ -63,6 +69,17 @@ export const useApp = create<EstadoApp>((set, get) => ({
   escenarioGrande: leer<boolean>('kody.grande', false),
   cuadricula: false,
   modo3d: leer<boolean>('kody.3d', true),
+  accesoAbierto: false,
+  proyectosAbierto: false,
+  apodoAbierto: false,
+  nombreAbierto: false,
+  abrirVentana: (v, abierta) =>
+    set({
+      accesoAbierto: v === 'acceso' ? abierta : false,
+      proyectosAbierto: v === 'proyectos' ? abierta : false,
+      apodoAbierto: v === 'apodo' ? abierta : false,
+      nombreAbierto: v === 'nombre' ? abierta : false,
+    }),
   bibliotecaAbierta: false,
   puntero: null,
   setPanel: (panel) => set({ panel }),

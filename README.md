@@ -4,6 +4,10 @@ Plataforma web de **programaci贸n por bloques** para estudiantes de grado 4 (9鈥
 
 > Estado: **Fase 2** (varios actores y escenarios, eventos, sensores, sonido, interfaz renovada). La Fase 1 sent贸 las bases (layout, tema, Blockly, escenario, int茅rprete). Ver [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
+## Cuentas y guardado en la nube
+
+Los estudiantes pueden **entrar** (c贸digo de clase + PIN, o con Google) y **guardar sus proyectos en la nube**, con autoguardado y "Mis proyectos". Sin cuenta todo sigue funcionando en el navegador. C贸mo activar Google, seguridad y roles: [docs/ACCESO.md](docs/ACCESO.md).
+
 ## Versi贸n web
 
 Kody se publica solo en **GitHub Pages**: https://iscosanchezl.github.io/Kody/

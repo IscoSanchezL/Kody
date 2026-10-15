@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { BarraSuperior } from './ui/BarraSuperior';
+import { Acceso } from './ui/Acceso';
 import { BibliotecaPersonajes } from './ui/BibliotecaPersonajes';
+import { DialogosCuenta } from './ui/DialogosCuenta';
+import { MisProyectos } from './ui/MisProyectos';
+import { conectarGuardado } from './nube/guardado';
+import { useSesion } from './nube/sesion';
 import { EditorBloques } from './ui/EditorBloques';
 import { Mascota } from './ui/Mascota';
 import { PanelActores } from './ui/PanelActores';
@@ -19,6 +24,20 @@ export default function App() {
   }, [tema, escala]);
 
   useEffect(() => conectarTeclado(), []);
+
+  // Cuenta: recuperar la sesión guardada y conectar el guardado automático.
+  const iniciarSesion = useSesion((s) => s.iniciar);
+  const perfil = useSesion((s) => s.perfil);
+  const decir = useApp((s) => s.decir);
+  useEffect(() => {
+    conectarGuardado();
+    iniciarSesion();
+  }, [iniciarSesion]);
+  useEffect(() => {
+    if (perfil) decir(`¡Hola, ${perfil.nombre}! 👋 Ya puedes guardar tus proyectos en tu cuenta.`);
+    // Solo al entrar o salir una persona, no cada vez que cambia su apodo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perfil?.id]);
 
   // Avisa a la red de seguridad de index.html que la aplicación sí arrancó.
   useEffect(() => {
@@ -48,6 +67,9 @@ export default function App() {
         </aside>
       </main>
       <BibliotecaPersonajes />
+      <Acceso />
+      <MisProyectos />
+      <DialogosCuenta />
     </div>
   );
 }

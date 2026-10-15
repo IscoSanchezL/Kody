@@ -10,6 +10,7 @@ import {
 } from '../store/controlador';
 import { useApp, type Tema } from '../store/useApp';
 import { uriPersonaje } from '../stage/uris';
+import { CuentaBarra } from './CuentaBarra';
 
 const NOMBRE_TEMA: Record<Tema, string> = {
   claro: '☀️ Claro',
@@ -187,6 +188,7 @@ export function BarraSuperior() {
         >
           ↷
         </button>
+        <CuentaBarra />
         <MenuProyecto />
         <button
           type="button"
