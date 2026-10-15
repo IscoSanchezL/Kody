@@ -1,6 +1,11 @@
 # Acceso y cuentas en Kody
 
 Kody guarda los proyectos de cada estudiante en **Supabase** (proyecto `CodeKid`, región us-west-2).
+
+> ⚠️ **Supabase compartido con CodeKid.** Kody usa el mismo proyecto Supabase que CodeKid (`fomdxwpxydxtqkbjtozl`). Usuarios, clases, `profiles` y cupos del plan gratuito son comunes. Las tablas de Kody llevan el prefijo `kody_`.
+> **No cambiar** en ese proyecto: Site URL, proveedor de correo, claves de API ni quitar Redirect URLs. Solo se pueden **agregar** redirecciones: `https://codekid-franksanloteam.vercel.app/**`, `https://iscosanchezl.github.io/Kody/**`, `http://localhost:3000/**`, `http://localhost:5173/**`.
+> Los pasos de Google (cliente OAuth "Kody web" y proveedor Google) se configuran en el Supabase de CodeKid. Mientras la app de Google esté en "Prueba", solo entran los usuarios de prueba agregados.
+
 Sin cuenta, todo sigue funcionando y los proyectos quedan solo en el navegador.
 
 ## Cómo entra cada persona
