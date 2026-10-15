@@ -14,8 +14,7 @@ import { CuentaBarra } from './CuentaBarra';
 
 const NOMBRE_TEMA: Record<Tema, string> = {
   claro: '☀️ Claro',
-  oscuro: '🌙 Oscuro',
-  contraste: '◐ Contraste',
+  oscuro: '🌌 Cristal',
 };
 
 function MenuProyecto() {

@@ -140,5 +140,5 @@ El motor no cambia: `Runtime` solo guarda el estado de los actores. Dos dibujant
 
 - Nombre de plataforma y mascota: **Kody**.
 - Renderer `zelos` de Blockly como base (el más parecido a Scratch 3) con tema propio más grande y redondeado.
-- Tailwind v4 con tokens definidos como variables CSS (permiten modo claro/oscuro/alto contraste).
+- Tailwind v4 con tokens definidos como variables CSS (permiten modo claro/cristal).
 - Fuentes Nunito, Baloo 2 y Atkinson Hyperlegible vía `@fontsource` (funcionan offline).

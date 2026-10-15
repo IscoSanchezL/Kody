@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { ModoEjecucion } from '../engine/tipos';
 
-export type Tema = 'claro' | 'oscuro' | 'contraste';
+export type Tema = 'claro' | 'oscuro';
 
 interface EstadoApp {
   tema: Tema;
@@ -62,10 +62,16 @@ const guardar = (clave: string, valor: unknown) => {
   }
 };
 
-const ORDEN: Tema[] = ['claro', 'oscuro', 'contraste'];
+/** El tema de alto contraste se retiró: quien lo tenía guardado pasa al oscuro. */
+function leerTema(): Tema {
+  const t = leer<string>('kody.tema', 'oscuro');
+  return t === 'claro' ? 'claro' : 'oscuro';
+}
+
+const ORDEN: Tema[] = ['claro', 'oscuro'];
 
 export const useApp = create<EstadoApp>((set, get) => ({
-  tema: leer<Tema>('kody.tema', 'claro'),
+  tema: leerTema(),
   escala: leer<number>('kody.escala', 1),
   modo: 'detenido',
   panel: 'actores',
