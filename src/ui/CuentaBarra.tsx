@@ -67,7 +67,7 @@ export function CuentaBarra() {
     <div ref={caja} className="relative flex items-center gap-2">
       {proyectoId ? (
         <span
-          className="rounded-full border-[3px] border-[var(--borde)] px-3 py-1 text-sm font-extrabold"
+          className="rounded-full border border-[var(--borde)] px-3 py-1 text-sm font-extrabold"
           role="status"
           title={mensaje}
         >
@@ -90,6 +90,16 @@ export function CuentaBarra() {
         onClick={() => setAbierto((v) => !v)}
       >
         <span aria-hidden="true">{perfil.avatar}</span> {perfil.nombre} ▾
+      </button>
+      <button
+        type="button"
+        className="btn btn-suave"
+        onClick={() => {
+          setAbierto(true);
+          setConfirmarSalida(true);
+        }}
+      >
+        🚪 Salir
       </button>
       {abierto && (
         <div role="menu" className="menu-flotante">
