@@ -20,6 +20,9 @@ interface EstadoApp {
   cuadricula: boolean;
   /** Escenario en 3D (si no, 2D). */
   modo3d: boolean;
+  /** Pantalla visible: página de inicio o el editor. */
+  pantalla: 'inicio' | 'editor';
+  setPantalla: (p: 'inicio' | 'editor') => void;
   /** Ventanas de la cuenta. */
   accesoAbierto: boolean;
   proyectosAbierto: boolean;
@@ -69,6 +72,8 @@ export const useApp = create<EstadoApp>((set, get) => ({
   escenarioGrande: leer<boolean>('kody.grande', false),
   cuadricula: false,
   modo3d: leer<boolean>('kody.3d', true),
+  pantalla: 'inicio',
+  setPantalla: (pantalla) => set({ pantalla }),
   accesoAbierto: false,
   proyectosAbierto: false,
   apodoAbierto: false,

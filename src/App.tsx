@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BarraSuperior } from './ui/BarraSuperior';
+import { Inicio } from './ui/Inicio';
 import { Acceso } from './ui/Acceso';
 import { BibliotecaPersonajes } from './ui/BibliotecaPersonajes';
 import { DialogosCuenta } from './ui/DialogosCuenta';
@@ -28,6 +29,9 @@ export default function App() {
   // Cuenta: recuperar la sesión guardada y conectar el guardado automático.
   const iniciarSesion = useSesion((s) => s.iniciar);
   const perfil = useSesion((s) => s.perfil);
+  const listo = useSesion((s) => s.listo);
+  const pantalla = useApp((s) => s.pantalla);
+  const setPantalla = useApp((s) => s.setPantalla);
   const decir = useApp((s) => s.decir);
   useEffect(() => {
     conectarGuardado();
@@ -39,10 +43,27 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perfil?.id]);
 
+  // Con sesión se entra directo al editor; al salir de la cuenta se vuelve al inicio.
+  const habiaPerfil = useRef(false);
+  useEffect(() => {
+    if (listo && perfil) setPantalla('editor');
+    if (habiaPerfil.current && !perfil) setPantalla('inicio');
+    habiaPerfil.current = !!perfil;
+  }, [listo, perfil, setPantalla]);
+
   // Avisa a la red de seguridad de index.html que la aplicación sí arrancó.
   useEffect(() => {
     (window as unknown as { __kodyListo?: boolean }).__kodyListo = true;
   }, []);
+
+  if (pantalla === 'inicio') {
+    return (
+      <>
+        <Inicio />
+        <Acceso />
+      </>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col">
