@@ -8,10 +8,10 @@
  * Mientras estén vacíos, Kody funciona sin cuenta (solo en el navegador).
  */
 export const FIREBASE_CONFIG = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? 'AIzaSyB7FDhYhHND6iiIv9zj_jS61OITgaCu1h8',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? 'kody-56d9b.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? 'kody-56d9b',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '1:501381875016:web:80fecea9bf31e6c2cc9f7d',
 };
 
 /** ¿Ya se configuró Firebase? Si no, el acceso con cuenta se muestra como "muy pronto". */
