@@ -6,7 +6,7 @@ Plataforma web de **programación por bloques** para estudiantes de primaria y m
 
 ## Cuentas y guardado en la nube
 
-Los estudiantes pueden **entrar** (código de clase + PIN, o con Google) y **guardar sus proyectos en la nube**, con autoguardado y "Mis proyectos". Sin cuenta todo sigue funcionando en el navegador. Cómo activar Google, seguridad y roles: [docs/ACCESO.md](docs/ACCESO.md).
+Los estudiantes pueden **entrar con Google** y **guardar sus proyectos en la nube** (Firebase), con autoguardado y "Mis proyectos". Sin cuenta todo sigue funcionando en el navegador. Cómo activar Google, seguridad y roles: [docs/ACCESO.md](docs/ACCESO.md).
 
 ## Versión web
 

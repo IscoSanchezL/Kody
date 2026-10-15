@@ -9,12 +9,7 @@ import {
 import { useSesion, type Rol } from '../nube/sesion';
 import { useApp } from '../store/useApp';
 
-const ROL: Record<Rol, string> = {
-  student: '',
-  teacher: 'Docente',
-  guardian: 'Tutor',
-  admin: 'Administrador',
-};
+const ROL: Record<Rol, string> = { student: '' };
 
 const ESTADO: Record<EstadoGuardado, string> = {
   'sin-cuenta': '',

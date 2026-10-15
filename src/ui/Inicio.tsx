@@ -214,19 +214,13 @@ export function Inicio() {
           <motion.div {...sube(3)} className="mx-auto mt-8 flex max-w-md flex-col gap-3 lg:mx-0">
             <button
               type="button"
-              onClick={() => abrirVentana('acceso', true)}
-              className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-b from-indigo-400 to-indigo-600 px-6 py-4 text-xl font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.5),0_14px_40px_-10px_rgba(99,102,241,.9)] transition-transform hover:-translate-y-0.5 focus-visible:outline-offset-4"
-            >
-              <span className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 -skew-x-12 bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-[420%]" />
-              🎒 Entrar con el código de mi clase
-            </button>
-            <button
-              type="button"
               onClick={google}
               disabled={googleActivo !== true}
-              className={`flex cursor-pointer items-center justify-center gap-3 rounded-2xl px-6 py-3.5 text-lg font-extrabold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 ${cristal}`}
+              className="group relative flex cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-b from-indigo-400 to-indigo-600 px-6 py-4 text-xl font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.5),0_14px_40px_-10px_rgba(99,102,241,.9)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-offset-4"
             >
-              <GoogleG /> Continuar con Google
+              <span className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 -skew-x-12 bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-[420%]" />
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-white"><GoogleG /></span>
+              {googleActivo === false ? 'Cuenta: muy pronto' : 'Entrar con Google'}
             </button>
             <button
               type="button"
