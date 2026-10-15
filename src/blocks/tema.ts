@@ -10,6 +10,7 @@ const estilo = (color: string) => ({
 
 /** Tema de Blockly de Kody: colores amigables, fuente grande y redondeada. */
 export function crearTema(nombre: string, oscuro: boolean) {
+  const gris = nombre.endsWith('gris');
   const estilos: Record<string, ReturnType<typeof estilo>> = {};
   for (const c of Object.values(CATEGORIAS)) estilos[c.id] = estilo(c.color);
 
@@ -25,10 +26,10 @@ export function crearTema(nombre: string, oscuro: boolean) {
       workspaceBackgroundColour: 'transparent',
       toolboxBackgroundColour: 'transparent',
       toolboxForegroundColour: oscuro ? '#dfe6ff' : '#14193d',
-      flyoutBackgroundColour: oscuro ? '#101014' : '#e3e9ff',
+      flyoutBackgroundColour: gris ? '#33363e' : oscuro ? '#101014' : '#e3e9ff',
       flyoutForegroundColour: oscuro ? '#dfe6ff' : '#14193d',
       flyoutOpacity: 1,
-      scrollbarColour: oscuro ? '#8b8ba0' : '#8c9bf0',
+      scrollbarColour: gris ? '#a0a5b5' : oscuro ? '#8b8ba0' : '#8c9bf0',
       scrollbarOpacity: 0.7,
       insertionMarkerColour: '#ffffff',
       insertionMarkerOpacity: 0.4,

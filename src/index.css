@@ -41,6 +41,23 @@
   --sombra: 0 18px 50px -20px rgb(0 0 0 / 0.9);
 }
 
+:root[data-tema='gris'] {
+  --fondo: #2a2c32;
+  --panel: rgb(255 255 255 / 0.07);
+  --texto: #eceef2;
+  --texto-suave: #b6bac6;
+  --borde: rgb(255 255 255 / 0.17);
+  --primario: #93a6ff;
+  --primario-texto: #16181d;
+  --exito: #3fd6a6;
+  --peligro: #ff8097;
+  --aviso: #f5c46c;
+  --brillo: rgb(255 255 255 / 0.2);
+  --aurora1: rgb(255 255 255 / 0.09);
+  --aurora2: rgb(147 166 255 / 0.08);
+  --sombra: 0 18px 44px -20px rgb(0 0 0 / 0.65);
+}
+
 html {
   font-size: calc(16px * var(--escala, 1));
 }
