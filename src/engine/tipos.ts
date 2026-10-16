@@ -28,10 +28,37 @@ export interface EstadoActor {
   dialogo: Dialogo | null;
 }
 
-export type OpBinaria = '+' | '-' | '*' | '/' | '>' | '<' | '=' | 'y' | 'o' | 'azar';
+export type OpBinaria =
+  | '+'
+  | '-'
+  | '*'
+  | '/'
+  | '>'
+  | '<'
+  | '='
+  | 'y'
+  | 'o'
+  | 'azar'
+  | 'resto'
+  | 'unir'
+  | 'letra'
+  | 'contiene';
+export type OpUnaria = 'redondear' | 'abs' | 'raiz' | 'piso' | 'techo' | 'sen' | 'cos' | 'longitud';
 /** Lo que un bloque de valor puede preguntarle a una lista. */
 export type OpLista = 'texto' | 'elemento' | 'posicion' | 'longitud' | 'contiene';
-export type NombreSensor = 'tecla' | 'borde' | 'tocando' | 'x' | 'y' | 'dir';
+export type NombreSensor =
+  | 'tecla'
+  | 'borde'
+  | 'tocando'
+  | 'x'
+  | 'y'
+  | 'dir'
+  | 'respuesta'
+  | 'raton-x'
+  | 'raton-y'
+  | 'raton-abajo'
+  | 'temporizador'
+  | 'distancia';
 
 /** Expresión (valor) ya compilada. */
 export type Expr =
@@ -39,6 +66,7 @@ export type Expr =
   | { tipo: 'txt'; valor: string }
   | { tipo: 'bin'; op: OpBinaria; a: Expr; b: Expr }
   | { tipo: 'no'; a: Expr }
+  | { tipo: 'un'; op: OpUnaria; a: Expr }
   | { tipo: 'sensor'; nombre: NombreSensor; param?: string }
   | { tipo: 'var'; nombre: string }
   | { tipo: 'lis'; op: OpLista; lista: string; a?: Expr };
@@ -88,6 +116,10 @@ export interface Oyentes {
   alCambiarModo?: (modo: ModoEjecucion) => void;
   /** Un bloque pidió un sonido o una nota. */
   alSonido?: (tipo: 'sonido' | 'nota', dato: string | number, segundos: number) => void;
+  /** Un bloque hizo una pregunta: la interfaz la muestra y luego llama a `responder`. */
+  alPreguntar?: (texto: string) => void;
+  /** La pregunta terminó (se respondió o se detuvo el programa). */
+  alTerminarPregunta?: () => void;
   /** Cambiaron las variables o listas que están visibles en el escenario. */
   alCambiarMonitores?: (m: Monitores) => void;
   /** Un bloque cambió el escenario. */

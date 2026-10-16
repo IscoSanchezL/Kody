@@ -54,7 +54,9 @@ El escenario se puede ver en **3D** (por defecto) o en 2D con el botón `3D / 2D
 ## Fase 3 (en curso)
 
 - **Variables** 📦 (crear, borrar, fijar, cambiar, mostrar y ocultar en el escenario) y **Listas** 📋 (agregar, borrar, insertar, reemplazar, elemento, posición, longitud, contiene, mostrar). Valen para todos los actores, se guardan con el proyecto y se reinician al ejecutar. Al borrar una, se quitan también los bloques que la usaban.
-- Pendiente de la fase: "Mis bloques", sensores nuevos (preguntar, ratón, temporizador), operadores de texto, lápiz y clones.
+- **Sensores nuevos:** preguntar y esperar (con su casilla en el escenario) y respuesta, posición y clic del ratón, distancia a un actor o al ratón, temporizador.
+- **Operadores nuevos:** unir, letra n de, longitud, contiene, resto, redondear, valor absoluto, raíz, piso, techo, seno y coseno.
+- Pendiente de la fase: "Mis bloques", lápiz y clones.
 
 ## Qué incluía la Fase 1
 

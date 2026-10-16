@@ -71,7 +71,9 @@ function serializar(proyecto: Proyecto): string {
 
 export async function listarProyectos(): Promise<ResumenProyecto[]> {
   try {
-    const r = await getDocs(query(coleccion(), orderBy('actualizado', 'desc'), limit(MAX_PROYECTOS)));
+    const r = await getDocs(
+      query(coleccion(), orderBy('actualizado', 'desc'), limit(MAX_PROYECTOS)),
+    );
     return r.docs.map((d) => ({
       id: d.id,
       nombre: String(d.data().nombre ?? 'Sin nombre'),

@@ -66,6 +66,11 @@ export class Runtime {
   private listas = new Map<string, (number | string)[]>();
   private visibles = new Set<string>();
   private datosSucios = false;
+  // Pregunta abierta ("preguntar ... y esperar"), última respuesta, ratón y temporizador.
+  private preguntando = false;
+  private respuesta = '';
+  private raton = { x: 0, y: 0, abajo: false };
+  private inicioTemporizador = 0;
 
   constructor(
     private oyentes: Oyentes = {},
@@ -124,6 +129,8 @@ export class Runtime {
     this.detener();
     this.reiniciarEscena();
     this.reiniciarDatos(datos);
+    this.respuesta = '';
+    this.inicioTemporizador = 0;
     this.reloj = 0;
     this.teclas.clear();
     for (const [actorId, programas] of Object.entries(porActor)) {
@@ -135,6 +142,24 @@ export class Runtime {
     }
     this.cambiarModo(paso ? 'paso-a-paso' : 'corriendo');
     if (this.hilos.length === 0 && this.manejadores.length === 0) this.cambiarModo('detenido');
+  }
+
+  /** La interfaz entrega lo que escribió la persona a una pregunta abierta. */
+  responder(texto: string) {
+    if (!this.preguntando) return;
+    this.respuesta = texto.slice(0, MAX_TEXTO);
+    this.preguntando = false;
+    this.oyentes.alTerminarPregunta?.();
+  }
+
+  /** Posición del ratón sobre el escenario (la interfaz la actualiza). */
+  fijarRaton(x: number, y: number) {
+    this.raton.x = x;
+    this.raton.y = y;
+  }
+
+  fijarRatonAbajo(abajo: boolean) {
+    this.raton.abajo = abajo;
   }
 
   /** Deja las variables en 0 y las listas vacías, y oculta todos los monitores. */
@@ -183,6 +208,10 @@ export class Runtime {
   }
 
   detener() {
+    if (this.preguntando) {
+      this.preguntando = false;
+      this.oyentes.alTerminarPregunta?.();
+    }
     this.hilos = [];
     this.manejadores = [];
     this.teclas.clear();
@@ -355,6 +384,22 @@ export class Runtime {
         return a.y;
       case 'dir':
         return a.direccion;
+      case 'respuesta':
+        return this.respuesta;
+      case 'raton-x':
+        return this.raton.x;
+      case 'raton-y':
+        return this.raton.y;
+      case 'raton-abajo':
+        return this.raton.abajo;
+      case 'temporizador':
+        return Math.round(((this.reloj - this.inicioTemporizador) / 1000) * 10) / 10;
+      case 'distancia': {
+        if (param === '__raton__')
+          return Math.round(Math.hypot(a.x - this.raton.x, a.y - this.raton.y));
+        const otro = this.actores.get(param ?? '');
+        return otro ? Math.round(Math.hypot(a.x - otro.x, a.y - otro.y)) : 0;
+      }
       default:
         return 0;
     }
@@ -369,6 +414,28 @@ export class Runtime {
         return !this.aBooleano(this.evaluar(e.a, a));
       case 'sensor':
         return this.sensor(e.nombre, e.param, a);
+      case 'un': {
+        const x = this.evaluar(e.a, a);
+        if (e.op === 'longitud') return String(x).length;
+        const v = this.aNumero(x);
+        switch (e.op) {
+          case 'redondear':
+            return Math.round(v);
+          case 'abs':
+            return Math.abs(v);
+          case 'raiz':
+            return v < 0 ? 0 : limitarNumero(Math.sqrt(v));
+          case 'piso':
+            return Math.floor(v);
+          case 'techo':
+            return Math.ceil(v);
+          case 'sen':
+            return Math.round(Math.sin((v * Math.PI) / 180) * 1e10) / 1e10;
+          case 'cos':
+            return Math.round(Math.cos((v * Math.PI) / 180) * 1e10) / 1e10;
+        }
+        return 0;
+      }
       case 'var':
         return this.variables.get(e.nombre) ?? 0;
       case 'lis':
@@ -395,6 +462,19 @@ export class Runtime {
             return this.aBooleano(x) && this.aBooleano(y);
           case 'o':
             return this.aBooleano(x) || this.aBooleano(y);
+          case 'resto': {
+            const d = this.aNumero(y);
+            return d === 0 ? 0 : limitarNumero(this.aNumero(x) % d);
+          }
+          case 'unir':
+            return (String(x) + String(y)).slice(0, MAX_TEXTO);
+          case 'letra': {
+            const i = Math.floor(this.aNumero(x));
+            const t = String(y);
+            return i >= 1 && i <= t.length ? t[i - 1] : '';
+          }
+          case 'contiene':
+            return String(x).toLowerCase().includes(String(y).toLowerCase());
           case 'azar': {
             const p = Math.round(this.aNumero(x));
             const q = Math.round(this.aNumero(y));
@@ -587,6 +667,22 @@ export class Runtime {
         yield { k: 'espera', ms: seg * 1000 };
         break;
       }
+
+      // ----- Sensores con efecto -----
+      case 'sen_preguntar': {
+        // En "paso a paso" no se puede esperar a nadie: se responde en blanco.
+        if (this.modo === 'paso-a-paso') {
+          this.respuesta = '';
+          break;
+        }
+        this.preguntando = true;
+        this.oyentes.alPreguntar?.(this.txt(s, 'TEXTO', a));
+        while (this.preguntando && this.modo !== 'detenido') yield { k: 'cuadro' };
+        break;
+      }
+      case 'sen_reiniciar_temporizador':
+        this.inicioTemporizador = this.reloj;
+        break;
 
       // ----- Variables -----
       case 'var_fijar': {

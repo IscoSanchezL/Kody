@@ -1,9 +1,4 @@
-import {
-  onAuthStateChanged,
-  signInWithPopup,
-  signInWithRedirect,
-  signOut,
-} from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { create } from 'zustand';
 import { autenticacion, baseDatos, proveedorGoogle } from './cliente';
@@ -111,7 +106,10 @@ export const useSesion = create<EstadoSesion>((set, get) => ({
     const problema = validarApodo(limpio);
     if (problema) return problema;
     try {
-      await setDoc(doc(baseDatos(), 'usuarios', perfil.id), { apodo: limpio, avatar: perfil.avatar });
+      await setDoc(doc(baseDatos(), 'usuarios', perfil.id), {
+        apodo: limpio,
+        avatar: perfil.avatar,
+      });
     } catch {
       return 'No se pudo guardar tu apodo. Inténtalo otra vez.';
     }

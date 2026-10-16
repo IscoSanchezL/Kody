@@ -1,4 +1,4 @@
-import type { Expr, OpBinaria, Programa, Sentencia } from './tipos';
+import type { Expr, OpBinaria, OpUnaria, Programa, Sentencia } from './tipos';
 
 /**
  * Compilador: JSON de Blockly (serialization.workspaces.save) -> programas.
@@ -42,11 +42,21 @@ const BINARIOS: Record<string, OpBinaria> = {
   op_y: 'y',
   op_o: 'o',
   op_aleatorio: 'azar',
+  op_resto: 'resto',
+  op_unir: 'unir',
+  op_contiene_texto: 'contiene',
+};
+
+const UNARIOS: Record<string, OpUnaria> = {
+  op_redondear: 'redondear',
+  op_longitud_texto: 'longitud',
 };
 
 /** Convierte un bloque de valor en una expresión. */
 function compilarExpr(b: BloqueJSON | undefined): Expr {
   if (!b) return { tipo: 'num', valor: 0 };
+  const un = UNARIOS[b.type];
+  if (un) return { tipo: 'un', op: un, a: compilarEntrada(b, 'A') };
   const op = BINARIOS[b.type];
   if (op) {
     // op_aleatorio usa DESDE/HASTA; los demás usan A/B
@@ -72,6 +82,33 @@ function compilarExpr(b: BloqueJSON | undefined): Expr {
       return { tipo: 'sensor', nombre: 'y' };
     case 'sen_dir':
       return { tipo: 'sensor', nombre: 'dir' };
+    case 'op_funcion':
+      return {
+        tipo: 'un',
+        op: (['abs', 'raiz', 'piso', 'techo', 'sen', 'cos'].includes(String(b.fields?.FUNC))
+          ? b.fields?.FUNC
+          : 'abs') as OpUnaria,
+        a: compilarEntrada(b, 'A'),
+      };
+    case 'op_letra':
+      return {
+        tipo: 'bin',
+        op: 'letra',
+        a: compilarEntrada(b, 'N'),
+        b: compilarEntrada(b, 'TEXTO'),
+      };
+    case 'sen_respuesta':
+      return { tipo: 'sensor', nombre: 'respuesta' };
+    case 'sen_raton_x':
+      return { tipo: 'sensor', nombre: 'raton-x' };
+    case 'sen_raton_y':
+      return { tipo: 'sensor', nombre: 'raton-y' };
+    case 'sen_raton_abajo':
+      return { tipo: 'sensor', nombre: 'raton-abajo' };
+    case 'sen_temporizador':
+      return { tipo: 'sensor', nombre: 'temporizador' };
+    case 'sen_distancia':
+      return { tipo: 'sensor', nombre: 'distancia', param: String(b.fields?.ACTOR ?? '') };
     case 'var_valor':
       return { tipo: 'var', nombre: String(b.fields?.VAR ?? '') };
     case 'lis_valor':

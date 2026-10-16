@@ -28,6 +28,8 @@ export const runtime = new Runtime({
   alActivarBloques: resaltar,
   alAviso: (m) => useApp.getState().decir(m),
   alCambiarMonitores: (m) => useApp.getState().setMonitores(m),
+  alPreguntar: (t) => useApp.getState().setPregunta(t),
+  alTerminarPregunta: () => useApp.getState().setPregunta(null),
   alSonido: (tipo, dato, seg) => {
     if (tipo === 'sonido') tocarEfecto(String(dato));
     else tocarNota(Number(dato), seg);
@@ -65,6 +67,15 @@ useProyecto.subscribe((s) => {
   }
   sincronizar();
 });
+
+// El ratón: el runtime lee su posición sobre el escenario y si está presionado.
+useApp.subscribe((s, antes) => {
+  if (s.puntero && s.puntero !== antes.puntero) runtime.fijarRaton(s.puntero.x, s.puntero.y);
+});
+export const ratonAbajo = (abajo: boolean) => runtime.fijarRatonAbajo(abajo);
+
+/** Entrega la respuesta escrita a una pregunta del programa. */
+export const responderPregunta = (texto: string) => runtime.responder(texto);
 
 // ------------------------------------------------------------- Editor
 

@@ -35,6 +35,9 @@ interface EstadoApp {
   /** Variables y listas visibles sobre el escenario mientras corre el programa. */
   monitores: Monitores;
   setMonitores: (m: Monitores) => void;
+  /** Pregunta abierta de "preguntar ... y esperar" (null = ninguna). */
+  pregunta: string | null;
+  setPregunta: (p: string | null) => void;
   /** Ventana de la biblioteca de personajes. */
   bibliotecaAbierta: boolean;
   /** Posición del puntero sobre el escenario (null si está fuera). */
@@ -101,6 +104,8 @@ export const useApp = create<EstadoApp>((set, get) => ({
   abrirDatos: (datosDialogo) => set({ datosDialogo }),
   monitores: { variables: [], listas: [] },
   setMonitores: (monitores) => set({ monitores }),
+  pregunta: null,
+  setPregunta: (pregunta) => set({ pregunta }),
   bibliotecaAbierta: false,
   puntero: null,
   setPanel: (panel) => set({ panel }),

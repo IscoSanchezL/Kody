@@ -61,6 +61,14 @@ const contenido: Partial<Record<IdCategoria, object[]>> = {
     bloque('sen_x'),
     bloque('sen_y'),
     bloque('sen_dir'),
+    bloque('sen_distancia'),
+    bloque('sen_raton_x'),
+    bloque('sen_raton_y'),
+    bloque('sen_raton_abajo'),
+    bloque('sen_preguntar', { TEXTO: t('¿Cómo te llamas?') }),
+    bloque('sen_respuesta'),
+    bloque('sen_temporizador'),
+    bloque('sen_reiniciar_temporizador'),
   ],
   operadores: [
     bloque('op_suma', { A: n(1), B: n(1) }),
@@ -74,6 +82,13 @@ const contenido: Partial<Record<IdCategoria, object[]>> = {
     bloque('op_y'),
     bloque('op_o'),
     bloque('op_no'),
+    bloque('op_resto', { A: n(10), B: n(3) }),
+    bloque('op_redondear', { A: n(3.6) }),
+    bloque('op_funcion', { A: n(16) }),
+    bloque('op_unir', { A: t('hola '), B: t('mundo') }),
+    bloque('op_letra', { N: n(1), TEXTO: t('Kody') }),
+    bloque('op_longitud_texto', { A: t('Kody') }),
+    bloque('op_contiene_texto', { A: t('Kody'), B: t('K') }),
   ],
 };
 

@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Monitores } from './Monitores';
+import { PreguntaEscenario } from './PreguntaEscenario';
 import { Escenario, type PuenteEscenario } from '../stage/Escenario';
-import { clicEnActor, runtime } from '../store/controlador';
+import { clicEnActor, ratonAbajo, runtime } from '../store/controlador';
 import { useProyecto } from '../store/proyecto';
 import { useApp } from '../store/useApp';
 import { seleccionarActor } from '../store/controlador';
@@ -77,9 +78,16 @@ export function PanelEscenario() {
   };
 
   return (
-    <div ref={envoltorio} className="escenario-wrap tarjeta relative w-full overflow-hidden">
+    <div
+      ref={envoltorio}
+      className="escenario-wrap tarjeta relative w-full overflow-hidden"
+      onPointerDown={() => ratonAbajo(true)}
+      onPointerUp={() => ratonAbajo(false)}
+      onPointerLeave={() => ratonAbajo(false)}
+    >
       <div ref={host} className="escenario-host relative w-full" style={{ aspectRatio: '4 / 3' }} />
       <Monitores />
+      <PreguntaEscenario />
       <div className="absolute right-2 top-2 flex gap-1.5">
         <button
           type="button"

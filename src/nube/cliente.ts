@@ -17,6 +17,9 @@ export const baseDatos = (): Firestore => getFirestore(iniciar());
 
 export function proveedorGoogle(): GoogleAuthProvider {
   const p = new GoogleAuthProvider();
-  p.setCustomParameters({ prompt: 'select_account', ...(GOOGLE_DOMINIO ? { hd: GOOGLE_DOMINIO } : {}) });
+  p.setCustomParameters({
+    prompt: 'select_account',
+    ...(GOOGLE_DOMINIO ? { hd: GOOGLE_DOMINIO } : {}),
+  });
   return p;
 }

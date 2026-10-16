@@ -346,6 +346,122 @@ const bloques = [
     tooltip: 'Elige un número al azar.',
   },
   {
+    type: 'sen_preguntar',
+    message0: 'preguntar %1 y esperar',
+    args0: [txt('TEXTO')],
+    ...pila,
+    style: 'sensores',
+    tooltip: 'Hace una pregunta y espera lo que escribas. La respuesta queda en "respuesta".',
+  },
+  {
+    type: 'sen_respuesta',
+    message0: 'respuesta',
+    output: 'String',
+    style: 'sensores',
+    tooltip: 'Lo último que se escribió al preguntar.',
+  },
+  {
+    type: 'sen_raton_x',
+    message0: 'ratón x',
+    output: 'Number',
+    style: 'sensores',
+    tooltip: 'Dónde está el ratón, de lado a lado.',
+  },
+  {
+    type: 'sen_raton_y',
+    message0: 'ratón y',
+    output: 'Number',
+    style: 'sensores',
+    tooltip: 'Dónde está el ratón, de arriba a abajo.',
+  },
+  {
+    type: 'sen_raton_abajo',
+    message0: '¿ratón presionado?',
+    output: 'Boolean',
+    style: 'sensores',
+    tooltip: 'Es verdadero mientras mantienes presionado el ratón sobre el escenario.',
+  },
+  {
+    type: 'sen_temporizador',
+    message0: 'temporizador',
+    output: 'Number',
+    style: 'sensores',
+    tooltip: 'Segundos desde que empezó el programa (o desde que lo reiniciaste).',
+  },
+  {
+    type: 'sen_reiniciar_temporizador',
+    message0: 'reiniciar temporizador',
+    ...pila,
+    style: 'sensores',
+    tooltip: 'Vuelve el temporizador a 0.',
+  },
+  {
+    type: 'op_unir',
+    message0: 'unir %1 con %2',
+    args0: [cualquiera('A'), cualquiera('B')],
+    output: 'String',
+    style: 'operadores',
+    tooltip: 'Junta dos textos (o números) en uno.',
+  },
+  {
+    type: 'op_letra',
+    message0: 'letra %1 de %2',
+    args0: [num('N'), txt('TEXTO')],
+    output: 'String',
+    style: 'operadores',
+    tooltip: 'La letra que está en ese lugar. La primera es la 1.',
+  },
+  {
+    type: 'op_longitud_texto',
+    message0: 'longitud de %1',
+    args0: [txt('A')],
+    output: 'Number',
+    style: 'operadores',
+    tooltip: 'Cuántas letras tiene un texto.',
+  },
+  {
+    type: 'op_contiene_texto',
+    message0: '%1 contiene %2 ?',
+    args0: [txt('A'), txt('B')],
+    output: 'Boolean',
+    style: 'operadores',
+    tooltip: '¿El primer texto tiene al segundo adentro?',
+  },
+  {
+    type: 'op_resto',
+    message0: 'resto de %1 ÷ %2',
+    args0: [num('A'), num('B')],
+    output: 'Number',
+    style: 'operadores',
+    tooltip: 'Lo que sobra al dividir. Sirve para saber si un número es par.',
+  },
+  {
+    type: 'op_redondear',
+    message0: 'redondear %1',
+    args0: [num('A')],
+    output: 'Number',
+    style: 'operadores',
+    tooltip: 'Quita los decimales al número más cercano.',
+  },
+  {
+    type: 'op_funcion',
+    message0: '%1 de %2',
+    args0: [
+      lista('FUNC', [
+        ['valor absoluto', 'abs'],
+        ['raíz cuadrada', 'raiz'],
+        ['piso', 'piso'],
+        ['techo', 'techo'],
+        ['seno', 'sen'],
+        ['coseno', 'cos'],
+      ]),
+      num('A'),
+    ],
+    output: 'Number',
+    style: 'operadores',
+    tooltip: 'Operaciones matemáticas de uso común.',
+  },
+  {
     type: 'cmp_mayor',
     message0: '%1 > %2',
     args0: [cualquiera('A'), cualquiera('B')],
@@ -611,6 +727,23 @@ export function registrarBloques() {
     'La muestra en el escenario.',
   );
   bloqueDato('lis_ocultar', 'listas', ['ocultar lista', L()], 'pila', 'La esconde del escenario.');
+
+  Blockly.Blocks['sen_distancia'] = {
+    init(this: Blockly.Block) {
+      this.appendDummyInput()
+        .appendField('distancia a')
+        .appendField(
+          new Blockly.FieldDropdown(() => [
+            ['puntero del ratón', '__raton__'],
+            ...proveedorActores(),
+          ]),
+          'ACTOR',
+        );
+      this.setOutput(true, 'Number');
+      this.setStyle('sensores');
+      this.setTooltip('Qué tan lejos está del ratón o de otro actor.');
+    },
+  };
 
   Blockly.Blocks['sen_tocando'] = {
     init(this: Blockly.Block) {
