@@ -26,6 +26,84 @@ export interface Proyecto {
   /** JSON de Blockly de cada actor, por id. */
   scripts: Record<string, object>;
   seleccionado: string;
+  /** Variables y listas del proyecto (valen para todos los actores). */
+  variables: string[];
+  listas: string[];
+}
+
+export const MAX_DATOS = 30;
+export const MAX_LARGO_NOMBRE_DATO = 20;
+
+/** Valida el nombre de una variable o lista nueva. Devuelve un mensaje o null si está bien. */
+export function validarNombreDato(nombre: string, existentes: string[]): string | null {
+  const n = nombre.trim().replace(/\s+/g, ' ');
+  if (n.length < 1) return 'Escribe un nombre.';
+  if (n.length > MAX_LARGO_NOMBRE_DATO) return `Máximo ${MAX_LARGO_NOMBRE_DATO} letras.`;
+  if (existentes.some((e) => e.toLowerCase() === n.toLowerCase())) return 'Ya existe ese nombre.';
+  if (existentes.length >= MAX_DATOS) return `Máximo ${MAX_DATOS}. Borra alguno para crear otro.`;
+  return null;
+}
+
+export const limpiarNombreDato = (nombre: string) => nombre.trim().replace(/\s+/g, ' ');
+
+function validarNombres(entrada: unknown): string[] {
+  if (!Array.isArray(entrada)) return [];
+  const nombres: string[] = [];
+  for (const x of entrada) {
+    if (typeof x !== 'string') continue;
+    const n = limpiarNombreDato(x).slice(0, MAX_LARGO_NOMBRE_DATO);
+    if (n && !nombres.some((e) => e.toLowerCase() === n.toLowerCase())) nombres.push(n);
+    if (nombres.length >= MAX_DATOS) break;
+  }
+  return nombres;
+}
+
+interface BloqueGuardado {
+  type?: string;
+  fields?: Record<string, unknown>;
+  inputs?: Record<string, { block?: BloqueGuardado; shadow?: BloqueGuardado }>;
+  next?: { block?: BloqueGuardado };
+}
+
+/**
+ * Quita de un programa guardado todos los bloques que usan una variable o lista
+ * (`campo` = 'VAR' o 'LISTA'). Un bloque de pila se salta y el resto de la pila queda unido;
+ * un bloque de valor desaparece de su casilla. Devuelve una copia; no cambia la entrada.
+ */
+export function quitarUsosDeDato(script: object, campo: 'VAR' | 'LISTA', nombre: string): object {
+  const copia = JSON.parse(JSON.stringify(script)) as {
+    blocks?: { blocks?: BloqueGuardado[] };
+  };
+  const usa = (b: BloqueGuardado) => b.fields?.[campo] === nombre;
+
+  const dentro = (b: BloqueGuardado) => {
+    for (const [nom, e] of Object.entries(b.inputs ?? {})) {
+      if (!e.block) continue;
+      if (nom.startsWith('CUERPO')) {
+        const resto = cadena(e.block);
+        if (resto) e.block = resto;
+        else delete e.block;
+      } else if (usa(e.block)) delete e.block;
+      else dentro(e.block);
+    }
+  };
+  function cadena(primero: BloqueGuardado | undefined): BloqueGuardado | undefined {
+    let b = primero;
+    while (b && usa(b)) b = b.next?.block;
+    if (!b) return undefined;
+    dentro(b);
+    const sig = cadena(b.next?.block);
+    if (sig) b.next = { block: sig };
+    else delete b.next;
+    return b;
+  }
+
+  const raices = copia.blocks?.blocks;
+  if (raices)
+    copia.blocks!.blocks = raices
+      .map((r) => (usa(r) ? null : cadena(r)))
+      .filter(Boolean) as BloqueGuardado[];
+  return copia;
 }
 
 export const SCRIPT_VACIO = { blocks: { languageVersion: 0, blocks: [] } };
@@ -146,5 +224,7 @@ export function validarProyecto(entrada: unknown): Proyecto | null {
     seleccionado: actores.some((a) => a.id === o.seleccionado)
       ? String(o.seleccionado)
       : actores[0].id,
+    variables: validarNombres(o.variables),
+    listas: validarNombres(o.listas),
   };
 }

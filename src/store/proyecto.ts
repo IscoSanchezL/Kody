@@ -5,6 +5,9 @@ import {
   MAX_ACTORES,
   SCRIPT_VACIO,
   crearActor,
+  limpiarNombreDato,
+  quitarUsosDeDato,
+  validarNombreDato,
   validarProyecto,
   type ActorProyecto,
   type Proyecto,
@@ -27,6 +30,8 @@ export function proyectoInicial(): Proyecto {
     fondo: 'pradera',
     scripts: { kody: scriptEjemplo },
     seleccionado: 'kody',
+    variables: [],
+    listas: [],
   };
 }
 
@@ -60,6 +65,9 @@ interface EstadoProyecto extends Proyecto {
   fijarFondo: (id: string) => void;
   guardarScript: (id: string, json: object) => void;
   reemplazar: (p: Proyecto) => void;
+  /** Crean o borran variables y listas; devuelven un mensaje si no se pudo (o null). */
+  crearDato: (tipo: 'variable' | 'lista', nombre: string) => string | null;
+  borrarDato: (tipo: 'variable' | 'lista', nombre: string) => void;
 }
 
 export const useProyecto = create<EstadoProyecto>((set, get) => ({
@@ -94,12 +102,35 @@ export const useProyecto = create<EstadoProyecto>((set, get) => ({
   fijarFondo: (fondo) => set({ fondo }),
   guardarScript: (id, json) => set((s) => ({ scripts: { ...s.scripts, [id]: json } })),
   reemplazar: (p) => set((s) => ({ ...p, revision: s.revision + 1 })),
+  crearDato: (tipo, nombre) => {
+    const clave = tipo === 'variable' ? 'variables' : 'listas';
+    const problema = validarNombreDato(nombre, get()[clave]);
+    if (problema) return problema;
+    set((s) => ({ [clave]: [...s[clave], limpiarNombreDato(nombre)] }) as Partial<EstadoProyecto>);
+    return null;
+  },
+  borrarDato: (tipo, nombre) => {
+    const clave = tipo === 'variable' ? 'variables' : 'listas';
+    const campo = tipo === 'variable' ? 'VAR' : 'LISTA';
+    set((s) => {
+      const scripts: Record<string, object> = {};
+      for (const [id, js] of Object.entries(s.scripts))
+        scripts[id] = quitarUsosDeDato(js, campo, nombre);
+      return {
+        [clave]: s[clave].filter((n) => n !== nombre),
+        scripts,
+        // El editor recarga los bloques para que ya no aparezcan los que se quitaron.
+        revision: s.revision + 1,
+      } as Partial<EstadoProyecto>;
+    });
+  },
 }));
 
 /** Lo que se guarda y se exporta (sin funciones). */
 export function instantanea(): Proyecto {
-  const { version, actores, fondo, scripts, seleccionado } = useProyecto.getState();
-  return { version, actores, fondo, scripts, seleccionado };
+  const { version, actores, fondo, scripts, seleccionado, variables, listas } =
+    useProyecto.getState();
+  return { version, actores, fondo, scripts, seleccionado, variables, listas };
 }
 
 /** Escribe el proyecto en el almacenamiento del navegador ahora mismo. */

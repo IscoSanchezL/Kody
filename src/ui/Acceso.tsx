@@ -76,9 +76,9 @@ export function Acceso() {
           Seguir sin cuenta
         </button>
         <p className="m-0 text-xs font-bold text-[var(--texto-suave)]">
-          Sin cuenta, tus proyectos solo quedan en este navegador. Con cuenta los guardas en la
-          nube y puedes abrirlos en cualquier computador. Kody solo muestra tu apodo, nunca tu
-          correo ni tu nombre.
+          Sin cuenta, tus proyectos solo quedan en este navegador. Con cuenta los guardas en la nube
+          y puedes abrirlos en cualquier computador. Kody solo muestra tu apodo, nunca tu correo ni
+          tu nombre.
         </p>
         {error && (
           <p

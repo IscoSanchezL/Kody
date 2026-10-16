@@ -27,6 +27,7 @@ function resaltar(ids: string[]) {
 export const runtime = new Runtime({
   alActivarBloques: resaltar,
   alAviso: (m) => useApp.getState().decir(m),
+  alCambiarMonitores: (m) => useApp.getState().setMonitores(m),
   alSonido: (tipo, dato, seg) => {
     if (tipo === 'sonido') tocarEfecto(String(dato));
     else tocarNota(Number(dato), seg);
@@ -91,6 +92,16 @@ export function clicEnActor(id: string) {
   runtime.clicActor(id);
 }
 
+/** Borra una variable o lista y todos los bloques que la usaban (en todos los actores). */
+export function borrarDato(tipo: 'variable' | 'lista', nombre: string) {
+  guardarScriptActual();
+  if (runtime.modo !== 'detenido') {
+    detenidoAMano = true;
+    runtime.detener();
+  }
+  useProyecto.getState().borrarDato(tipo, nombre);
+}
+
 export function deshacer(rehacer = false) {
   espacio?.undo(rehacer);
 }
@@ -100,7 +111,7 @@ export function deshacer(rehacer = false) {
 /** Compila los programas de todos los actores y los ejecuta. */
 export function ejecutar(paso = false) {
   guardarScriptActual();
-  const { actores, scripts } = useProyecto.getState();
+  const { actores, scripts, variables, listas } = useProyecto.getState();
   const porActor: Record<string, Programa[]> = {};
   let total = 0;
   for (const a of actores) {
@@ -115,7 +126,7 @@ export function ejecutar(paso = false) {
   }
   detenidoAMano = false;
   sonidoInicio();
-  runtime.iniciar(porActor, paso);
+  runtime.iniciar(porActor, paso, { variables, listas });
   const escucha = runtime.escuchando;
   useApp
     .getState()

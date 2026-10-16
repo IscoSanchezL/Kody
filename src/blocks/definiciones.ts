@@ -411,6 +411,74 @@ export function configurarActores(fn: () => [string, string][]) {
   proveedorActores = fn;
 }
 
+/** Quién da los nombres de variables y listas del proyecto (los configura la aplicación). */
+let proveedorDatos = {
+  variables: (): string[] => [],
+  listas: (): string[] => [],
+};
+export function configurarDatos(p: typeof proveedorDatos) {
+  proveedorDatos = p;
+}
+export const nombresDe = (tipo: 'variable' | 'lista') =>
+  tipo === 'variable' ? proveedorDatos.variables() : proveedorDatos.listas();
+
+type Parte =
+  | string
+  | { dato: 'variable' | 'lista'; name: string }
+  | { entrada: string; check?: string | string[] };
+
+const VACIO: [string, string] = ['(crea una primero)', ''];
+
+/** Define un bloque que mezcla texto, nombres de variables/listas y casillas para encajar valores. */
+function bloqueDato(
+  tipo: string,
+  estilo: 'variables' | 'listas',
+  partes: Parte[],
+  forma: 'pila' | 'numero' | 'texto' | 'logico',
+  ayuda: string,
+) {
+  Blockly.Blocks[tipo] = {
+    init(this: Blockly.Block) {
+      type Pendiente = { campo: string | Blockly.Field; nombre?: string };
+      let pendientes: Pendiente[] = [];
+      const poner = (entrada: Blockly.Input) => {
+        for (const f of pendientes) entrada.appendField(f.campo as never, f.nombre);
+        pendientes = [];
+      };
+      for (const p of partes) {
+        if (typeof p === 'string') pendientes.push({ campo: p });
+        else if ('dato' in p) {
+          const quien = p.dato;
+          pendientes.push({
+            nombre: p.name,
+            campo: new Blockly.FieldDropdown(() => {
+              const o = nombresDe(quien).map((n): [string, string] => [n, n]);
+              return o.length ? o : [VACIO];
+            }),
+          });
+        } else {
+          const entrada = this.appendValueInput(p.entrada);
+          if (p.check) entrada.setCheck(p.check);
+          poner(entrada);
+        }
+      }
+      if (pendientes.length) poner(this.appendDummyInput());
+      this.setInputsInline(true);
+      if (forma === 'pila') {
+        this.setPreviousStatement(true);
+        this.setNextStatement(true);
+      } else {
+        this.setOutput(
+          true,
+          forma === 'numero' ? ['Number', 'String'] : forma === 'logico' ? 'Boolean' : 'String',
+        );
+      }
+      this.setStyle(estilo);
+      this.setTooltip(ayuda);
+    },
+  };
+}
+
 let registrado = false;
 
 /** Registra todos los bloques (idempotente). */
@@ -437,6 +505,112 @@ export function registrarBloques() {
     args0: [lista('MENSAJE', MENSAJES)],
     tooltip: 'Se ejecuta cuando otro actor envía ese mensaje.',
   });
+
+  const V = (name = 'VAR') => ({ dato: 'variable' as const, name });
+  const L = (name = 'LISTA') => ({ dato: 'lista' as const, name });
+  const e = (entrada: string, check?: string | string[]) => ({ entrada, check });
+  const ANY = ['Number', 'String'];
+  bloqueDato('var_valor', 'variables', [V()], 'numero', 'El valor de la variable.');
+  bloqueDato(
+    'var_fijar',
+    'variables',
+    ['fijar', V(), 'a', e('VALOR', ANY)],
+    'pila',
+    'Guarda un valor en la variable.',
+  );
+  bloqueDato(
+    'var_cambiar',
+    'variables',
+    ['cambiar', V(), 'en', e('N', 'Number')],
+    'pila',
+    'Suma (o resta) a la variable.',
+  );
+  bloqueDato(
+    'var_mostrar',
+    'variables',
+    ['mostrar variable', V()],
+    'pila',
+    'La muestra en el escenario.',
+  );
+  bloqueDato(
+    'var_ocultar',
+    'variables',
+    ['ocultar variable', V()],
+    'pila',
+    'La esconde del escenario.',
+  );
+  bloqueDato(
+    'lis_valor',
+    'listas',
+    [L()],
+    'texto',
+    'Todos los elementos de la lista, separados por espacios.',
+  );
+  bloqueDato(
+    'lis_agregar',
+    'listas',
+    ['agregar', e('ITEM', ANY), 'a', L()],
+    'pila',
+    'Pone un elemento al final de la lista.',
+  );
+  bloqueDato(
+    'lis_borrar',
+    'listas',
+    ['borrar el elemento', e('N', 'Number'), 'de', L()],
+    'pila',
+    'Quita un elemento de la lista.',
+  );
+  bloqueDato('lis_borrar_todo', 'listas', ['borrar todo de', L()], 'pila', 'Deja la lista vacía.');
+  bloqueDato(
+    'lis_insertar',
+    'listas',
+    ['insertar', e('ITEM', ANY), 'en la posición', e('N', 'Number'), 'de', L()],
+    'pila',
+    'Mete un elemento en un lugar de la lista.',
+  );
+  bloqueDato(
+    'lis_reemplazar',
+    'listas',
+    ['reemplazar el elemento', e('N', 'Number'), 'de', L(), 'con', e('ITEM', ANY)],
+    'pila',
+    'Cambia un elemento de la lista.',
+  );
+  bloqueDato(
+    'lis_elemento',
+    'listas',
+    ['elemento', e('N', 'Number'), 'de', L()],
+    'numero',
+    'Lee un elemento. El primero es el 1.',
+  );
+  bloqueDato(
+    'lis_posicion',
+    'listas',
+    ['posición de', e('ITEM', ANY), 'en', L()],
+    'numero',
+    'Dice en qué lugar está (0 si no está).',
+  );
+  bloqueDato(
+    'lis_longitud',
+    'listas',
+    ['longitud de', L()],
+    'numero',
+    'Cuántos elementos tiene la lista.',
+  );
+  bloqueDato(
+    'lis_contiene',
+    'listas',
+    [L(), 'contiene', e('ITEM', ANY)],
+    'logico',
+    '¿Está ese elemento en la lista?',
+  );
+  bloqueDato(
+    'lis_mostrar',
+    'listas',
+    ['mostrar lista', L()],
+    'pila',
+    'La muestra en el escenario.',
+  );
+  bloqueDato('lis_ocultar', 'listas', ['ocultar lista', L()], 'pila', 'La esconde del escenario.');
 
   Blockly.Blocks['sen_tocando'] = {
     init(this: Blockly.Block) {

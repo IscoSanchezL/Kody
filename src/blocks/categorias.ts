@@ -15,6 +15,7 @@ export const CATEGORIAS = {
   sensores: { id: 'sensores', nombre: 'Sensores', icono: '👀', color: '#0891b2' },
   operadores: { id: 'operadores', nombre: 'Operadores', icono: '🧮', color: '#16a34a' },
   variables: { id: 'variables', nombre: 'Variables', icono: '📦', color: '#dc2626' },
+  listas: { id: 'listas', nombre: 'Listas', icono: '📋', color: '#be123c' },
   mis_bloques: { id: 'mis_bloques', nombre: 'Mis bloques', icono: '🧩', color: '#c026d3' },
 } as const satisfies Record<string, Categoria>;
 

@@ -29,6 +29,8 @@ export interface EstadoActor {
 }
 
 export type OpBinaria = '+' | '-' | '*' | '/' | '>' | '<' | '=' | 'y' | 'o' | 'azar';
+/** Lo que un bloque de valor puede preguntarle a una lista. */
+export type OpLista = 'texto' | 'elemento' | 'posicion' | 'longitud' | 'contiene';
 export type NombreSensor = 'tecla' | 'borde' | 'tocando' | 'x' | 'y' | 'dir';
 
 /** Expresión (valor) ya compilada. */
@@ -37,7 +39,9 @@ export type Expr =
   | { tipo: 'txt'; valor: string }
   | { tipo: 'bin'; op: OpBinaria; a: Expr; b: Expr }
   | { tipo: 'no'; a: Expr }
-  | { tipo: 'sensor'; nombre: NombreSensor; param?: string };
+  | { tipo: 'sensor'; nombre: NombreSensor; param?: string }
+  | { tipo: 'var'; nombre: string }
+  | { tipo: 'lis'; op: OpLista; lista: string; a?: Expr };
 
 /** Sentencia (bloque apilable) ya compilada. */
 export interface Sentencia {
@@ -48,6 +52,18 @@ export interface Sentencia {
   entradas: Record<string, Expr>;
   /** Cuerpos de bloques en forma de "C" (repetir, si, por siempre...). */
   hijos: Record<string, Sentencia[]>;
+}
+
+/** Variables y listas que declara el proyecto (todas son para todos los actores). */
+export interface DatosProyecto {
+  variables: string[];
+  listas: string[];
+}
+
+/** Lo que se muestra en el escenario: variables y listas con su monitor visible. */
+export interface Monitores {
+  variables: { nombre: string; valor: number | string }[];
+  listas: { nombre: string; valores: (number | string)[] }[];
 }
 
 /** Un programa = un bloque sombrero + la pila que cuelga de él. */
@@ -72,6 +88,8 @@ export interface Oyentes {
   alCambiarModo?: (modo: ModoEjecucion) => void;
   /** Un bloque pidió un sonido o una nota. */
   alSonido?: (tipo: 'sonido' | 'nota', dato: string | number, segundos: number) => void;
+  /** Cambiaron las variables o listas que están visibles en el escenario. */
+  alCambiarMonitores?: (m: Monitores) => void;
   /** Un bloque cambió el escenario. */
   alCambiarFondo?: (id: string) => void;
 }

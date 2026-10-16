@@ -51,6 +51,11 @@ Kody **no se puede abrir haciendo doble clic en `index.html`** de la carpeta del
 
 El escenario se puede ver en **3D** (por defecto) o en 2D con el botón `3D / 2D` del escenario. En 3D los actores son modelos construidos con formas simples (Three.js, sin descargar archivos) que respiran, se inclinan al moverse y giran hacia donde miran; el fondo pintado queda detrás como en un teatro de títeres, y la cámara se balancea suavemente con el puntero (se desactiva si el sistema pide reducir movimiento). Las coordenadas `x` e `y` significan lo mismo que en 2D. Si el equipo no puede mostrar 3D, Kody vuelve solo al 2D.
 
+## Fase 3 (en curso)
+
+- **Variables** 📦 (crear, borrar, fijar, cambiar, mostrar y ocultar en el escenario) y **Listas** 📋 (agregar, borrar, insertar, reemplazar, elemento, posición, longitud, contiene, mostrar). Valen para todos los actores, se guardan con el proyecto y se reinician al ejecutar. Al borrar una, se quitan también los bloques que la usaban.
+- Pendiente de la fase: "Mis bloques", sensores nuevos (preguntar, ratón, temporizador), operadores de texto, lápiz y clones.
+
 ## Qué incluía la Fase 1
 
 - Editor de bloques con **Blockly** (renderer `zelos`, redondeado como Scratch 3) y tema propio.

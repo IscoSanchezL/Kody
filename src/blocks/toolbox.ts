@@ -1,4 +1,5 @@
 import { CATEGORIAS, type IdCategoria } from './categorias';
+import { nombresDe } from './definiciones';
 
 /** Entrada numérica con "sombra": el niño puede escribir el número o encajar otro bloque. */
 const n = (valor: number) => ({ shadow: { type: 'math_number', fields: { NUM: valor } } });
@@ -10,6 +11,8 @@ const bloque = (type: string, inputs?: Record<string, unknown>) => ({
 });
 
 const contenido: Partial<Record<IdCategoria, object[]>> = {
+  variables: [],
+  listas: [],
   eventos: [
     bloque('evento_al_ejecutar'),
     bloque('evento_tecla'),
@@ -74,6 +77,64 @@ const contenido: Partial<Record<IdCategoria, object[]>> = {
   ],
 };
 
+const campo = (type: string, nombre: string, extra?: Record<string, unknown>) => ({
+  kind: 'block',
+  type,
+  fields: { [type.startsWith('var_') ? 'VAR' : 'LISTA']: nombre },
+  ...(extra ? { inputs: extra } : {}),
+});
+
+/** Bloques de la paleta "Variables": botones para crear/borrar y un bloque por cada variable. */
+export function contenidoVariables(): object[] {
+  const nombres = nombresDe('variable');
+  const botones = [
+    { kind: 'button', text: '➕ Crear una variable', callbackKey: 'KODY_CREAR_VARIABLE' },
+    ...(nombres.length
+      ? [{ kind: 'button', text: '🗑 Borrar una variable', callbackKey: 'KODY_BORRAR_VARIABLE' }]
+      : []),
+  ];
+  if (!nombres.length)
+    return [...botones, { kind: 'label', text: 'Crea una variable para guardar puntos, vidas...' }];
+  const p = nombres[0];
+  return [
+    ...botones,
+    ...nombres.map((n) => campo('var_valor', n)),
+    campo('var_fijar', p, { VALOR: n(0) }),
+    campo('var_cambiar', p, { N: n(1) }),
+    campo('var_mostrar', p),
+    campo('var_ocultar', p),
+  ];
+}
+
+/** Bloques de la paleta "Listas". */
+export function contenidoListas(): object[] {
+  const nombres = nombresDe('lista');
+  const botones = [
+    { kind: 'button', text: '➕ Crear una lista', callbackKey: 'KODY_CREAR_LISTA' },
+    ...(nombres.length
+      ? [{ kind: 'button', text: '🗑 Borrar una lista', callbackKey: 'KODY_BORRAR_LISTA' }]
+      : []),
+  ];
+  if (!nombres.length)
+    return [...botones, { kind: 'label', text: 'Crea una lista para guardar varios datos.' }];
+  const p = nombres[0];
+  return [
+    ...botones,
+    ...nombres.map((x) => campo('lis_valor', x)),
+    campo('lis_agregar', p, { ITEM: t('cosa') }),
+    campo('lis_borrar', p, { N: n(1) }),
+    campo('lis_borrar_todo', p),
+    campo('lis_insertar', p, { ITEM: t('cosa'), N: n(1) }),
+    campo('lis_reemplazar', p, { N: n(1), ITEM: t('cosa') }),
+    campo('lis_elemento', p, { N: n(1) }),
+    campo('lis_posicion', p, { ITEM: t('cosa') }),
+    campo('lis_longitud', p),
+    campo('lis_contiene', p, { ITEM: t('cosa') }),
+    campo('lis_mostrar', p),
+    campo('lis_ocultar', p),
+  ];
+}
+
 const ORDEN: IdCategoria[] = [
   'eventos',
   'movimiento',
@@ -82,6 +143,8 @@ const ORDEN: IdCategoria[] = [
   'control',
   'sensores',
   'operadores',
+  'variables',
+  'listas',
 ];
 
 /** Toolbox por categorías; solo muestra las que ya tienen bloques. */
@@ -93,7 +156,11 @@ export function crearToolbox(permitidas?: IdCategoria[]) {
       kind: 'category',
       name: `${CATEGORIAS[id].icono}  ${CATEGORIAS[id].nombre}`,
       categorystyle: id,
-      contents: contenido[id],
+      ...(id === 'variables'
+        ? { custom: 'KODY_VARIABLES' }
+        : id === 'listas'
+          ? { custom: 'KODY_LISTAS' }
+          : { contents: contenido[id] }),
     })),
   };
 }

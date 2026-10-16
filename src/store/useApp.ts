@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ModoEjecucion } from '../engine/tipos';
+import type { ModoEjecucion, Monitores } from '../engine/tipos';
 
 export type Tema = 'claro' | 'gris' | 'oscuro';
 
@@ -29,6 +29,12 @@ interface EstadoApp {
   apodoAbierto: boolean;
   nombreAbierto: boolean;
   abrirVentana: (v: 'acceso' | 'proyectos' | 'apodo' | 'nombre', abierta: boolean) => void;
+  /** Ventana para crear o borrar una variable o lista (null = cerrada). */
+  datosDialogo: { tipo: 'variable' | 'lista'; accion: 'crear' | 'borrar' } | null;
+  abrirDatos: (d: { tipo: 'variable' | 'lista'; accion: 'crear' | 'borrar' } | null) => void;
+  /** Variables y listas visibles sobre el escenario mientras corre el programa. */
+  monitores: Monitores;
+  setMonitores: (m: Monitores) => void;
   /** Ventana de la biblioteca de personajes. */
   bibliotecaAbierta: boolean;
   /** Posición del puntero sobre el escenario (null si está fuera). */
@@ -91,6 +97,10 @@ export const useApp = create<EstadoApp>((set, get) => ({
       apodoAbierto: v === 'apodo' ? abierta : false,
       nombreAbierto: v === 'nombre' ? abierta : false,
     }),
+  datosDialogo: null,
+  abrirDatos: (datosDialogo) => set({ datosDialogo }),
+  monitores: { variables: [], listas: [] },
+  setMonitores: (monitores) => set({ monitores }),
   bibliotecaAbierta: false,
   puntero: null,
   setPanel: (panel) => set({ panel }),

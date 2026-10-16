@@ -1,8 +1,10 @@
 import type {
   Cesion,
+  DatosProyecto,
   EstadoActor,
   Expr,
   ModoEjecucion,
+  Monitores,
   Oyentes,
   Programa,
   Sentencia,
@@ -16,6 +18,9 @@ const normalizar = (g: number) => {
   const r = ((((g + 180) % 360) + 360) % 360) - 180;
   return r === -180 ? 180 : r;
 };
+/** Una lista no puede crecer sin freno (protege la memoria del equipo). */
+export const MAX_ELEMENTOS_LISTA = 1000;
+const MAX_TEXTO = 500;
 const limitarNumero = (n: number) => (Number.isFinite(n) ? n : 0);
 
 type Valor = number | string | boolean;
@@ -56,6 +61,11 @@ export class Runtime {
   fondo = '';
   private fondoInicial = '';
   private aleatorio: () => number;
+  // Variables y listas (para todos los actores). Solo existen las que declara el proyecto.
+  private variables = new Map<string, number | string>();
+  private listas = new Map<string, (number | string)[]>();
+  private visibles = new Set<string>();
+  private datosSucios = false;
 
   constructor(
     private oyentes: Oyentes = {},
@@ -106,9 +116,14 @@ export class Runtime {
   }
 
   /** Inicia la ejecución con los programas de cada actor (por id). */
-  iniciar(porActor: Record<string, Programa[]>, paso = false) {
+  iniciar(
+    porActor: Record<string, Programa[]>,
+    paso = false,
+    datos: DatosProyecto = { variables: [], listas: [] },
+  ) {
     this.detener();
     this.reiniciarEscena();
+    this.reiniciarDatos(datos);
     this.reloj = 0;
     this.teclas.clear();
     for (const [actorId, programas] of Object.entries(porActor)) {
@@ -120,6 +135,43 @@ export class Runtime {
     }
     this.cambiarModo(paso ? 'paso-a-paso' : 'corriendo');
     if (this.hilos.length === 0 && this.manejadores.length === 0) this.cambiarModo('detenido');
+  }
+
+  /** Deja las variables en 0 y las listas vacías, y oculta todos los monitores. */
+  private reiniciarDatos(datos: DatosProyecto) {
+    this.variables = new Map(datos.variables.map((n) => [n, 0]));
+    this.listas = new Map(datos.listas.map((n) => [n, []]));
+    this.visibles.clear();
+    this.datosSucios = true;
+    this.notificarDatos();
+  }
+
+  /** Variables y listas que hoy tienen su monitor visible. */
+  monitores(): Monitores {
+    return {
+      variables: [...this.variables]
+        .filter(([n]) => this.visibles.has(`v:${n}`))
+        .map(([nombre, valor]) => ({ nombre, valor })),
+      listas: [...this.listas]
+        .filter(([n]) => this.visibles.has(`l:${n}`))
+        .map(([nombre, valores]) => ({ nombre, valores: [...valores] })),
+    };
+  }
+
+  /** Avisa a la interfaz si algo visible cambió (como máximo una vez por fotograma). */
+  private notificarDatos() {
+    if (!this.datosSucios) return;
+    this.datosSucios = false;
+    this.oyentes.alCambiarMonitores?.(this.monitores());
+  }
+
+  /** Valor actual de una variable (para pruebas y para la interfaz). */
+  valorVariable(nombre: string): number | string | undefined {
+    return this.variables.get(nombre);
+  }
+
+  valoresLista(nombre: string): (number | string)[] | undefined {
+    return this.listas.get(nombre);
   }
 
   pausar() {
@@ -220,6 +272,7 @@ export class Runtime {
   private limpiarTerminados() {
     this.hilos = this.hilos.filter((h) => !h.terminado);
     this.avisarBloques();
+    this.notificarDatos();
     if (this.hilos.length === 0 && this.manejadores.length === 0 && this.modo !== 'detenido') {
       this.cambiarModo('detenido');
     }
@@ -316,6 +369,10 @@ export class Runtime {
         return !this.aBooleano(this.evaluar(e.a, a));
       case 'sensor':
         return this.sensor(e.nombre, e.param, a);
+      case 'var':
+        return this.variables.get(e.nombre) ?? 0;
+      case 'lis':
+        return this.consultarLista(e.lista, e.op, e.a ? this.evaluar(e.a, a) : 0);
       case 'bin': {
         const x = this.evaluar(e.a, a);
         const y = this.evaluar(e.b, a);
@@ -347,6 +404,31 @@ export class Runtime {
         }
       }
     }
+  }
+
+  /** Responde a "elemento n de", "posición de", "longitud de"... (las posiciones empiezan en 1). */
+  private consultarLista(nombre: string, op: string, dato: Valor): Valor {
+    const lista = this.listas.get(nombre) ?? [];
+    switch (op) {
+      case 'longitud':
+        return lista.length;
+      case 'elemento': {
+        const i = Math.floor(this.aNumero(dato));
+        return i >= 1 && i <= lista.length ? lista[i - 1] : '';
+      }
+      case 'posicion':
+        return lista.findIndex((x) => this.iguales(x, dato)) + 1;
+      case 'contiene':
+        return lista.some((x) => this.iguales(x, dato));
+      default:
+        return lista.join(' ');
+    }
+  }
+
+  /** Lo que se guarda en una variable o lista: número o texto (nunca un booleano). */
+  private aGuardable(v: Valor): number | string {
+    if (typeof v === 'boolean') return v ? 'true' : 'false';
+    return typeof v === 'string' ? v.slice(0, MAX_TEXTO) : limitarNumero(v);
   }
 
   private aNumero(v: Valor): number {
@@ -506,6 +588,82 @@ export class Runtime {
         break;
       }
 
+      // ----- Variables -----
+      case 'var_fijar': {
+        const n = s.campos.VAR ?? '';
+        const e = s.entradas.VALOR;
+        if (this.variables.has(n) && e) {
+          this.variables.set(n, this.aGuardable(this.evaluar(e, a)));
+          this.datosSucios = true;
+        }
+        break;
+      }
+      case 'var_cambiar': {
+        const n = s.campos.VAR ?? '';
+        if (this.variables.has(n)) {
+          const actual = this.aNumero(this.variables.get(n) ?? 0);
+          this.variables.set(n, limitarNumero(actual + this.num(s, 'N', a)));
+          this.datosSucios = true;
+        }
+        break;
+      }
+      case 'var_mostrar':
+      case 'var_ocultar':
+        this.cambiarMonitor(`v:${s.campos.VAR ?? ''}`, s.tipo === 'var_mostrar');
+        break;
+
+      // ----- Listas -----
+      case 'lis_agregar': {
+        const l = this.listas.get(s.campos.LISTA ?? '');
+        const e = s.entradas.ITEM;
+        if (l && e && l.length < MAX_ELEMENTOS_LISTA) {
+          l.push(this.aGuardable(this.evaluar(e, a)));
+          this.datosSucios = true;
+        }
+        break;
+      }
+      case 'lis_borrar': {
+        const l = this.listas.get(s.campos.LISTA ?? '');
+        const i = Math.floor(this.num(s, 'N', a));
+        if (l && i >= 1 && i <= l.length) {
+          l.splice(i - 1, 1);
+          this.datosSucios = true;
+        }
+        break;
+      }
+      case 'lis_borrar_todo': {
+        const l = this.listas.get(s.campos.LISTA ?? '');
+        if (l) {
+          l.length = 0;
+          this.datosSucios = true;
+        }
+        break;
+      }
+      case 'lis_insertar': {
+        const l = this.listas.get(s.campos.LISTA ?? '');
+        const e = s.entradas.ITEM;
+        const i = Math.floor(this.num(s, 'N', a));
+        if (l && e && i >= 1 && i <= l.length + 1 && l.length < MAX_ELEMENTOS_LISTA) {
+          l.splice(i - 1, 0, this.aGuardable(this.evaluar(e, a)));
+          this.datosSucios = true;
+        }
+        break;
+      }
+      case 'lis_reemplazar': {
+        const l = this.listas.get(s.campos.LISTA ?? '');
+        const e = s.entradas.ITEM;
+        const i = Math.floor(this.num(s, 'N', a));
+        if (l && e && i >= 1 && i <= l.length) {
+          l[i - 1] = this.aGuardable(this.evaluar(e, a));
+          this.datosSucios = true;
+        }
+        break;
+      }
+      case 'lis_mostrar':
+      case 'lis_ocultar':
+        this.cambiarMonitor(`l:${s.campos.LISTA ?? ''}`, s.tipo === 'lis_mostrar');
+        break;
+
       // ----- Eventos -----
       case 'ev_enviar':
         this.enviar(s.campos.MENSAJE ?? '');
@@ -548,6 +706,16 @@ export class Runtime {
         this.detener();
         return;
     }
+  }
+
+  private cambiarMonitor(clave: string, visible: boolean) {
+    const existe = clave.startsWith('v:')
+      ? this.variables.has(clave.slice(2))
+      : this.listas.has(clave.slice(2));
+    if (!existe) return;
+    if (visible) this.visibles.add(clave);
+    else this.visibles.delete(clave);
+    this.datosSucios = true;
   }
 
   /**

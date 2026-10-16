@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { Monitores } from './Monitores';
 import { Escenario, type PuenteEscenario } from '../stage/Escenario';
 import { clicEnActor, runtime } from '../store/controlador';
 import { useProyecto } from '../store/proyecto';
@@ -78,6 +79,7 @@ export function PanelEscenario() {
   return (
     <div ref={envoltorio} className="escenario-wrap tarjeta relative w-full overflow-hidden">
       <div ref={host} className="escenario-host relative w-full" style={{ aspectRatio: '4 / 3' }} />
+      <Monitores />
       <div className="absolute right-2 top-2 flex gap-1.5">
         <button
           type="button"

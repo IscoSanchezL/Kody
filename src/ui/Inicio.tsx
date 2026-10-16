@@ -16,24 +16,55 @@ const PILA = [
 const CICLO = 9; // segundos por vuelta
 
 const CRISTALES = [
-  { x: '4%', y: '14%', t: 120, r: 12, d: 14, clip: 'polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)' },
+  {
+    x: '4%',
+    y: '14%',
+    t: 120,
+    r: 12,
+    d: 14,
+    clip: 'polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)',
+  },
   { x: '84%', y: '58%', t: 150, r: -18, d: 18, clip: 'polygon(30% 0,100% 20%,70% 100%,0 70%)' },
   { x: '72%', y: '6%', t: 70, r: 25, d: 11, clip: 'polygon(50% 0,100% 50%,50% 100%,0 50%)' },
   { x: '12%', y: '74%', t: 90, r: -8, d: 16, clip: 'polygon(0 20%,60% 0,100% 60%,40% 100%)' },
 ];
 
 const PASOS = [
-  { n: '01', titulo: 'Arma con bloques', texto: 'Une piezas para dar órdenes. Sin escribir código.' },
-  { n: '02', titulo: 'Dirige el escenario 3D', texto: '8 personajes y 8 mundos que responden a tu programa.' },
-  { n: '03', titulo: 'Guarda en la nube', texto: 'Tu cuenta lleva tus proyectos a cualquier computador.' },
+  {
+    n: '01',
+    titulo: 'Arma con bloques',
+    texto: 'Une piezas para dar órdenes. Sin escribir código.',
+  },
+  {
+    n: '02',
+    titulo: 'Dirige el escenario 3D',
+    texto: '8 personajes y 8 mundos que responden a tu programa.',
+  },
+  {
+    n: '03',
+    titulo: 'Guarda en la nube',
+    texto: 'Tu cuenta lleva tus proyectos a cualquier computador.',
+  },
 ];
 
 const GoogleG = () => (
   <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
-    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z" />
-    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z" />
-    <path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z" />
-    <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z" />
+    <path
+      fill="#EA4335"
+      d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"
+    />
+    <path
+      fill="#4285F4"
+      d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"
+    />
+    <path
+      fill="#34A853"
+      d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"
+    />
   </svg>
 );
 
@@ -74,8 +105,13 @@ function PilaAnimada({ quieta }: { quieta: boolean }) {
                       y: [-90, -90, 4, 0, 0, 0, 14],
                       rotate: [i % 2 ? 8 : -8, i % 2 ? 8 : -8, 0, 0, 0, 0, 0],
                       filter: [
-                        'brightness(1)', 'brightness(1)', 'brightness(1.1)', 'brightness(1)',
-                        'brightness(1.5)', 'brightness(1)', 'brightness(1)',
+                        'brightness(1)',
+                        'brightness(1)',
+                        'brightness(1.1)',
+                        'brightness(1)',
+                        'brightness(1.5)',
+                        'brightness(1)',
+                        'brightness(1)',
                       ],
                     }
               }
@@ -88,7 +124,10 @@ function PilaAnimada({ quieta }: { quieta: boolean }) {
             >
               <span className="absolute inset-x-3 top-1 h-px bg-white/50" />
               {b.texto}
-              <span className="absolute -bottom-[7px] left-6 h-[8px] w-8 rounded-b-md" style={{ background: `${b.tono}c0` }} />
+              <span
+                className="absolute -bottom-[7px] left-6 h-[8px] w-8 rounded-b-md"
+                style={{ background: `${b.tono}c0` }}
+              />
             </motion.div>
           );
         })}
@@ -103,13 +142,30 @@ function PilaAnimada({ quieta }: { quieta: boolean }) {
           width={64}
           height={64}
           className="absolute bottom-2 left-4 drop-shadow-[0_8px_16px_rgba(0,0,0,.5)]"
-          animate={quieta ? undefined : { x: [0, 0, 0, 70, 140, 210, 210, 0], rotate: [0, 0, 0, 0, 0, 0, 0, 0], scale: [1, 1, 1, 1, 1, 1, 1.1, 1] }}
-          transition={{ duration: CICLO, times: [0, 0.5, 0.52, 0.6, 0.68, 0.76, 0.86, 0.95], repeat: Infinity, ease: 'easeInOut' }}
+          animate={
+            quieta
+              ? undefined
+              : {
+                  x: [0, 0, 0, 70, 140, 210, 210, 0],
+                  rotate: [0, 0, 0, 0, 0, 0, 0, 0],
+                  scale: [1, 1, 1, 1, 1, 1, 1.1, 1],
+                }
+          }
+          transition={{
+            duration: CICLO,
+            times: [0, 0.5, 0.52, 0.6, 0.68, 0.76, 0.86, 0.95],
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         />
         <motion.span
           className="absolute right-4 top-3 rounded-xl border border-white/30 bg-white/15 px-3 py-1 text-sm font-extrabold text-white backdrop-blur"
           initial={quieta ? false : { opacity: 0, scale: 0.8 }}
-          animate={quieta ? undefined : { opacity: [0, 0, 1, 1, 0, 0], scale: [0.8, 0.8, 1, 1, 0.95, 0.95] }}
+          animate={
+            quieta
+              ? undefined
+              : { opacity: [0, 0, 1, 1, 0, 0], scale: [0.8, 0.8, 1, 1, 0.95, 0.95] }
+          }
           transition={{ duration: CICLO, times: [0, 0.74, 0.78, 0.9, 0.93, 1], repeat: Infinity }}
         >
           ¡Hola, mundo!
@@ -121,7 +177,12 @@ function PilaAnimada({ quieta }: { quieta: boolean }) {
           className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-indigo-300 to-violet-300"
           initial={{ width: 0 }}
           animate={quieta ? { width: '100%' } : { width: ['0%', '0%', '100%', '100%'] }}
-          transition={{ duration: CICLO, times: [0, 0.5, 0.86, 1], repeat: Infinity, ease: 'linear' }}
+          transition={{
+            duration: CICLO,
+            times: [0, 0.5, 0.86, 1],
+            repeat: Infinity,
+            ease: 'linear',
+          }}
         />
       </div>
       <span className="sr-only">{n} bloques de ejemplo</span>
@@ -181,7 +242,8 @@ export function Inicio() {
               width: c.t,
               height: c.t,
               clipPath: c.clip,
-              background: 'linear-gradient(135deg,rgba(255,255,255,.28),rgba(165,180,252,.08) 55%,rgba(255,255,255,.02))',
+              background:
+                'linear-gradient(135deg,rgba(255,255,255,.28),rgba(165,180,252,.08) 55%,rgba(255,255,255,.02))',
               backdropFilter: 'blur(6px)',
             }}
             animate={quieta ? { rotate: c.r } : { rotate: [c.r, c.r + 14, c.r], y: [0, -16, 0] }}
@@ -200,15 +262,31 @@ export function Inicio() {
             Programación por bloques · para estudiantes
           </motion.p>
 
-          <motion.div {...sube(1)} className="mt-5 flex items-center justify-center gap-4 lg:justify-start">
-            <img src={`${BASE}kody-logo.svg`} alt="" width={84} height={84} className="drop-shadow-[0_10px_30px_rgba(125,140,255,.55)]" />
+          <motion.div
+            {...sube(1)}
+            className="mt-5 flex items-center justify-center gap-4 lg:justify-start"
+          >
+            <img
+              src={`${BASE}kody-logo.svg`}
+              alt=""
+              width={84}
+              height={84}
+              className="drop-shadow-[0_10px_30px_rgba(125,140,255,.55)]"
+            />
             <h1 className="titulo m-0 bg-gradient-to-b from-white via-indigo-100 to-indigo-300 bg-clip-text text-7xl font-extrabold tracking-tight text-transparent sm:text-8xl">
               Kody
             </h1>
           </motion.div>
 
-          <motion.p {...sube(2)} className="m-0 mt-4 max-w-lg text-2xl font-bold leading-snug text-indigo-100/90 lg:max-w-xl">
-            Arma bloques y mira cómo tus ideas <span className="bg-gradient-to-r from-cyan-200 to-violet-300 bg-clip-text text-transparent">cobran vida</span> en 3D.
+          <motion.p
+            {...sube(2)}
+            className="m-0 mt-4 max-w-lg text-2xl font-bold leading-snug text-indigo-100/90 lg:max-w-xl"
+          >
+            Arma bloques y mira cómo tus ideas{' '}
+            <span className="bg-gradient-to-r from-cyan-200 to-violet-300 bg-clip-text text-transparent">
+              cobran vida
+            </span>{' '}
+            en 3D.
           </motion.p>
 
           <motion.div {...sube(3)} className="mx-auto mt-8 flex max-w-md flex-col gap-3 lg:mx-0">
@@ -219,7 +297,9 @@ export function Inicio() {
               className="group relative flex cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-b from-indigo-400 to-indigo-600 px-6 py-4 text-xl font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.5),0_14px_40px_-10px_rgba(99,102,241,.9)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-offset-4"
             >
               <span className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 -skew-x-12 bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-[420%]" />
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-white"><GoogleG /></span>
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-white">
+                <GoogleG />
+              </span>
               {googleActivo === false ? 'Cuenta: muy pronto' : 'Entrar con Google'}
             </button>
             <button
@@ -231,7 +311,11 @@ export function Inicio() {
             </button>
           </motion.div>
 
-          <motion.ul {...sube(4)} className="m-0 mt-6 flex list-none flex-wrap justify-center gap-2 p-0 lg:justify-start" aria-label="Personajes">
+          <motion.ul
+            {...sube(4)}
+            className="m-0 mt-6 flex list-none flex-wrap justify-center gap-2 p-0 lg:justify-start"
+            aria-label="Personajes"
+          >
             {PERSONAJES.map((p) => (
               <li key={p.id} className={`rounded-xl p-1.5 ${cristal}`}>
                 <img src={alDataUri(p.svg(0))} alt={p.nombre} width={36} height={36} />
@@ -246,13 +330,20 @@ export function Inicio() {
           aria-label="Así se programa con Kody"
         >
           <div className="mb-5 flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.2em] text-indigo-200/80">
-            <span className="flex gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-white/30" /><i className="h-2.5 w-2.5 rounded-full bg-white/20" /><i className="h-2.5 w-2.5 rounded-full bg-white/10" /></span>
+            <span className="flex gap-1.5">
+              <i className="h-2.5 w-2.5 rounded-full bg-white/30" />
+              <i className="h-2.5 w-2.5 rounded-full bg-white/20" />
+              <i className="h-2.5 w-2.5 rounded-full bg-white/10" />
+            </span>
             programa.kody
           </div>
           <PilaAnimada quieta={quieta} />
         </motion.section>
 
-        <motion.ul {...sube(5)} className="m-0 grid list-none gap-3 p-0 sm:grid-cols-3 lg:col-span-2">
+        <motion.ul
+          {...sube(5)}
+          className="m-0 grid list-none gap-3 p-0 sm:grid-cols-3 lg:col-span-2"
+        >
           {PASOS.map((p) => (
             <li key={p.n} className={`rounded-3xl p-5 text-left ${cristal}`}>
               <span className="font-mono text-sm font-bold text-cyan-200/80">{p.n}</span>
@@ -263,7 +354,9 @@ export function Inicio() {
         </motion.ul>
 
         <footer className="pb-2 text-center text-sm font-bold text-indigo-200/70 lg:col-span-2">
-          <a className="text-indigo-100 underline" href={`${BASE}privacidad.html`}>Política de privacidad</a>
+          <a className="text-indigo-100 underline" href={`${BASE}privacidad.html`}>
+            Política de privacidad
+          </a>
           {' · '}Kody solo muestra tu apodo, nunca tu correo.
         </footer>
       </main>

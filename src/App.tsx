@@ -4,6 +4,7 @@ import { Inicio } from './ui/Inicio';
 import { Acceso } from './ui/Acceso';
 import { BibliotecaPersonajes } from './ui/BibliotecaPersonajes';
 import { DialogosCuenta } from './ui/DialogosCuenta';
+import { DialogosDatos } from './ui/DialogosDatos';
 import { MisProyectos } from './ui/MisProyectos';
 import { conectarGuardado } from './nube/guardado';
 import { useSesion } from './nube/sesion';
@@ -91,6 +92,7 @@ export default function App() {
       <Acceso />
       <MisProyectos />
       <DialogosCuenta />
+      <DialogosDatos />
     </div>
   );
 }

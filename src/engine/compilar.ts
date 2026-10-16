@@ -72,6 +72,33 @@ function compilarExpr(b: BloqueJSON | undefined): Expr {
       return { tipo: 'sensor', nombre: 'y' };
     case 'sen_dir':
       return { tipo: 'sensor', nombre: 'dir' };
+    case 'var_valor':
+      return { tipo: 'var', nombre: String(b.fields?.VAR ?? '') };
+    case 'lis_valor':
+      return { tipo: 'lis', op: 'texto', lista: String(b.fields?.LISTA ?? '') };
+    case 'lis_longitud':
+      return { tipo: 'lis', op: 'longitud', lista: String(b.fields?.LISTA ?? '') };
+    case 'lis_elemento':
+      return {
+        tipo: 'lis',
+        op: 'elemento',
+        lista: String(b.fields?.LISTA ?? ''),
+        a: compilarEntrada(b, 'N'),
+      };
+    case 'lis_posicion':
+      return {
+        tipo: 'lis',
+        op: 'posicion',
+        lista: String(b.fields?.LISTA ?? ''),
+        a: compilarEntrada(b, 'ITEM'),
+      };
+    case 'lis_contiene':
+      return {
+        tipo: 'lis',
+        op: 'contiene',
+        lista: String(b.fields?.LISTA ?? ''),
+        a: compilarEntrada(b, 'ITEM'),
+      };
     default:
       return { tipo: 'num', valor: 0 };
   }

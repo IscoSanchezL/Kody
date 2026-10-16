@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import * as Blockly from 'blockly';
 import * as Es from 'blockly/msg/es';
-import { configurarActores, registrarBloques } from '../blocks/definiciones';
+import { configurarActores, configurarDatos, registrarBloques } from '../blocks/definiciones';
 import { crearTema } from '../blocks/tema';
-import { crearToolbox } from '../blocks/toolbox';
+import { contenidoListas, contenidoVariables, crearToolbox } from '../blocks/toolbox';
 import { sonidoEncaje } from '../audio';
 import { guardarScriptActual, registrarEspacio } from '../store/controlador';
 import { guardarYa, useProyecto } from '../store/proyecto';
@@ -42,6 +42,12 @@ export function EditorBloques() {
       return actores.filter((a) => a.id !== yo).map((a) => [a.nombre, a.id] as [string, string]);
     });
 
+    // Variables y listas del proyecto (se leen al abrir cada lista desplegable).
+    configurarDatos({
+      variables: () => useProyecto.getState().variables,
+      listas: () => useProyecto.getState().listas,
+    });
+
     const t0 = useApp.getState().tema;
     const w = Blockly.inject(el, {
       renderer: 'zelos',
@@ -62,6 +68,24 @@ export function EditorBloques() {
       media: `${import.meta.env.BASE_URL}blockly-media/`,
     });
     ws.current = w;
+    w.registerToolboxCategoryCallback('KODY_VARIABLES', () => contenidoVariables() as never);
+    w.registerToolboxCategoryCallback('KODY_LISTAS', () => contenidoListas() as never);
+    const abrir = useApp.getState().abrirDatos;
+    w.registerButtonCallback('KODY_CREAR_VARIABLE', () =>
+      abrir({ tipo: 'variable', accion: 'crear' }),
+    );
+    w.registerButtonCallback('KODY_BORRAR_VARIABLE', () =>
+      abrir({ tipo: 'variable', accion: 'borrar' }),
+    );
+    w.registerButtonCallback('KODY_CREAR_LISTA', () => abrir({ tipo: 'lista', accion: 'crear' }));
+    w.registerButtonCallback('KODY_BORRAR_LISTA', () => abrir({ tipo: 'lista', accion: 'borrar' }));
+    // Cuando cambian los nombres, la paleta abierta se vuelve a dibujar.
+    let antes = useProyecto.getState();
+    const dejarDeEscuchar = useProyecto.subscribe((s) => {
+      if (s.variables === antes.variables && s.listas === antes.listas) return;
+      antes = s;
+      w.getToolbox()?.refreshSelection();
+    });
     // Solo en desarrollo: facilita depurar el editor desde la consola y en las pruebas.
     if (import.meta.env.DEV) (window as unknown as { __kodyWs?: unknown }).__kodyWs = w;
     registrarEspacio(w);
@@ -91,6 +115,7 @@ export function EditorBloques() {
 
     return () => {
       clearTimeout(pendiente);
+      dejarDeEscuchar();
       window.removeEventListener('beforeunload', alSalir);
       document.removeEventListener('visibilitychange', oculta);
       ro.disconnect();
