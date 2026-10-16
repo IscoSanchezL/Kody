@@ -9,6 +9,7 @@ import {
   siguientePaso,
 } from '../store/controlador';
 import { useApp, type Tema } from '../store/useApp';
+import { useIconos } from './useIconos';
 import { uriPersonaje } from '../stage/uris';
 import { CuentaBarra } from './CuentaBarra';
 
@@ -125,6 +126,7 @@ function MenuProyecto() {
 }
 
 export function BarraSuperior() {
+  useIconos();
   const modo = useApp((s) => s.modo);
   const tema = useApp((s) => s.tema);
   const ciclarTema = useApp((s) => s.ciclarTema);

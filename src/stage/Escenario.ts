@@ -11,6 +11,7 @@ import type { Runtime } from '../engine/runtime';
 import { ESCENARIO, RADIO_ACTOR, type Dialogo, type EstadoActor } from '../engine/tipos';
 import { alDataUri } from './disfraces';
 import { fondoPorId, personajePorId } from './biblioteca';
+import { esIcono3D, uriPersonaje } from './uris';
 import { rasterizar } from './rasterizar';
 
 const TAM_BASE = 96; // px del actor al 100 %
@@ -130,12 +131,12 @@ export class Escenario {
    * El SVG se convierte primero en un lienzo de tamaño fijo: así el resultado no depende
    * de cómo cada navegador (sobre todo Safari) calcula el tamaño de una imagen SVG.
    */
-  private textura(clave: string, svg: () => string, ancho: number, alto: number): Texture | null {
+  private textura(clave: string, uri: () => string, ancho: number, alto: number): Texture | null {
     const lista = this.texturas.get(clave);
     if (lista) return lista;
     if (!this.cargando.has(clave)) {
       this.cargando.add(clave);
-      rasterizar(alDataUri(svg()), ancho, alto)
+      rasterizar(uri(), ancho, alto)
         .then((lienzo) => {
           if (!this.destruido) this.texturas.set(clave, Texture.from(lienzo));
         })
@@ -146,7 +147,12 @@ export class Escenario {
 
   private dibujarFondo(id: string) {
     if (id === this.fondoId) return;
-    const t = this.textura(`f:${id}`, () => fondoPorId(id).svg, TEX_FONDO.ancho, TEX_FONDO.alto);
+    const t = this.textura(
+      `f:${id}`,
+      () => alDataUri(fondoPorId(id).svg),
+      TEX_FONDO.ancho,
+      TEX_FONDO.alto,
+    );
     if (!t) return; // se mantiene el anterior hasta que cargue el nuevo
     this.fondo.texture = t;
     this.fondo.scale.set(ESCENARIO.ancho / TEX_FONDO.ancho, ESCENARIO.alto / TEX_FONDO.alto);
@@ -265,8 +271,8 @@ export class Escenario {
     const pers = personajePorId(this.puente.personajeDe(a.id));
     const disfraz = (a.disfrazActual % 2) as 0 | 1;
     const tex = this.textura(
-      `p:${pers.id}:${disfraz}`,
-      () => pers.svg(disfraz),
+      `p:${pers.id}:${disfraz}:${esIcono3D(pers.id, disfraz) ? '3d' : 'svg'}`,
+      () => uriPersonaje(pers.id, disfraz),
       TEX_ACTOR,
       TEX_ACTOR,
     );

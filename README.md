@@ -47,6 +47,11 @@ Kody **no se puede abrir haciendo doble clic en `index.html`** de la carpeta del
 - Propiedades del actor (nombre, posición, dirección, tamaño, visibilidad, disfraz, personaje), deshacer / rehacer, y **guardar / abrir proyectos** como archivo `.kody.json` (con validación de archivos dañados).
 - Pendiente de esta fase: clones de actores.
 
+### Arte
+
+- **Personajes:** modelos 3D con cuerpo natural (patas, cola, brazos), de perfil en tres cuartos para los animales y el dino, y de frente para Robo. Las imágenes planas (biblioteca, escenario 2D, sellos del lápiz) se generan solas a partir de esos mismos modelos; si el equipo no tiene 3D se usan los dibujos planos de respaldo.
+- **Escenarios:** pradera, espacio, océano, ciudad de noche, desierto y montañas con nieve, dibujados por capas con perspectiva atmosférica, luz coherente, nubes y texturas de ruido, con aspecto de imagen.
+
 ### Escenario 3D
 
 El escenario se puede ver en **3D** (por defecto) o en 2D con el botón `3D / 2D` del escenario. En 3D los actores son modelos construidos con formas simples (Three.js, sin descargar archivos) que respiran, se inclinan al moverse y giran hacia donde miran; el fondo pintado queda detrás como en un teatro de títeres, y la cámara se balancea suavemente con el puntero (se desactiva si el sistema pide reducir movimiento). Las coordenadas `x` e `y` significan lo mismo que en 2D. Si el equipo no puede mostrar 3D, Kody vuelve solo al 2D.

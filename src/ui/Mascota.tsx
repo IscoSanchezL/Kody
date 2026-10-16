@@ -1,9 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { alDataUri, kodySVG } from '../stage/disfraces';
+import { uriPersonaje } from '../stage/uris';
+import { useIconos } from './useIconos';
 import { useApp } from '../store/useApp';
 
 /** Kody, la mascota guía: muestra pistas y celebra con un globo de texto. */
 export function Mascota() {
+  useIconos();
   const mensaje = useApp((s) => s.mensaje);
   const id = useApp((s) => s.mensajeId);
   const corriendo = useApp((s) => s.modo !== 'detenido');
@@ -12,7 +14,7 @@ export function Mascota() {
   return (
     <div className="flex items-end gap-3" aria-live="polite">
       <motion.img
-        src={alDataUri(kodySVG(variante))}
+        src={uriPersonaje('kody', variante)}
         alt="Kody, tu guía"
         width={84}
         height={84}

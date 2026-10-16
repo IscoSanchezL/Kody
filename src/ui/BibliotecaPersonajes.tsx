@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 import { PERSONAJES } from '../stage/biblioteca';
+import { useIconos } from './useIconos';
 import { uriPersonaje } from '../stage/uris';
 import { useProyecto } from '../store/proyecto';
 import { MAX_ACTORES } from '../store/proyectoModelo';
@@ -10,6 +11,7 @@ import { sonidoEncaje } from '../audio';
 
 /** Ventana para elegir un personaje nuevo. */
 export function BibliotecaPersonajes() {
+  useIconos();
   const abierta = useApp((s) => s.bibliotecaAbierta);
   const abrir = useApp((s) => s.abrirBiblioteca);
   const decir = useApp((s) => s.decir);

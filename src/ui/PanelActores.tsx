@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FONDOS, PERSONAJES } from '../stage/biblioteca';
 import { uriFondo, uriPersonaje } from '../stage/uris';
+import { useIconos } from './useIconos';
 import { runtime, seleccionarActor } from '../store/controlador';
 import { useProyecto } from '../store/proyecto';
 import { MAX_ACTORES, type ActorProyecto } from '../store/proyectoModelo';
@@ -52,6 +53,7 @@ function Campo({
 }
 
 function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
+  useIconos();
   const editar = useProyecto((s) => s.editarActor);
   const quitar = useProyecto((s) => s.quitarActor);
   const total = useProyecto((s) => s.actores.length);
@@ -202,6 +204,7 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
 }
 
 function ListaActores() {
+  useIconos();
   const actores = useProyecto((s) => s.actores);
   const seleccionado = useProyecto((s) => s.seleccionado);
   const abrir = useApp((s) => s.abrirBiblioteca);

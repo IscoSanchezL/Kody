@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { PERSONAJES } from '../stage/biblioteca';
-import { alDataUri } from '../stage/disfraces';
+import { uriPersonaje } from '../stage/uris';
+import { useIconos } from './useIconos';
 import { useSesion } from '../nube/sesion';
 import { useApp } from '../store/useApp';
 
@@ -192,6 +193,7 @@ function PilaAnimada({ quieta }: { quieta: boolean }) {
 
 /** Página de inicio: presenta Kody y deja elegir cómo entrar. */
 export function Inicio() {
+  useIconos();
   const quieta = !!useReducedMotion();
   const abrirVentana = useApp((s) => s.abrirVentana);
   const setPantalla = useApp((s) => s.setPantalla);
@@ -318,7 +320,7 @@ export function Inicio() {
           >
             {PERSONAJES.map((p) => (
               <li key={p.id} className={`rounded-xl p-1.5 ${cristal}`}>
-                <img src={alDataUri(p.svg(0))} alt={p.nombre} width={36} height={36} />
+                <img src={uriPersonaje(p.id, 0)} alt={p.nombre} width={36} height={36} />
               </li>
             ))}
           </motion.ul>
