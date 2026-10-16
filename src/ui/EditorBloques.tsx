@@ -3,7 +3,12 @@ import * as Blockly from 'blockly';
 import * as Es from 'blockly/msg/es';
 import { configurarActores, configurarDatos, registrarBloques } from '../blocks/definiciones';
 import { crearTema } from '../blocks/tema';
-import { contenidoListas, contenidoVariables, crearToolbox } from '../blocks/toolbox';
+import {
+  contenidoListas,
+  contenidoMisBloques,
+  contenidoVariables,
+  crearToolbox,
+} from '../blocks/toolbox';
 import { sonidoEncaje } from '../audio';
 import { guardarScriptActual, registrarEspacio } from '../store/controlador';
 import { guardarYa, useProyecto } from '../store/proyecto';
@@ -21,6 +26,18 @@ function cargar(w: Blockly.WorkspaceSvg, json: object | undefined) {
     Blockly.Events.enable();
   }
   w.clearUndo();
+}
+
+/** Borra las llamadas a bloques propios cuyo "definir" ya no existe. */
+function quitarLlamadasHuerfanas(w: Blockly.WorkspaceSvg) {
+  const vivos = new Set(
+    w.getBlocksByType('fun_definir').map((b) => (b as unknown as { nombre: string }).nombre),
+  );
+  Blockly.Events.setGroup(true);
+  for (const b of w.getBlocksByType('fun_llamar')) {
+    if (!vivos.has((b as unknown as { nombre: string }).nombre)) b.dispose(true);
+  }
+  Blockly.Events.setGroup(false);
 }
 
 /** Editor de bloques (Blockly con renderer "zelos", redondeado como Scratch 3). */
@@ -70,6 +87,11 @@ export function EditorBloques() {
     ws.current = w;
     w.registerToolboxCategoryCallback('KODY_VARIABLES', () => contenidoVariables() as never);
     w.registerToolboxCategoryCallback('KODY_LISTAS', () => contenidoListas() as never);
+    w.registerToolboxCategoryCallback(
+      'KODY_MIS_BLOQUES',
+      () => contenidoMisBloques(w as never) as never,
+    );
+    w.registerButtonCallback('KODY_CREAR_BLOQUE', () => useApp.getState().abrirBloquePropio(true));
     const abrir = useApp.getState().abrirDatos;
     w.registerButtonCallback('KODY_CREAR_VARIABLE', () =>
       abrir({ tipo: 'variable', accion: 'crear' }),
@@ -96,6 +118,16 @@ export function EditorBloques() {
       if (e.type === Blockly.Events.BLOCK_MOVE) {
         const m = e as Blockly.Events.BlockMove;
         if (m.newParentId && m.newParentId !== m.oldParentId) sonidoEncaje();
+      }
+      // Mis bloques: la paleta se actualiza al crear o borrar una definición, y al borrar una
+      // definición también se quitan sus llamadas.
+      if (e.type === Blockly.Events.BLOCK_CREATE || e.type === Blockly.Events.BLOCK_DELETE) {
+        const json = e as { json?: { type?: string }; oldJson?: { type?: string } };
+        const def = json.json ?? json.oldJson;
+        if (def?.type === 'fun_definir') {
+          if (e.type === Blockly.Events.BLOCK_DELETE) quitarLlamadasHuerfanas(w);
+          w.getToolbox()?.refreshSelection();
+        }
       }
       if (e.isUiEvent) return;
       clearTimeout(pendiente);

@@ -11,6 +11,7 @@ export const CATEGORIAS = {
   movimiento: { id: 'movimiento', nombre: 'Movimiento', icono: '🧭', color: '#2563eb' },
   apariencia: { id: 'apariencia', nombre: 'Apariencia', icono: '🎨', color: '#7c3aed' },
   sonido: { id: 'sonido', nombre: 'Sonido', icono: '🔊', color: '#db2777' },
+  lapiz: { id: 'lapiz', nombre: 'Lápiz', icono: '🖊️', color: '#0d9488' },
   control: { id: 'control', nombre: 'Control', icono: '🔁', color: '#ea580c' },
   sensores: { id: 'sensores', nombre: 'Sensores', icono: '👀', color: '#0891b2' },
   operadores: { id: 'operadores', nombre: 'Operadores', icono: '🧮', color: '#16a34a' },

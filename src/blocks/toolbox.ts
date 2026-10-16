@@ -13,6 +13,16 @@ const bloque = (type: string, inputs?: Record<string, unknown>) => ({
 const contenido: Partial<Record<IdCategoria, object[]>> = {
   variables: [],
   listas: [],
+  mis_bloques: [],
+  lapiz: [
+    bloque('lap_bajar'),
+    bloque('lap_subir'),
+    bloque('lap_color'),
+    bloque('lap_grosor', { N: n(2) }),
+    bloque('lap_cambiar_grosor', { N: n(1) }),
+    bloque('lap_borrar'),
+    bloque('lap_sellar'),
+  ],
   eventos: [
     bloque('evento_al_ejecutar'),
     bloque('evento_tecla'),
@@ -53,6 +63,9 @@ const contenido: Partial<Record<IdCategoria, object[]>> = {
     bloque('ctrl_si_sino'),
     bloque('ctrl_esperar_hasta'),
     bloque('ctrl_detener'),
+    bloque('evento_clon'),
+    bloque('clon_crear'),
+    bloque('clon_borrar'),
   ],
   sensores: [
     bloque('sen_tecla'),
@@ -150,16 +163,46 @@ export function contenidoListas(): object[] {
   ];
 }
 
+/** Paleta "Mis bloques": crear uno y, por cada bloque definido en este actor, su llamada y sus parámetros. */
+export function contenidoMisBloques(espacio: {
+  getBlocksByType: (tipo: string) => { nombre?: string; params?: string[] }[];
+}): object[] {
+  const definidos = espacio
+    .getBlocksByType('fun_definir')
+    .map((b) => ({ nombre: String(b.nombre ?? ''), params: (b.params ?? []).map(String) }))
+    .filter((d) => d.nombre);
+  const botones = [
+    { kind: 'button', text: '➕ Crear un bloque', callbackKey: 'KODY_CREAR_BLOQUE' },
+  ];
+  if (!definidos.length)
+    return [...botones, { kind: 'label', text: 'Crea tus propios bloques para repetir ideas.' }];
+  const llamadas = definidos.map((d) => ({
+    kind: 'block',
+    type: 'fun_llamar',
+    extraState: { nombre: d.nombre, params: d.params },
+    inputs: Object.fromEntries(d.params.map((_, i) => [`ARG${i + 1}`, n(10)])),
+  }));
+  const nombresParam = [...new Set(definidos.flatMap((d) => d.params))];
+  const parametros = nombresParam.map((nombre) => ({
+    kind: 'block',
+    type: 'fun_param',
+    extraState: { nombre, params: [] },
+  }));
+  return [...botones, ...llamadas, ...parametros];
+}
+
 const ORDEN: IdCategoria[] = [
   'eventos',
   'movimiento',
   'apariencia',
   'sonido',
+  'lapiz',
   'control',
   'sensores',
   'operadores',
   'variables',
   'listas',
+  'mis_bloques',
 ];
 
 /** Toolbox por categorías; solo muestra las que ya tienen bloques. */
@@ -175,7 +218,9 @@ export function crearToolbox(permitidas?: IdCategoria[]) {
         ? { custom: 'KODY_VARIABLES' }
         : id === 'listas'
           ? { custom: 'KODY_LISTAS' }
-          : { contents: contenido[id] }),
+          : id === 'mis_bloques'
+            ? { custom: 'KODY_MIS_BLOQUES' }
+            : { contents: contenido[id] }),
     })),
   };
 }

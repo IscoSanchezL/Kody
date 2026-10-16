@@ -62,3 +62,15 @@ export function teclaABloque(e: { key: string }): string | null {
   const k = e.key.toLowerCase();
   return ['w', 'a', 's', 'd'].includes(k) ? k : null;
 }
+
+/** Colores del lápiz: la etiqueta lleva un emoji para reconocerlos aunque no se vean bien. */
+export const COLORES_LAPIZ: [string, string][] = [
+  ['🔴 rojo', '#dc2626'],
+  ['🟠 naranja', '#ea580c'],
+  ['🟡 amarillo', '#eab308'],
+  ['🟢 verde', '#16a34a'],
+  ['🔵 azul', '#2563eb'],
+  ['🟣 morado', '#7c3aed'],
+  ['⚫ negro', '#111827'],
+  ['⚪ blanco', '#f8fafc'],
+];

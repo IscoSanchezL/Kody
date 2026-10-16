@@ -9,6 +9,8 @@ interface BloqueJSON {
   type: string;
   id?: string;
   fields?: Record<string, unknown>;
+  /** Estado propio de los bloques de "Mis bloques": nombre y nombres de sus parámetros. */
+  extraState?: { nombre?: string; params?: string[] };
   inputs?: Record<string, { block?: BloqueJSON; shadow?: BloqueJSON }>;
   next?: { block?: BloqueJSON };
 }
@@ -23,13 +25,24 @@ export const SOMBREROS = new Set([
   'evento_tecla',
   'evento_clic_actor',
   'evento_mensaje',
+  'evento_clon',
+  'fun_definir',
 ]);
 
 let contadorId = 0;
 const idDe = (b: BloqueJSON) => b.id ?? `anon-${++contadorId}`;
 
-const camposDe = (b: BloqueJSON): Record<string, string> =>
-  Object.fromEntries(Object.entries(b.fields ?? {}).map(([k, v]) => [k, String(v ?? '')]));
+const camposDe = (b: BloqueJSON): Record<string, string> => {
+  const campos = Object.fromEntries(
+    Object.entries(b.fields ?? {}).map(([k, v]) => [k, String(v ?? '')]),
+  );
+  // Mis bloques: el nombre y los parámetros viajan en el estado extra del bloque.
+  if (b.extraState?.nombre !== undefined) {
+    campos.NOMBRE = String(b.extraState.nombre);
+    (b.extraState.params ?? []).slice(0, 3).forEach((p, i) => (campos[`P${i + 1}`] = String(p)));
+  }
+  return campos;
+};
 
 const BINARIOS: Record<string, OpBinaria> = {
   op_suma: '+',
@@ -109,6 +122,8 @@ function compilarExpr(b: BloqueJSON | undefined): Expr {
       return { tipo: 'sensor', nombre: 'temporizador' };
     case 'sen_distancia':
       return { tipo: 'sensor', nombre: 'distancia', param: String(b.fields?.ACTOR ?? '') };
+    case 'fun_param':
+      return { tipo: 'param', nombre: String(b.extraState?.nombre ?? '') };
     case 'var_valor':
       return { tipo: 'var', nombre: String(b.fields?.VAR ?? '') };
     case 'lis_valor':

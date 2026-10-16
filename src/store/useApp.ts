@@ -32,6 +32,9 @@ interface EstadoApp {
   /** Ventana para crear o borrar una variable o lista (null = cerrada). */
   datosDialogo: { tipo: 'variable' | 'lista'; accion: 'crear' | 'borrar' } | null;
   abrirDatos: (d: { tipo: 'variable' | 'lista'; accion: 'crear' | 'borrar' } | null) => void;
+  /** Ventana para crear un bloque propio ("Mis bloques"). */
+  bloquePropioAbierto: boolean;
+  abrirBloquePropio: (abierta: boolean) => void;
   /** Variables y listas visibles sobre el escenario mientras corre el programa. */
   monitores: Monitores;
   setMonitores: (m: Monitores) => void;
@@ -100,6 +103,8 @@ export const useApp = create<EstadoApp>((set, get) => ({
       apodoAbierto: v === 'apodo' ? abierta : false,
       nombreAbierto: v === 'nombre' ? abierta : false,
     }),
+  bloquePropioAbierto: false,
+  abrirBloquePropio: (bloquePropioAbierto) => set({ bloquePropioAbierto }),
   datosDialogo: null,
   abrirDatos: (datosDialogo) => set({ datosDialogo }),
   monitores: { variables: [], listas: [] },

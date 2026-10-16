@@ -26,6 +26,8 @@ export interface EstadoActor {
   disfrazActual: number;
   totalDisfraces: number;
   dialogo: Dialogo | null;
+  /** Si es un clon, el id del actor original (los clones solo existen mientras corre el programa). */
+  clonDe?: string;
 }
 
 export type OpBinaria =
@@ -44,6 +46,12 @@ export type OpBinaria =
   | 'letra'
   | 'contiene';
 export type OpUnaria = 'redondear' | 'abs' | 'raiz' | 'piso' | 'techo' | 'sen' | 'cos' | 'longitud';
+/** Lo que el lápiz dibuja sobre el escenario (la interfaz lo pinta en una capa propia). */
+export type EventoLapiz =
+  | { t: 'linea'; x1: number; y1: number; x2: number; y2: number; color: string; grosor: number }
+  | { t: 'sello'; actorId: string }
+  | { t: 'borrar' };
+
 /** Lo que un bloque de valor puede preguntarle a una lista. */
 export type OpLista = 'texto' | 'elemento' | 'posicion' | 'longitud' | 'contiene';
 export type NombreSensor =
@@ -69,6 +77,7 @@ export type Expr =
   | { tipo: 'un'; op: OpUnaria; a: Expr }
   | { tipo: 'sensor'; nombre: NombreSensor; param?: string }
   | { tipo: 'var'; nombre: string }
+  | { tipo: 'param'; nombre: string }
   | { tipo: 'lis'; op: OpLista; lista: string; a?: Expr };
 
 /** Sentencia (bloque apilable) ya compilada. */
@@ -120,6 +129,8 @@ export interface Oyentes {
   alPreguntar?: (texto: string) => void;
   /** La pregunta terminó (se respondió o se detuvo el programa). */
   alTerminarPregunta?: () => void;
+  /** El lápiz dibujó, selló o borró. */
+  alLapiz?: (e: EventoLapiz) => void;
   /** Cambiaron las variables o listas que están visibles en el escenario. */
   alCambiarMonitores?: (m: Monitores) => void;
   /** Un bloque cambió el escenario. */

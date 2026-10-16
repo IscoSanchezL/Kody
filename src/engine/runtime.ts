@@ -21,6 +21,12 @@ const normalizar = (g: number) => {
 /** Una lista no puede crecer sin freno (protege la memoria del equipo). */
 export const MAX_ELEMENTOS_LISTA = 1000;
 const MAX_TEXTO = 500;
+/** Clones vivos a la vez y llamadas de "Mis bloques" una dentro de otra. */
+export const MAX_CLONES = 30;
+const MAX_PROFUNDIDAD = 30;
+const COLOR_LAPIZ = '#2563eb';
+const baseDe = (id: string) => id.split('~')[0];
+const esColor = (c: string) => /^#[0-9a-f]{6}$/i.test(c);
 const limitarNumero = (n: number) => (Number.isFinite(n) ? n : 0);
 
 type Valor = number | string | boolean;
@@ -34,6 +40,8 @@ interface Hilo {
   duermeHasta: number;
   bloqueActivo: string | null;
   terminado: boolean;
+  /** Parámetros de las llamadas a "Mis bloques" en curso (el último es el activo). */
+  marcos: Record<string, Valor>[];
 }
 
 interface Manejador {
@@ -71,6 +79,12 @@ export class Runtime {
   private respuesta = '';
   private raton = { x: 0, y: 0, abajo: false };
   private inicioTemporizador = 0;
+  // Lápiz (por actor), clones, y "Mis bloques".
+  private lapices = new Map<string, { abajo: boolean; color: string; grosor: number }>();
+  private programas: Record<string, Programa[]> = {};
+  private funciones = new Map<string, Programa>();
+  private contadorClones = 0;
+  private hiloActual: Hilo | null = null;
 
   constructor(
     private oyentes: Oyentes = {},
@@ -133,11 +147,17 @@ export class Runtime {
     this.inicioTemporizador = 0;
     this.reloj = 0;
     this.teclas.clear();
+    this.programas = porActor;
+    this.funciones.clear();
+    this.lapices.clear();
+    this.contadorClones = 0;
+    this.oyentes.alLapiz?.({ t: 'borrar' });
     for (const [actorId, programas] of Object.entries(porActor)) {
       if (!this.actores.has(actorId)) continue;
       for (const p of programas) {
-        if (p.sombrero === 'evento_al_ejecutar') this.arrancarHilo(actorId, p);
-        else this.manejadores.push({ actorId, programa: p });
+        if (p.sombrero === 'fun_definir') this.funciones.set(`${actorId}:${p.campos.NOMBRE}`, p);
+        else if (p.sombrero === 'evento_al_ejecutar') this.arrancarHilo(actorId, p);
+        else if (p.sombrero !== 'evento_clon') this.manejadores.push({ actorId, programa: p });
       }
     }
     this.cambiarModo(paso ? 'paso-a-paso' : 'corriendo');
@@ -215,6 +235,7 @@ export class Runtime {
     this.hilos = [];
     this.manejadores = [];
     this.teclas.clear();
+    for (const [id, a] of this.actores) if (a.clonDe) this.actores.delete(id);
     for (const a of this.actores.values()) a.dialogo = null;
     this.oyentes.alActivarBloques?.([]);
     if (this.modo !== 'detenido') this.cambiarModo('detenido');
@@ -232,12 +253,14 @@ export class Runtime {
   // ---------- Eventos externos ----------
 
   private arrancarHilo(actorId: string, p: Programa) {
-    // Si el mismo programa ya corre, se reinicia (como en Scratch).
-    this.hilos = this.hilos.filter((h) => h.programaId !== p.id);
+    // Si el mismo programa ya corre, se reinicia (como en Scratch). Cada clon tiene el suyo.
+    const clave = actorId === baseDe(actorId) ? p.id : `${p.id}@${actorId}`;
+    this.hilos = this.hilos.filter((h) => h.programaId !== clave);
     this.hilos.push({
       id: this.siguienteHilo++,
       actorId,
-      programaId: p.id,
+      programaId: clave,
+      marcos: [],
       gen: this.ejecutarPila(p.cuerpo, actorId),
       duermeHasta: 0,
       bloqueActivo: null,
@@ -320,6 +343,7 @@ export class Runtime {
     if (h.terminado || this.modo === 'detenido' || this.reloj < h.duermeHasta) return;
     let gastados = 0;
     let primerPaso = true;
+    this.hiloActual = h;
     for (;;) {
       if (++gastados > PRESUPUESTO_PASOS) {
         this.oyentes.alAviso?.(
@@ -329,6 +353,7 @@ export class Runtime {
         return;
       }
       const r = h.gen.next();
+      if (h.terminado) return; // por ejemplo, un clon que se borró a sí mismo
       if (r.done) {
         h.terminado = true;
         h.bloqueActivo = null;
@@ -374,9 +399,14 @@ export class Runtime {
         return Math.abs(a.x) >= maxX - 0.5 || Math.abs(a.y) >= maxY - 0.5;
       }
       case 'tocando': {
-        const otro = this.actores.get(param ?? '');
-        if (!otro || otro.id === a.id || !otro.visible || !a.visible) return false;
-        return Math.hypot(a.x - otro.x, a.y - otro.y) < this.radio(a) + this.radio(otro);
+        // Vale el actor original o cualquiera de sus clones.
+        if (!a.visible) return false;
+        for (const otro of this.actores.values()) {
+          if (otro.id === a.id || !otro.visible || baseDe(otro.id) !== (param ?? '')) continue;
+          if (Math.hypot(a.x - otro.x, a.y - otro.y) < this.radio(a) + this.radio(otro))
+            return true;
+        }
+        return false;
       }
       case 'x':
         return a.x;
@@ -438,6 +468,10 @@ export class Runtime {
       }
       case 'var':
         return this.variables.get(e.nombre) ?? 0;
+      case 'param': {
+        const marco = this.hiloActual?.marcos[this.hiloActual.marcos.length - 1];
+        return marco?.[e.nombre] ?? 0;
+      }
       case 'lis':
         return this.consultarLista(e.lista, e.op, e.a ? this.evaluar(e.a, a) : 0);
       case 'bin': {
@@ -563,9 +597,7 @@ export class Runtime {
       case 'mov_mover': {
         const rad = (a.direccion * Math.PI) / 180;
         const pasos = this.num(s, 'PASOS', a);
-        a.x += pasos * Math.sin(rad);
-        a.y += pasos * Math.cos(rad);
-        this.mantenerDentro(a, false);
+        this.posicionar(a, a.x + pasos * Math.sin(rad), a.y + pasos * Math.cos(rad));
         break;
       }
       case 'mov_girar_der':
@@ -575,20 +607,16 @@ export class Runtime {
         a.direccion = normalizar(a.direccion - this.num(s, 'GRADOS', a));
         break;
       case 'mov_ir_a':
-        a.x = this.num(s, 'X', a);
-        a.y = this.num(s, 'Y', a);
-        this.mantenerDentro(a, false);
+        this.posicionar(a, this.num(s, 'X', a), this.num(s, 'Y', a));
         break;
       case 'mov_apuntar':
         a.direccion = normalizar(this.num(s, 'DIR', a));
         break;
       case 'mov_cambiar_x':
-        a.x += this.num(s, 'N', a);
-        this.mantenerDentro(a, false);
+        this.posicionar(a, a.x + this.num(s, 'N', a), a.y);
         break;
       case 'mov_cambiar_y':
-        a.y += this.num(s, 'N', a);
-        this.mantenerDentro(a, false);
+        this.posicionar(a, a.x, a.y + this.num(s, 'N', a));
         break;
       case 'mov_rebotar':
         this.mantenerDentro(a, true);
@@ -601,14 +629,12 @@ export class Runtime {
         const y1 = this.num(s, 'Y', a);
         const inicio = this.reloj;
         if (dur === 0) {
-          a.x = x1;
-          a.y = y1;
+          this.posicionar(a, x1, y1, false);
           break;
         }
         for (;;) {
           const t = Math.min(1, (this.reloj - inicio) / dur);
-          a.x = x0 + (x1 - x0) * t;
-          a.y = y0 + (y1 - y0) * t;
+          this.posicionar(a, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, false);
           if (t >= 1) break;
           yield { k: 'cuadro' };
         }
@@ -665,6 +691,83 @@ export class Runtime {
         const seg = Math.min(4, Math.max(0.05, this.num(s, 'SEG', a)));
         this.oyentes.alSonido?.('nota', Number(s.campos.NOTA ?? 60), seg);
         yield { k: 'espera', ms: seg * 1000 };
+        break;
+      }
+
+      // ----- Lápiz -----
+      case 'lap_bajar': {
+        const l = this.lapiz(a.id);
+        l.abajo = true;
+        // Al bajarlo deja un punto, como en Scratch.
+        this.oyentes.alLapiz?.({
+          t: 'linea',
+          x1: a.x,
+          y1: a.y,
+          x2: a.x,
+          y2: a.y,
+          color: l.color,
+          grosor: l.grosor,
+        });
+        break;
+      }
+      case 'lap_subir':
+        this.lapiz(a.id).abajo = false;
+        break;
+      case 'lap_color':
+        if (esColor(s.campos.COLOR ?? '')) this.lapiz(a.id).color = s.campos.COLOR;
+        break;
+      case 'lap_grosor':
+        this.lapiz(a.id).grosor = Math.min(50, Math.max(1, this.num(s, 'N', a)));
+        break;
+      case 'lap_cambiar_grosor': {
+        const l = this.lapiz(a.id);
+        l.grosor = Math.min(50, Math.max(1, l.grosor + this.num(s, 'N', a)));
+        break;
+      }
+      case 'lap_borrar':
+        this.oyentes.alLapiz?.({ t: 'borrar' });
+        break;
+      case 'lap_sellar':
+        this.oyentes.alLapiz?.({ t: 'sello', actorId: a.id });
+        break;
+
+      // ----- Clones -----
+      case 'clon_crear': {
+        const quien = s.campos.ACTOR ?? '__yo__';
+        this.crearClon(quien === '__yo__' ? actorId : quien);
+        break;
+      }
+      case 'clon_borrar': {
+        if (!a.clonDe) break; // el actor original no se puede borrar
+        this.borrarClon(actorId);
+        if (this.hiloActual) this.hiloActual.terminado = true;
+        yield { k: 'cuadro' };
+        return;
+      }
+
+      // ----- Mis bloques -----
+      case 'fun_llamar': {
+        const def = this.funciones.get(`${baseDe(actorId)}:${s.campos.NOMBRE ?? ''}`);
+        const h = this.hiloActual;
+        if (!def || !h) break;
+        if (h.marcos.length >= MAX_PROFUNDIDAD) {
+          this.oyentes.alAviso?.(
+            '¡Uy! Un bloque tuyo se llama a sí mismo muchas veces. Revisa que termine 🔍',
+          );
+          h.terminado = true;
+          yield { k: 'cuadro' };
+          return;
+        }
+        const marco: Record<string, Valor> = {};
+        for (let i = 1; i <= 3; i++) {
+          const nombre = def.campos[`P${i}`];
+          if (!nombre) continue;
+          const e = s.entradas[`ARG${i}`];
+          marco[nombre] = e ? this.evaluar(e, a) : 0;
+        }
+        h.marcos.push(marco);
+        yield* this.ejecutarPila(def.cuerpo, actorId);
+        h.marcos.pop();
         break;
       }
 
@@ -802,6 +905,62 @@ export class Runtime {
         this.detener();
         return;
     }
+  }
+
+  /** Mueve al actor (recortando al escenario) y, si el lápiz está abajo, deja el trazo. */
+  private posicionar(a: EstadoActor, x: number, y: number, limitar = true) {
+    const x0 = a.x;
+    const y0 = a.y;
+    a.x = x;
+    a.y = y;
+    if (limitar) this.mantenerDentro(a, false);
+    const l = this.lapices.get(a.id);
+    if (l?.abajo && (a.x !== x0 || a.y !== y0)) {
+      this.oyentes.alLapiz?.({
+        t: 'linea',
+        x1: x0,
+        y1: y0,
+        x2: a.x,
+        y2: a.y,
+        color: l.color,
+        grosor: l.grosor,
+      });
+    }
+  }
+
+  private lapiz(id: string) {
+    let l = this.lapices.get(id);
+    if (!l) {
+      l = { abajo: false, color: COLOR_LAPIZ, grosor: 2 };
+      this.lapices.set(id, l);
+    }
+    return l;
+  }
+
+  /** Crea un clon de un actor (o de otro clon). Hereda posición, aspecto y lápiz. */
+  private crearClon(origenId: string) {
+    const origen = this.actores.get(origenId);
+    if (!origen) return;
+    let vivos = 0;
+    for (const x of this.actores.values()) if (x.clonDe) vivos++;
+    if (vivos >= MAX_CLONES) return;
+    const base = baseDe(origenId);
+    const id = `${base}~${++this.contadorClones}`;
+    this.actores.set(id, { ...origen, id, dialogo: null, clonDe: base });
+    this.lapices.set(id, { ...this.lapiz(origenId) });
+    for (const p of this.programas[base] ?? []) {
+      if (p.sombrero === 'evento_clon') this.arrancarHilo(id, p);
+      else if (p.sombrero !== 'evento_al_ejecutar' && p.sombrero !== 'fun_definir')
+        this.manejadores.push({ actorId: id, programa: p });
+    }
+  }
+
+  /** Quita un clon: su actor, sus programas en espera y sus hilos. */
+  private borrarClon(id: string) {
+    this.actores.delete(id);
+    this.lapices.delete(id);
+    this.manejadores = this.manejadores.filter((m) => m.actorId !== id);
+    for (const h of this.hilos) if (h.actorId === id) h.terminado = true;
   }
 
   private cambiarMonitor(clave: string, visible: boolean) {

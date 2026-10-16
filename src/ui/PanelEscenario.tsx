@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { CapaLapiz } from './CapaLapiz';
 import { Monitores } from './Monitores';
 import { PreguntaEscenario } from './PreguntaEscenario';
 import { Escenario, type PuenteEscenario } from '../stage/Escenario';
@@ -9,7 +10,9 @@ import { seleccionarActor } from '../store/controlador';
 
 /** Lo que el escenario (2D o 3D) necesita de la aplicación. */
 const crearPuente = (): PuenteEscenario => ({
-  personajeDe: (id) => useProyecto.getState().actores.find((a) => a.id === id)?.personaje ?? 'kody',
+  // Un clon se dibuja como su original: su id es `original~n`.
+  personajeDe: (id) =>
+    useProyecto.getState().actores.find((a) => a.id === id.split('~')[0])?.personaje ?? 'kody',
   seleccionado: () => useProyecto.getState().seleccionado,
   cuadricula: () => useApp.getState().cuadricula,
   puedeArrastrar: () => runtime.modo === 'detenido',
@@ -85,7 +88,14 @@ export function PanelEscenario() {
       onPointerUp={() => ratonAbajo(false)}
       onPointerLeave={() => ratonAbajo(false)}
     >
-      <div ref={host} className="escenario-host relative w-full" style={{ aspectRatio: '4 / 3' }} />
+      <div className="relative">
+        <div
+          ref={host}
+          className="escenario-host relative w-full"
+          style={{ aspectRatio: '4 / 3' }}
+        />
+        <CapaLapiz />
+      </div>
       <Monitores />
       <PreguntaEscenario />
       <div className="absolute right-2 top-2 flex gap-1.5">

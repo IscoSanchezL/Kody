@@ -1,5 +1,5 @@
 import * as Blockly from 'blockly';
-import { MENSAJES, NOTAS, OPCIONES_FONDOS, SONIDOS, TECLAS } from './opciones';
+import { COLORES_LAPIZ, MENSAJES, NOTAS, OPCIONES_FONDOS, SONIDOS, TECLAS } from './opciones';
 
 /**
  * Definición de los bloques de Kody.
@@ -21,6 +21,67 @@ const cuerpo = (name = 'CUERPO') => ({ type: 'input_statement', name });
 const pila = { previousStatement: null, nextStatement: null };
 
 const bloques = [
+  // ---------- Lápiz ----------
+  {
+    type: 'lap_bajar',
+    message0: 'bajar el lápiz ✏️',
+    ...pila,
+    style: 'lapiz',
+    tooltip: 'Desde ahora, al moverte dibujas una línea.',
+  },
+  {
+    type: 'lap_subir',
+    message0: 'subir el lápiz',
+    ...pila,
+    style: 'lapiz',
+    tooltip: 'Deja de dibujar al moverte.',
+  },
+  {
+    type: 'lap_color',
+    message0: 'fijar color del lápiz a %1',
+    args0: [lista('COLOR', COLORES_LAPIZ)],
+    ...pila,
+    style: 'lapiz',
+    tooltip: 'Elige el color de las líneas.',
+  },
+  {
+    type: 'lap_grosor',
+    message0: 'fijar grosor del lápiz a %1',
+    args0: [num('N')],
+    ...pila,
+    style: 'lapiz',
+    tooltip: 'Qué tan gruesas son las líneas (1 a 50).',
+  },
+  {
+    type: 'lap_cambiar_grosor',
+    message0: 'cambiar grosor del lápiz en %1',
+    args0: [num('N')],
+    ...pila,
+    style: 'lapiz',
+    tooltip: 'Engrosa o adelgaza las líneas.',
+  },
+  {
+    type: 'lap_borrar',
+    message0: 'borrar todo lo dibujado',
+    ...pila,
+    style: 'lapiz',
+    tooltip: 'Limpia el escenario de líneas y sellos.',
+  },
+  {
+    type: 'lap_sellar',
+    message0: 'sellar',
+    ...pila,
+    style: 'lapiz',
+    tooltip: 'Deja una copia del actor dibujada en el escenario.',
+  },
+  // ---------- Clones ----------
+  {
+    type: 'clon_borrar',
+    message0: 'borrar este clon',
+    previousStatement: null,
+    style: 'control',
+    tooltip: 'El clon desaparece. El actor original no se borra.',
+  },
   // ---------- Movimiento ----------
   {
     type: 'mov_mover',
@@ -616,6 +677,11 @@ export function registrarBloques() {
     message0: 'al hacer clic en este actor',
     tooltip: 'Se ejecuta cuando tocas al actor en el escenario.',
   });
+  Blockly.Blocks['evento_clon'] = sombrero({
+    message0: 'al comenzar como clon',
+    style: 'control',
+    tooltip: 'Cada clon nuevo empieza su programa aquí.',
+  });
   Blockly.Blocks['evento_mensaje'] = sombrero({
     message0: 'al recibir %1',
     args0: [lista('MENSAJE', MENSAJES)],
@@ -727,6 +793,76 @@ export function registrarBloques() {
     'La muestra en el escenario.',
   );
   bloqueDato('lis_ocultar', 'listas', ['ocultar lista', L()], 'pila', 'La esconde del escenario.');
+
+  Blockly.Blocks['clon_crear'] = {
+    init(this: Blockly.Block) {
+      this.appendDummyInput()
+        .appendField('crear un clon de')
+        .appendField(
+          new Blockly.FieldDropdown(() => [['mí mismo', '__yo__'], ...proveedorActores()]),
+          'ACTOR',
+        );
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setStyle('control');
+      this.setTooltip('Hace una copia que corre su propio programa "al comenzar como clon".');
+    },
+  };
+
+  // ----- Mis bloques: funciones propias con hasta 3 parámetros -----
+  type EstadoFun = { nombre: string; params: string[] };
+  const conEstado = (cuerpo: (b: Blockly.Block & EstadoFun) => void) => ({
+    nombre: '',
+    params: [] as string[],
+    saveExtraState(this: EstadoFun): EstadoFun {
+      return { nombre: this.nombre, params: this.params };
+    },
+    loadExtraState(this: Blockly.Block & EstadoFun & { armar: () => void }, e: Partial<EstadoFun>) {
+      this.nombre = String(e?.nombre ?? '');
+      this.params = (e?.params ?? []).slice(0, 3).map(String);
+      this.armar();
+    },
+    init(this: Blockly.Block & EstadoFun & { armar: () => void }) {
+      this.armar = () => cuerpo(this);
+      this.armar();
+    },
+  });
+  Blockly.Blocks['fun_definir'] = conEstado((b) => {
+    if (b.getInput('CAB')) b.removeInput('CAB');
+    const fila = b
+      .appendDummyInput('CAB')
+      .appendField('definir')
+      .appendField(new Blockly.FieldLabel(b.nombre || '…'));
+    if (b.params.length) {
+      fila.appendField('con');
+      for (const p of b.params) fila.appendField(new Blockly.FieldLabel(`⟨${p}⟩`));
+    }
+    b.setNextStatement(true);
+    b.setStyle('mis_bloques');
+    (b as unknown as { hat: string }).hat = 'cap';
+    b.setTooltip('Aquí armas lo que hace tu bloque. Después úsalo desde Mis bloques.');
+  });
+  Blockly.Blocks['fun_llamar'] = conEstado((b) => {
+    for (const i of [...b.inputList]) b.removeInput(i.name);
+    if (!b.params.length) b.appendDummyInput('CAB').appendField(b.nombre || '…');
+    b.params.forEach((p, i) => {
+      const e = b.appendValueInput(`ARG${i + 1}`).setCheck(['Number', 'String']);
+      if (i === 0) e.appendField(b.nombre || '…');
+      e.appendField(p);
+    });
+    b.setInputsInline(true);
+    b.setPreviousStatement(true);
+    b.setNextStatement(true);
+    b.setStyle('mis_bloques');
+    b.setTooltip('Usa un bloque que tú armaste.');
+  });
+  Blockly.Blocks['fun_param'] = conEstado((b) => {
+    for (const i of [...b.inputList]) b.removeInput(i.name);
+    b.appendDummyInput('CAB').appendField(new Blockly.FieldLabel(b.nombre || '…'));
+    b.setOutput(true, ['Number', 'String']);
+    b.setStyle('mis_bloques');
+    b.setTooltip('El dato que recibe tu bloque. Arrástralo adentro de "definir".');
+  });
 
   Blockly.Blocks['sen_distancia'] = {
     init(this: Blockly.Block) {

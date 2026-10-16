@@ -56,7 +56,9 @@ El escenario se puede ver en **3D** (por defecto) o en 2D con el botón `3D / 2D
 - **Variables** 📦 (crear, borrar, fijar, cambiar, mostrar y ocultar en el escenario) y **Listas** 📋 (agregar, borrar, insertar, reemplazar, elemento, posición, longitud, contiene, mostrar). Valen para todos los actores, se guardan con el proyecto y se reinician al ejecutar. Al borrar una, se quitan también los bloques que la usaban.
 - **Sensores nuevos:** preguntar y esperar (con su casilla en el escenario) y respuesta, posición y clic del ratón, distancia a un actor o al ratón, temporizador.
 - **Operadores nuevos:** unir, letra n de, longitud, contiene, resto, redondear, valor absoluto, raíz, piso, techo, seno y coseno.
-- Pendiente de la fase: "Mis bloques", lápiz y clones.
+- **Lápiz** 🖊️: bajar y subir, color (8), grosor, borrar todo y sellar. Dibuja sobre el escenario 2D y 3D, y cada actor y clon tiene su propio lápiz.
+- **Clones:** crear un clon, "al comenzar como clon" y borrar este clon (hasta 30 a la vez). Heredan posición, aspecto y programas de su original, y desaparecen al detener.
+- **Mis bloques** 🧩: bloques propios con nombre y hasta 3 datos, por actor. Se arman con "definir", se usan desde la paleta, admiten recursión corta (30 niveles) y, si se borra la definición, se quitan sus llamadas.
 
 ## Qué incluía la Fase 1
 

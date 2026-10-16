@@ -26,7 +26,9 @@ describe('mensajes de error de la nube', () => {
     expect(mensajeDeError({ code: 'unavailable', message: 'network error' })).toMatch(/conexión/);
   });
   it('explica la sesión vencida', () => {
-    expect(mensajeDeError({ code: 'permission-denied', message: 'Missing permissions' })).toMatch(/sesión/);
+    expect(mensajeDeError({ code: 'permission-denied', message: 'Missing permissions' })).toMatch(
+      /sesión/,
+    );
   });
   it('no muestra textos técnicos en errores desconocidos', () => {
     const m = mensajeDeError({ message: 'relation "x" does not exist', code: 'internal' });

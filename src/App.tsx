@@ -4,6 +4,7 @@ import { Inicio } from './ui/Inicio';
 import { Acceso } from './ui/Acceso';
 import { BibliotecaPersonajes } from './ui/BibliotecaPersonajes';
 import { DialogosCuenta } from './ui/DialogosCuenta';
+import { DialogoBloquePropio } from './ui/DialogoBloquePropio';
 import { DialogosDatos } from './ui/DialogosDatos';
 import { MisProyectos } from './ui/MisProyectos';
 import { conectarGuardado } from './nube/guardado';
@@ -93,6 +94,7 @@ export default function App() {
       <MisProyectos />
       <DialogosCuenta />
       <DialogosDatos />
+      <DialogoBloquePropio />
     </div>
   );
 }
