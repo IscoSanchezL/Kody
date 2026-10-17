@@ -1,16 +1,18 @@
 import { CATEGORIAS, type IdCategoria } from './categorias';
+import { t as tr } from '../i18n';
 import { nombresDe } from './definiciones';
 
 /** Entrada numérica con "sombra": el niño puede escribir el número o encajar otro bloque. */
 const n = (valor: number) => ({ shadow: { type: 'math_number', fields: { NUM: valor } } });
-const t = (valor: string) => ({ shadow: { type: 'text', fields: { TEXT: valor } } });
+const txt = (valor: string) => ({ shadow: { type: 'text', fields: { TEXT: valor } } });
 const bloque = (type: string, inputs?: Record<string, unknown>) => ({
   kind: 'block',
   type,
   ...(inputs ? { inputs } : {}),
 });
 
-const contenido: Partial<Record<IdCategoria, object[]>> = {
+/** Bloques de cada categoría. Es una función: las muestras de texto salen en el idioma actual. */
+const contenido = (): Partial<Record<IdCategoria, object[]>> => ({
   variables: [],
   listas: [],
   mis_bloques: [],
@@ -42,10 +44,10 @@ const contenido: Partial<Record<IdCategoria, object[]>> = {
     bloque('mov_rebotar'),
   ],
   apariencia: [
-    bloque('ap_decir', { TEXTO: t('¡Hola!') }),
-    bloque('ap_decir_seg', { TEXTO: t('¡Hola!'), SEG: n(2) }),
-    bloque('ap_pensar', { TEXTO: t('Mmm...') }),
-    bloque('ap_pensar_seg', { TEXTO: t('Mmm...'), SEG: n(2) }),
+    bloque('ap_decir', { TEXTO: txt(tr('tb.hola')) }),
+    bloque('ap_decir_seg', { TEXTO: txt(tr('tb.hola')), SEG: n(2) }),
+    bloque('ap_pensar', { TEXTO: txt(tr('tb.mmm')) }),
+    bloque('ap_pensar_seg', { TEXTO: txt(tr('tb.mmm')), SEG: n(2) }),
     bloque('ap_sig_disfraz'),
     bloque('ap_cambiar_tamano', { N: n(10) }),
     bloque('ap_fijar_tamano', { N: n(100) }),
@@ -78,7 +80,7 @@ const contenido: Partial<Record<IdCategoria, object[]>> = {
     bloque('sen_raton_x'),
     bloque('sen_raton_y'),
     bloque('sen_raton_abajo'),
-    bloque('sen_preguntar', { TEXTO: t('¿Cómo te llamas?') }),
+    bloque('sen_preguntar', { TEXTO: txt(tr('tb.nombrePregunta')) }),
     bloque('sen_respuesta'),
     bloque('sen_temporizador'),
     bloque('sen_reiniciar_temporizador'),
@@ -98,12 +100,12 @@ const contenido: Partial<Record<IdCategoria, object[]>> = {
     bloque('op_resto', { A: n(10), B: n(3) }),
     bloque('op_redondear', { A: n(3.6) }),
     bloque('op_funcion', { A: n(16) }),
-    bloque('op_unir', { A: t('hola '), B: t('mundo') }),
-    bloque('op_letra', { N: n(1), TEXTO: t('Kody') }),
-    bloque('op_longitud_texto', { A: t('Kody') }),
-    bloque('op_contiene_texto', { A: t('Kody'), B: t('K') }),
+    bloque('op_unir', { A: txt(tr('tb.holaEspacio')), B: txt(tr('tb.mundo')) }),
+    bloque('op_letra', { N: n(1), TEXTO: txt('Kody') }),
+    bloque('op_longitud_texto', { A: txt('Kody') }),
+    bloque('op_contiene_texto', { A: txt('Kody'), B: txt('K') }),
   ],
-};
+});
 
 const campo = (type: string, nombre: string, extra?: Record<string, unknown>) => ({
   kind: 'block',
@@ -116,13 +118,12 @@ const campo = (type: string, nombre: string, extra?: Record<string, unknown>) =>
 export function contenidoVariables(): object[] {
   const nombres = nombresDe('variable');
   const botones = [
-    { kind: 'button', text: '➕ Crear una variable', callbackKey: 'KODY_CREAR_VARIABLE' },
+    { kind: 'button', text: tr('tb.crearVariable'), callbackKey: 'KODY_CREAR_VARIABLE' },
     ...(nombres.length
-      ? [{ kind: 'button', text: '🗑 Borrar una variable', callbackKey: 'KODY_BORRAR_VARIABLE' }]
+      ? [{ kind: 'button', text: tr('tb.borrarVariable'), callbackKey: 'KODY_BORRAR_VARIABLE' }]
       : []),
   ];
-  if (!nombres.length)
-    return [...botones, { kind: 'label', text: 'Crea una variable para guardar puntos, vidas...' }];
+  if (!nombres.length) return [...botones, { kind: 'label', text: tr('tb.vacioVariables') }];
   const p = nombres[0];
   return [
     ...botones,
@@ -138,26 +139,25 @@ export function contenidoVariables(): object[] {
 export function contenidoListas(): object[] {
   const nombres = nombresDe('lista');
   const botones = [
-    { kind: 'button', text: '➕ Crear una lista', callbackKey: 'KODY_CREAR_LISTA' },
+    { kind: 'button', text: tr('tb.crearLista'), callbackKey: 'KODY_CREAR_LISTA' },
     ...(nombres.length
-      ? [{ kind: 'button', text: '🗑 Borrar una lista', callbackKey: 'KODY_BORRAR_LISTA' }]
+      ? [{ kind: 'button', text: tr('tb.borrarLista'), callbackKey: 'KODY_BORRAR_LISTA' }]
       : []),
   ];
-  if (!nombres.length)
-    return [...botones, { kind: 'label', text: 'Crea una lista para guardar varios datos.' }];
+  if (!nombres.length) return [...botones, { kind: 'label', text: tr('tb.vacioListas') }];
   const p = nombres[0];
   return [
     ...botones,
     ...nombres.map((x) => campo('lis_valor', x)),
-    campo('lis_agregar', p, { ITEM: t('cosa') }),
+    campo('lis_agregar', p, { ITEM: txt(tr('tb.cosa')) }),
     campo('lis_borrar', p, { N: n(1) }),
     campo('lis_borrar_todo', p),
-    campo('lis_insertar', p, { ITEM: t('cosa'), N: n(1) }),
-    campo('lis_reemplazar', p, { N: n(1), ITEM: t('cosa') }),
+    campo('lis_insertar', p, { ITEM: txt(tr('tb.cosa')), N: n(1) }),
+    campo('lis_reemplazar', p, { N: n(1), ITEM: txt(tr('tb.cosa')) }),
     campo('lis_elemento', p, { N: n(1) }),
-    campo('lis_posicion', p, { ITEM: t('cosa') }),
+    campo('lis_posicion', p, { ITEM: txt(tr('tb.cosa')) }),
     campo('lis_longitud', p),
-    campo('lis_contiene', p, { ITEM: t('cosa') }),
+    campo('lis_contiene', p, { ITEM: txt(tr('tb.cosa')) }),
     campo('lis_mostrar', p),
     campo('lis_ocultar', p),
   ];
@@ -172,10 +172,9 @@ export function contenidoMisBloques(espacio: {
     .map((b) => ({ nombre: String(b.nombre ?? ''), params: (b.params ?? []).map(String) }))
     .filter((d) => d.nombre);
   const botones = [
-    { kind: 'button', text: '➕ Crear un bloque', callbackKey: 'KODY_CREAR_BLOQUE' },
+    { kind: 'button', text: tr('tb.crearBloque'), callbackKey: 'KODY_CREAR_BLOQUE' },
   ];
-  if (!definidos.length)
-    return [...botones, { kind: 'label', text: 'Crea tus propios bloques para repetir ideas.' }];
+  if (!definidos.length) return [...botones, { kind: 'label', text: tr('tb.vacioBloques') }];
   const llamadas = definidos.map((d) => ({
     kind: 'block',
     type: 'fun_llamar',
@@ -207,7 +206,8 @@ const ORDEN: IdCategoria[] = [
 
 /** Toolbox por categorías; solo muestra las que ya tienen bloques. */
 export function crearToolbox(permitidas?: IdCategoria[]) {
-  const ids = ORDEN.filter((id) => contenido[id] && (!permitidas || permitidas.includes(id)));
+  const todo = contenido();
+  const ids = ORDEN.filter((id) => todo[id] && (!permitidas || permitidas.includes(id)));
   return {
     kind: 'categoryToolbox',
     contents: ids.map((id) => ({
@@ -220,7 +220,7 @@ export function crearToolbox(permitidas?: IdCategoria[]) {
           ? { custom: 'KODY_LISTAS' }
           : id === 'mis_bloques'
             ? { custom: 'KODY_MIS_BLOQUES' }
-            : { contents: contenido[id] }),
+            : { contents: todo[id] }),
     })),
   };
 }

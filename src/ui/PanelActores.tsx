@@ -5,6 +5,7 @@ import { useIconos } from './useIconos';
 import { runtime, seleccionarActor } from '../store/controlador';
 import { useProyecto } from '../store/proyecto';
 import { MAX_ACTORES, type ActorProyecto } from '../store/proyectoModelo';
+import { useT } from '../i18n';
 import { useApp } from '../store/useApp';
 
 /** Valores en vivo del actor mientras corre el programa. */
@@ -53,6 +54,7 @@ function Campo({
 }
 
 function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
+  const t = useT();
   useIconos();
   const editar = useProyecto((s) => s.editarActor);
   const quitar = useProyecto((s) => s.quitarActor);
@@ -78,20 +80,22 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
           className="rounded-xl bg-[var(--fondo)]"
         />
         <label className="flex-1 text-xs font-bold text-[var(--texto-suave)]">
-          Nombre
+          {t('actor.nombre')}
           <input
             className="campo w-full text-base"
             value={actor.nombre}
             maxLength={20}
             disabled={bloqueado}
             onChange={(e) => editar(actor.id, { nombre: e.target.value })}
-            onBlur={(e) => !e.target.value.trim() && editar(actor.id, { nombre: 'Actor' })}
+            onBlur={(e) =>
+              !e.target.value.trim() && editar(actor.id, { nombre: t('actor.generico') })
+            }
           />
         </label>
       </div>
 
       <label className="mb-2 flex items-center gap-2 text-xs font-bold text-[var(--texto-suave)]">
-        Personaje
+        {t('actor.personaje')}
         <select
           className="campo !w-auto flex-1"
           value={actor.personaje}
@@ -124,7 +128,7 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
           alCambiar={(y) => editar(actor.id, { y })}
         />
         <Campo
-          etiqueta="dirección"
+          etiqueta={t('actor.direccion')}
           valor={a.direccion}
           min={-180}
           max={180}
@@ -132,7 +136,7 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
           alCambiar={(direccion) => editar(actor.id, { direccion })}
         />
         <Campo
-          etiqueta="tamaño %"
+          etiqueta={t('actor.tamano')}
           valor={a.tamano}
           min={10}
           max={300}
@@ -150,36 +154,36 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
             disabled={bloqueado}
             onChange={(e) => editar(actor.id, { visible: e.target.checked })}
           />
-          Visible
+          {t('actor.visible')}
         </label>
         <button
           type="button"
           className="btn btn-suave !min-h-10 !px-3 !text-base"
           disabled={bloqueado}
           onClick={() => editar(actor.id, { disfraz: actor.disfraz === 0 ? 1 : 0 })}
-          aria-label="Cambiar disfraz"
+          aria-label={t('actor.cambiarDisfraz')}
         >
-          👕 Disfraz {(a.disfrazActual % 2) + 1}/2
+          {t('actor.disfraz', { n: (a.disfrazActual % 2) + 1 })}
         </button>
         {confirmar ? (
           <span className="ml-auto flex items-center gap-1.5 text-sm font-bold">
-            ¿Quitar a {actor.nombre}?
+            {t('actor.quitarPregunta', { nombre: actor.nombre })}
             <button
               type="button"
               className="btn btn-detener !min-h-10 !px-3 !text-base"
               onClick={() => {
                 quitar(actor.id);
-                decir(`${actor.nombre} salió del escenario.`);
+                decir('actor.salio', { nombre: actor.nombre });
               }}
             >
-              Sí
+              {t('comun.si')}
             </button>
             <button
               type="button"
               className="btn btn-suave !min-h-10 !px-3 !text-base"
               onClick={() => setConfirmar(false)}
             >
-              No
+              {t('comun.no')}
             </button>
           </span>
         ) : (
@@ -187,23 +191,22 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
             type="button"
             className="btn btn-suave ml-auto !min-h-10 !px-3 !text-base"
             disabled={total <= 1}
-            title={total <= 1 ? 'Siempre debe quedar un actor' : 'Quitar este actor'}
+            title={total <= 1 ? t('actor.siempreUno') : t('actor.quitarEste')}
             onClick={() => setConfirmar(true)}
           >
-            🗑️ Quitar
+            {t('actor.quitar')}
           </button>
         )}
       </div>
       {bloqueado && (
-        <p className="m-0 mt-2 text-xs font-bold text-[var(--texto-suave)]">
-          Detén el programa (■) para editar al actor.
-        </p>
+        <p className="m-0 mt-2 text-xs font-bold text-[var(--texto-suave)]">{t('actor.detener')}</p>
       )}
     </div>
   );
 }
 
 function ListaActores() {
+  const t = useT();
   useIconos();
   const actores = useProyecto((s) => s.actores);
   const seleccionado = useProyecto((s) => s.seleccionado);
@@ -232,12 +235,12 @@ function ListaActores() {
               type="button"
               className="tarjeta-boton !p-1.5 !border-dashed"
               onClick={() => abrir(true)}
-              aria-label="Agregar un personaje"
+              aria-label={t('actor.agregarAria')}
             >
               <span className="grid h-[52px] w-[52px] place-items-center text-3xl text-[var(--primario)]">
                 ＋
               </span>
-              <span className="text-xs font-extrabold">Agregar</span>
+              <span className="text-xs font-extrabold">{t('actor.agregar')}</span>
             </button>
           </li>
         )}
@@ -248,6 +251,7 @@ function ListaActores() {
 }
 
 function ListaFondos() {
+  useT(); // los nombres de los escenarios cambian con el idioma
   const fondo = useProyecto((s) => s.fondo);
   const fijar = useProyecto((s) => s.fijarFondo);
   const decir = useApp((s) => s.decir);
@@ -261,7 +265,7 @@ function ListaFondos() {
             aria-pressed={f.id === fondo}
             onClick={() => {
               fijar(f.id);
-              decir(`Escenario: ${f.nombre} 🌄`);
+              decir('fondo.elegido', { nombre: f.nombre });
             }}
           >
             <img
@@ -280,15 +284,16 @@ function ListaFondos() {
 
 /** Panel inferior derecho: actores (con sus propiedades) y escenarios. */
 export function PanelActores() {
+  const t = useT();
   const panel = useApp((s) => s.panel);
   const setPanel = useApp((s) => s.setPanel);
   return (
-    <section className="tarjeta p-3" aria-label="Actores y escenarios">
+    <section className="tarjeta p-3" aria-label={t('panel.etiqueta')}>
       <div role="tablist" className="mb-3 flex gap-2">
         {(
           [
-            ['actores', '🦊 Actores'],
-            ['fondos', '🏞️ Escenarios'],
+            ['actores', t('panel.actores')],
+            ['fondos', t('panel.fondos')],
           ] as const
         ).map(([id, texto]) => (
           <button

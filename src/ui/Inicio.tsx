@@ -3,16 +3,18 @@ import { PERSONAJES } from '../stage/biblioteca';
 import { uriPersonaje } from '../stage/uris';
 import { useIconos } from './useIconos';
 import { useSesion } from '../nube/sesion';
+import { useT, type Clave } from '../i18n';
 import { useApp } from '../store/useApp';
+import { SelectorIdioma } from './SelectorIdioma';
 
 const BASE = import.meta.env.BASE_URL;
 
 /** Bloques que se arman solos; colores suaves, con acabado de cristal. */
-const PILA = [
-  { texto: 'al hacer clic en 🏁', tono: '#e2b062', hat: true },
-  { texto: 'mover 10 pasos', tono: '#7ea6e0' },
-  { texto: 'repetir 4 veces', tono: '#74c4a0' },
-  { texto: 'decir ¡Hola, mundo!', tono: '#a99be6' },
+const PILA: { clave: Clave; tono: string; hat?: boolean }[] = [
+  { clave: 'inicio.pila1', tono: '#e2b062', hat: true },
+  { clave: 'inicio.pila2', tono: '#7ea6e0' },
+  { clave: 'inicio.pila3', tono: '#74c4a0' },
+  { clave: 'inicio.pila4', tono: '#a99be6' },
 ];
 const CICLO = 9; // segundos por vuelta
 
@@ -30,22 +32,10 @@ const CRISTALES = [
   { x: '12%', y: '74%', t: 90, r: -8, d: 16, clip: 'polygon(0 20%,60% 0,100% 60%,40% 100%)' },
 ];
 
-const PASOS = [
-  {
-    n: '01',
-    titulo: 'Arma con bloques',
-    texto: 'Une piezas para dar órdenes. Sin escribir código.',
-  },
-  {
-    n: '02',
-    titulo: 'Dirige el escenario 3D',
-    texto: '8 personajes y 8 mundos que responden a tu programa.',
-  },
-  {
-    n: '03',
-    titulo: 'Guarda en la nube',
-    texto: 'Tu cuenta lleva tus proyectos a cualquier computador.',
-  },
+const PASOS: { n: string; titulo: Clave; texto: Clave }[] = [
+  { n: '01', titulo: 'inicio.paso1.titulo', texto: 'inicio.paso1.texto' },
+  { n: '02', titulo: 'inicio.paso2.titulo', texto: 'inicio.paso2.texto' },
+  { n: '03', titulo: 'inicio.paso3.titulo', texto: 'inicio.paso3.texto' },
 ];
 
 const GoogleG = () => (
@@ -74,6 +64,7 @@ const cristal =
 
 /** Pila de bloques que cae, encaja, se ejecuta y se reinicia. */
 function PilaAnimada({ quieta }: { quieta: boolean }) {
+  const t = useT();
   const n = PILA.length;
   return (
     <div className="relative mx-auto w-full max-w-[22rem]" aria-hidden="true">
@@ -86,7 +77,7 @@ function PilaAnimada({ quieta }: { quieta: boolean }) {
           const sale = 0.93;
           return (
             <motion.div
-              key={b.texto}
+              key={b.clave}
               className={`relative flex h-12 items-center px-5 text-[15px] font-extrabold text-white ${
                 b.hat ? 'rounded-t-[26px] rounded-b-xl' : 'rounded-xl'
               }`}
@@ -124,7 +115,7 @@ function PilaAnimada({ quieta }: { quieta: boolean }) {
               }}
             >
               <span className="absolute inset-x-3 top-1 h-px bg-white/50" />
-              {b.texto}
+              {t(b.clave)}
               <span
                 className="absolute -bottom-[7px] left-6 h-[8px] w-8 rounded-b-md"
                 style={{ background: `${b.tono}c0` }}
@@ -169,7 +160,7 @@ function PilaAnimada({ quieta }: { quieta: boolean }) {
           }
           transition={{ duration: CICLO, times: [0, 0.74, 0.78, 0.9, 0.93, 1], repeat: Infinity }}
         >
-          ¡Hola, mundo!
+          {t('inicio.holaMundo')}
         </motion.span>
       </div>
       {/* Carga: indica el progreso del programa */}
@@ -186,13 +177,14 @@ function PilaAnimada({ quieta }: { quieta: boolean }) {
           }}
         />
       </div>
-      <span className="sr-only">{n} bloques de ejemplo</span>
+      <span className="sr-only">{t('inicio.bloquesEjemplo', { n })}</span>
     </div>
   );
 }
 
 /** Página de inicio: presenta Kody y deja elegir cómo entrar. */
 export function Inicio() {
+  const t = useT();
   useIconos();
   const quieta = !!useReducedMotion();
   const abrirVentana = useApp((s) => s.abrirVentana);
@@ -254,6 +246,10 @@ export function Inicio() {
         ))}
       </div>
 
+      <div className="absolute right-4 top-4 z-10">
+        <SelectorIdioma sobreOscuro />
+      </div>
+
       <main className="relative mx-auto grid min-h-full max-w-6xl items-center gap-10 px-6 py-12 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="text-center lg:text-left">
           <motion.p
@@ -261,7 +257,7 @@ export function Inicio() {
             className={`m-0 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold text-indigo-100 ${cristal}`}
           >
             <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_10px_#67e8f9]" />
-            Programación por bloques · para estudiantes
+            {t('inicio.etiqueta')}
           </motion.p>
 
           <motion.div
@@ -284,11 +280,11 @@ export function Inicio() {
             {...sube(2)}
             className="m-0 mt-4 max-w-lg text-2xl font-bold leading-snug text-indigo-100/90 lg:max-w-xl"
           >
-            Arma bloques y mira cómo tus ideas{' '}
+            {t('inicio.lema1')}{' '}
             <span className="bg-gradient-to-r from-cyan-200 to-violet-300 bg-clip-text text-transparent">
-              cobran vida
+              {t('inicio.lema2')}
             </span>{' '}
-            en 3D.
+            {t('inicio.lema3')}
           </motion.p>
 
           <motion.div {...sube(3)} className="mx-auto mt-8 flex max-w-md flex-col gap-3 lg:mx-0">
@@ -302,21 +298,21 @@ export function Inicio() {
               <span className="grid h-8 w-8 place-items-center rounded-full bg-white">
                 <GoogleG />
               </span>
-              {googleActivo === false ? 'Cuenta: muy pronto' : 'Entrar con Google'}
+              {googleActivo === false ? t('inicio.cuentaPronto') : t('inicio.entrarGoogle')}
             </button>
             <button
               type="button"
               onClick={() => setPantalla('editor')}
               className="cursor-pointer border-0 bg-transparent p-2 text-base font-extrabold text-indigo-200 underline decoration-indigo-300/40 underline-offset-4 hover:text-white"
             >
-              Probar sin cuenta →
+              {t('inicio.probar')}
             </button>
           </motion.div>
 
           <motion.ul
             {...sube(4)}
             className="m-0 mt-6 flex list-none flex-wrap justify-center gap-2 p-0 lg:justify-start"
-            aria-label="Personajes"
+            aria-label={t('inicio.personajes')}
           >
             {PERSONAJES.map((p) => (
               <li key={p.id} className={`rounded-xl p-1.5 ${cristal}`}>
@@ -329,7 +325,7 @@ export function Inicio() {
         <motion.section
           {...sube(3)}
           className={`relative rounded-[2rem] p-6 sm:p-8 ${cristal}`}
-          aria-label="Así se programa con Kody"
+          aria-label={t('inicio.asi')}
         >
           <div className="mb-5 flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.2em] text-indigo-200/80">
             <span className="flex gap-1.5">
@@ -349,17 +345,18 @@ export function Inicio() {
           {PASOS.map((p) => (
             <li key={p.n} className={`rounded-3xl p-5 text-left ${cristal}`}>
               <span className="font-mono text-sm font-bold text-cyan-200/80">{p.n}</span>
-              <h2 className="titulo m-0 mt-1 text-xl font-extrabold">{p.titulo}</h2>
-              <p className="m-0 mt-1 text-base font-bold text-indigo-100/75">{p.texto}</p>
+              <h2 className="titulo m-0 mt-1 text-xl font-extrabold">{t(p.titulo)}</h2>
+              <p className="m-0 mt-1 text-base font-bold text-indigo-100/75">{t(p.texto)}</p>
             </li>
           ))}
         </motion.ul>
 
         <footer className="pb-2 text-center text-sm font-bold text-indigo-200/70 lg:col-span-2">
           <a className="text-indigo-100 underline" href={`${BASE}privacidad.html`}>
-            Política de privacidad
+            {t('inicio.privacidad')}
           </a>
-          {' · '}Kody solo muestra tu apodo, nunca tu correo.
+          {' · '}
+          {t('inicio.soloApodo')}
         </footer>
       </main>
     </div>

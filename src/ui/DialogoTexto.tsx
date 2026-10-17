@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useT } from '../i18n';
 import { Ventana } from './Ventana';
 
 /** Ventana con un campo de texto (apodo, nombre del proyecto...). `alGuardar` devuelve un error o null. */
@@ -9,7 +10,7 @@ export function DialogoTexto({
   ayuda,
   inicial,
   maximo = 40,
-  boton = 'Guardar',
+  boton,
   alGuardar,
   alCerrar,
 }: {
@@ -23,6 +24,7 @@ export function DialogoTexto({
   alGuardar: (valor: string) => Promise<string | null>;
   alCerrar: () => void;
 }) {
+  const t = useT();
   const [valor, setValor] = useState(inicial);
   const [error, setError] = useState('');
   const [ocupado, setOcupado] = useState(false);
@@ -69,10 +71,10 @@ export function DialogoTexto({
         )}
         <div className="flex gap-2">
           <button type="submit" className="btn flex-1" disabled={ocupado}>
-            {ocupado ? 'Guardando…' : boton}
+            {ocupado ? t('dialogo.guardando') : (boton ?? t('comun.guardar'))}
           </button>
           <button type="button" className="btn btn-suave" onClick={alCerrar}>
-            Más tarde
+            {t('dialogo.masTarde')}
           </button>
         </div>
       </form>

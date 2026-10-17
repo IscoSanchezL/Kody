@@ -1,5 +1,6 @@
 import { FONDOS, PERSONAJES } from '../stage/biblioteca';
 import type { EstadoActor } from '../engine/tipos';
+import { t } from '../i18n';
 
 /** Modelo del proyecto de Kody (versión 2) y utilidades puras, sin React ni navegador. */
 
@@ -37,10 +38,10 @@ export const MAX_LARGO_NOMBRE_DATO = 20;
 /** Valida el nombre de una variable o lista nueva. Devuelve un mensaje o null si está bien. */
 export function validarNombreDato(nombre: string, existentes: string[]): string | null {
   const n = nombre.trim().replace(/\s+/g, ' ');
-  if (n.length < 1) return 'Escribe un nombre.';
-  if (n.length > MAX_LARGO_NOMBRE_DATO) return `Máximo ${MAX_LARGO_NOMBRE_DATO} letras.`;
-  if (existentes.some((e) => e.toLowerCase() === n.toLowerCase())) return 'Ya existe ese nombre.';
-  if (existentes.length >= MAX_DATOS) return `Máximo ${MAX_DATOS}. Borra alguno para crear otro.`;
+  if (n.length < 1) return t('datos.errVacio');
+  if (n.length > MAX_LARGO_NOMBRE_DATO) return t('datos.errLargo', { max: MAX_LARGO_NOMBRE_DATO });
+  if (existentes.some((e) => e.toLowerCase() === n.toLowerCase())) return t('datos.errRepetido');
+  if (existentes.length >= MAX_DATOS) return t('datos.errMaximo', { max: MAX_DATOS });
   return null;
 }
 
@@ -194,7 +195,9 @@ export function validarProyecto(entrada: unknown): Proyecto | null {
     actores.push({
       id,
       nombre:
-        typeof a.nombre === 'string' && a.nombre.trim() ? a.nombre.trim().slice(0, 20) : 'Actor',
+        typeof a.nombre === 'string' && a.nombre.trim()
+          ? a.nombre.trim().slice(0, 20)
+          : t('actor.generico'),
       personaje,
       x: limitar(a.x, -240, 240, 0),
       y: limitar(a.y, -180, 180, 0),

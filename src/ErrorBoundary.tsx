@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react';
+import { t } from './i18n';
 
 /** Si algo falla al dibujar la aplicación, se muestra un mensaje amable en vez de una pantalla en blanco. */
 export class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
@@ -35,8 +36,8 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
           background: '#fff',
         }}
       >
-        <h1>Kody tuvo un problema 🦊</h1>
-        <p>Puedes recargar la página. Si sigue igual, borra lo guardado y empieza de nuevo.</p>
+        <h1>{t('error.titulo')}</h1>
+        <p>{t('error.texto')}</p>
         <button
           type="button"
           onClick={this.reiniciar}
@@ -51,7 +52,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
             cursor: 'pointer',
           }}
         >
-          Borrar lo guardado y reiniciar
+          {t('error.boton')}
         </button>
         <pre
           style={{

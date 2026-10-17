@@ -1,3 +1,4 @@
+import { useT } from '../i18n';
 import { useApp } from '../store/useApp';
 
 const forma = (v: number | string) =>
@@ -5,6 +6,7 @@ const forma = (v: number | string) =>
 
 /** Variables y listas que el programa mostró, sobre una esquina del escenario. */
 export function Monitores() {
+  const t = useT();
   const { variables, listas } = useApp((s) => s.monitores);
   if (!variables.length && !listas.length) return null;
   return (
@@ -36,7 +38,7 @@ export function Monitores() {
               </li>
             ))}
             {l.valores.length > 8 && <li className="opacity-70">…</li>}
-            {l.valores.length === 0 && <li className="opacity-70">(vacía)</li>}
+            {l.valores.length === 0 && <li className="opacity-70">{t('monitor.vacia')}</li>}
           </ol>
         </div>
       ))}

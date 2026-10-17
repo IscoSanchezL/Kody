@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as Blockly from 'blockly';
+import * as En from 'blockly/msg/en';
 import * as Es from 'blockly/msg/es';
 import { configurarActores, configurarDatos, registrarBloques } from '../blocks/definiciones';
 import { crearTema } from '../blocks/tema';
@@ -10,6 +11,7 @@ import {
   crearToolbox,
 } from '../blocks/toolbox';
 import { sonidoEncaje } from '../audio';
+import { idiomaActual, useT } from '../i18n';
 import { guardarScriptActual, registrarEspacio } from '../store/controlador';
 import { guardarYa, useProyecto } from '../store/proyecto';
 import { SCRIPT_VACIO } from '../store/proyectoModelo';
@@ -40,8 +42,14 @@ function quitarLlamadasHuerfanas(w: Blockly.WorkspaceSvg) {
   Blockly.Events.setGroup(false);
 }
 
-/** Editor de bloques (Blockly con renderer "zelos", redondeado como Scratch 3). */
+/**
+ * Editor de bloques (Blockly con renderer "zelos", redondeado como Scratch 3).
+ * Los textos de los bloques y de la propia librería salen en el idioma actual; para cambiar de
+ * idioma, la aplicación vuelve a montar este componente (con `key`), que antes guarda los bloques
+ * del alumno y al montarse los carga de nuevo.
+ */
 export function EditorBloques() {
+  const t = useT();
   const host = useRef<HTMLDivElement>(null);
   const ws = useRef<Blockly.WorkspaceSvg | null>(null);
   const tema = useApp((s) => s.tema);
@@ -51,7 +59,8 @@ export function EditorBloques() {
   useEffect(() => {
     const el = host.current;
     if (!el) return;
-    Blockly.setLocale(Es as unknown as Record<string, string>);
+    // Mensajes de la propia librería (menú contextual, zoom, papelera…) en el idioma elegido.
+    Blockly.setLocale((idiomaActual() === 'en' ? En : Es) as unknown as Record<string, string>);
     registrarBloques();
     // "¿tocando a …?" ofrece a los demás actores del proyecto.
     configurarActores(() => {
@@ -147,6 +156,7 @@ export function EditorBloques() {
 
     return () => {
       clearTimeout(pendiente);
+      guardarScriptActual(); // lo que hay en pantalla pasa al proyecto antes de destruir el editor
       dejarDeEscuchar();
       window.removeEventListener('beforeunload', alSalir);
       document.removeEventListener('visibilitychange', oculta);
@@ -173,7 +183,7 @@ export function EditorBloques() {
       ref={host}
       className="absolute inset-0"
       role="application"
-      aria-label="Editor de bloques"
+      aria-label={t('app.editorBloques')}
     />
   );
 }

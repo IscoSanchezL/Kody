@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '../i18n';
 import { responderPregunta } from '../store/controlador';
 import { useApp } from '../store/useApp';
 
 /** La pregunta de "preguntar … y esperar": una barra con su casilla, al pie del escenario. */
 export function PreguntaEscenario() {
+  const t = useT();
   const pregunta = useApp((s) => s.pregunta);
   const [texto, setTexto] = useState('');
   const campo = useRef<HTMLInputElement>(null);
@@ -37,7 +39,7 @@ export function PreguntaEscenario() {
           onChange={(e) => setTexto(e.target.value)}
         />
         <button type="submit" className="btn !min-h-9 !px-4 !text-base">
-          Listo ✔
+          {t('pregunta.listo')}
         </button>
       </div>
     </form>

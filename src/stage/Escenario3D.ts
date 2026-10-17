@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Runtime } from '../engine/runtime';
+import { t } from '../i18n';
 import { ESCENARIO, RADIO_ACTOR, type Dialogo, type EstadoActor } from '../engine/tipos';
 import { alDataUri } from './disfraces';
 import { fondoPorId } from './biblioteca';
@@ -222,7 +223,7 @@ export class Escenario3D {
     const lienzo = this.renderer.domElement;
     lienzo.style.cssText = 'display:block;width:100%;height:100%;touch-action:none';
     lienzo.setAttribute('role', 'img');
-    lienzo.setAttribute('aria-label', 'Escenario 3D donde se mueven los actores');
+    lienzo.setAttribute('aria-label', t('escenario.aria3d'));
     host.appendChild(lienzo);
     this.sinMovimiento = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 

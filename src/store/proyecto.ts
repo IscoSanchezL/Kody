@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { PERSONAJES } from '../stage/biblioteca';
-import { scriptEjemplo } from './ejemplo';
+import { crearScriptEjemplo } from './ejemplo';
 import {
   MAX_ACTORES,
   SCRIPT_VACIO,
@@ -28,7 +28,7 @@ export function proyectoInicial(): Proyecto {
     version: 2,
     actores: [kody],
     fondo: 'pradera',
-    scripts: { kody: scriptEjemplo },
+    scripts: { kody: crearScriptEjemplo() },
     seleccionado: 'kody',
     variables: [],
     listas: [],

@@ -8,9 +8,11 @@ import { MAX_ACTORES } from '../store/proyectoModelo';
 import { guardarScriptActual } from '../store/controlador';
 import { useApp } from '../store/useApp';
 import { sonidoEncaje } from '../audio';
+import { useT } from '../i18n';
 
 /** Ventana para elegir un personaje nuevo. */
 export function BibliotecaPersonajes() {
+  const t = useT();
   useIconos();
   const abierta = useApp((s) => s.bibliotecaAbierta);
   const abrir = useApp((s) => s.abrirBiblioteca);
@@ -29,7 +31,7 @@ export function BibliotecaPersonajes() {
   const elegir = (id: string, nombre: string) => {
     guardarScriptActual();
     if (useProyecto.getState().agregarActor(id)) {
-      decir(`¡${nombre} se unió al escenario! Arrástralo para ponerlo donde quieras.`);
+      decir('biblioteca.unio', { nombre });
       sonidoEncaje();
     }
     abrir(false);
@@ -56,22 +58,20 @@ export function BibliotecaPersonajes() {
           >
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 id="titulo-biblioteca" className="titulo m-0 text-2xl font-extrabold">
-                Elige un personaje
+                {t('biblioteca.titulo')}
               </h2>
               <button
                 ref={cerrar}
                 type="button"
                 className="btn btn-suave"
                 onClick={() => abrir(false)}
-                aria-label="Cerrar"
+                aria-label={t('comun.cerrar')}
               >
                 ✕
               </button>
             </div>
             {cantidad >= MAX_ACTORES ? (
-              <p className="m-0 font-bold">
-                Ya tienes {MAX_ACTORES} actores, ¡el máximo! Quita uno para agregar otro.
-              </p>
+              <p className="m-0 font-bold">{t('biblioteca.maximo', { max: MAX_ACTORES })}</p>
             ) : (
               <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-4">
                 {PERSONAJES.map((p) => (

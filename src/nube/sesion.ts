@@ -2,6 +2,7 @@ import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { create } from 'zustand';
 import { autenticacion, baseDatos, proveedorGoogle } from './cliente';
+import { t } from '../i18n';
 import { NUBE_CONFIGURADA } from './config';
 
 export type Rol = 'student';
@@ -29,12 +30,20 @@ interface EstadoSesion {
 /** Valida el apodo: entre 2 y 40 letras. */
 export function validarApodo(v: string): string | null {
   const n = v.trim().replace(/\s+/g, ' ');
-  if (n.length < 2) return 'Escribe al menos 2 letras.';
-  if (n.length > 40) return 'Máximo 40 letras.';
+  if (n.length < 2) return t('apodo.errCorto');
+  if (n.length > 40) return t('apodo.errLargo');
   return null;
 }
 
+/** Apodo que se guarda al crear la cuenta (no cambia nunca: está en las cuentas ya creadas). */
 const APODO_INICIAL = 'Explorador';
+
+/** ¿Es el apodo de cuando aún no eligió uno? (se reconoce en cualquiera de los dos idiomas) */
+export const esApodoInicial = (nombre: string) => nombre === APODO_INICIAL || nombre === 'Explorer';
+
+/** Lo que se muestra de un apodo: el inicial se escribe en el idioma actual. */
+export const apodoVisible = (nombre: string) =>
+  esApodoInicial(nombre) ? t('cuenta.explorador') : nombre;
 const AVATAR_INICIAL = '🦊';
 
 /** Lee el apodo guardado (usuarios/{id}) o lo crea la primera vez. */
@@ -93,15 +102,14 @@ export const useSesion = create<EstadoSesion>((set, get) => ({
           /* cae al mensaje general */
         }
       }
-      if (codigo === 'auth/unauthorized-domain')
-        return 'Este sitio aún no está autorizado en Firebase. Avisa a tu docente.';
-      return 'No se pudo abrir Google. Inténtalo de nuevo en un momento.';
+      if (codigo === 'auth/unauthorized-domain') return t('acceso.errDominio');
+      return t('acceso.errGoogle');
     }
   },
 
   cambiarApodo: async (nombre) => {
     const perfil = get().perfil;
-    if (!perfil) return 'Primero entra a Kody.';
+    if (!perfil) return t('apodo.errPrimero');
     const limpio = nombre.trim().replace(/\s+/g, ' ');
     const problema = validarApodo(limpio);
     if (problema) return problema;
@@ -111,7 +119,7 @@ export const useSesion = create<EstadoSesion>((set, get) => ({
         avatar: perfil.avatar,
       });
     } catch {
-      return 'No se pudo guardar tu apodo. Inténtalo otra vez.';
+      return t('apodo.errGuardar');
     }
     set({ perfil: { ...perfil, nombre: limpio } });
     return null;

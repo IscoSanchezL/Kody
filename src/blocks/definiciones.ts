@@ -1,16 +1,28 @@
 import * as Blockly from 'blockly';
-import { COLORES_LAPIZ, MENSAJES, NOTAS, OPCIONES_FONDOS, SONIDOS, TECLAS } from './opciones';
+import { t, tDinamica } from '../i18n';
+import {
+  opcionesColoresLapiz,
+  opcionesFondos,
+  opcionesFunciones,
+  opcionesMensajes,
+  opcionesNotas,
+  opcionesSonidos,
+  opcionesTeclas,
+} from './opciones';
 
 /**
  * Definición de los bloques de Kody.
  * Los campos numéricos son entradas con "sombra" para poder encajar otros bloques encima.
+ * Los textos no están aquí: cada bloque lee su etiqueta (`b.<tipo>`) y su ayuda (`b.<tipo>.ayuda`)
+ * del diccionario de idiomas al crearse, así que el editor se rehace al cambiar de idioma.
  */
 
 const num = (name: string) => ({ type: 'input_value', name, check: 'Number' });
 const txt = (name: string) => ({ type: 'input_value', name, check: ['String', 'Number'] });
 const cualquiera = (name: string) => ({ type: 'input_value', name, check: ['Number', 'String'] });
 const bool = (name: string) => ({ type: 'input_value', name, check: 'Boolean' });
-const lista = (name: string, options: [string, string][]) => ({
+/** Lista desplegable: las opciones se piden al crear el bloque, ya traducidas. */
+const lista = (name: string, options: () => [string, string][]) => ({
   type: 'field_dropdown',
   name,
   options,
@@ -24,559 +36,428 @@ const bloques = [
   // ---------- Lápiz ----------
   {
     type: 'lap_bajar',
-    message0: 'bajar el lápiz ✏️',
     ...pila,
     style: 'lapiz',
-    tooltip: 'Desde ahora, al moverte dibujas una línea.',
   },
   {
     type: 'lap_subir',
-    message0: 'subir el lápiz',
     ...pila,
     style: 'lapiz',
-    tooltip: 'Deja de dibujar al moverte.',
   },
   {
     type: 'lap_color',
-    message0: 'fijar color del lápiz a %1',
-    args0: [lista('COLOR', COLORES_LAPIZ)],
+    args0: [lista('COLOR', opcionesColoresLapiz)],
     ...pila,
     style: 'lapiz',
-    tooltip: 'Elige el color de las líneas.',
   },
   {
     type: 'lap_grosor',
-    message0: 'fijar grosor del lápiz a %1',
     args0: [num('N')],
     ...pila,
     style: 'lapiz',
-    tooltip: 'Qué tan gruesas son las líneas (1 a 50).',
   },
   {
     type: 'lap_cambiar_grosor',
-    message0: 'cambiar grosor del lápiz en %1',
     args0: [num('N')],
     ...pila,
     style: 'lapiz',
-    tooltip: 'Engrosa o adelgaza las líneas.',
   },
   {
     type: 'lap_borrar',
-    message0: 'borrar todo lo dibujado',
     ...pila,
     style: 'lapiz',
-    tooltip: 'Limpia el escenario de líneas y sellos.',
   },
   {
     type: 'lap_sellar',
-    message0: 'sellar',
     ...pila,
     style: 'lapiz',
-    tooltip: 'Deja una copia del actor dibujada en el escenario.',
   },
   // ---------- Clones ----------
   {
     type: 'clon_borrar',
-    message0: 'borrar este clon',
     previousStatement: null,
     style: 'control',
-    tooltip: 'El clon desaparece. El actor original no se borra.',
   },
   // ---------- Movimiento ----------
   {
     type: 'mov_mover',
-    message0: 'mover %1 pasos',
     args0: [num('PASOS')],
     ...pila,
     style: 'movimiento',
-    tooltip: 'Mueve al actor hacia donde mira.',
   },
   {
     type: 'mov_girar_der',
-    message0: 'girar ↻ %1 grados',
     args0: [num('GRADOS')],
     ...pila,
     style: 'movimiento',
-    tooltip: 'Gira a la derecha.',
   },
   {
     type: 'mov_girar_izq',
-    message0: 'girar ↺ %1 grados',
     args0: [num('GRADOS')],
     ...pila,
     style: 'movimiento',
-    tooltip: 'Gira a la izquierda.',
   },
   {
     type: 'mov_apuntar',
-    message0: 'apuntar hacia %1 °',
     args0: [num('DIR')],
     ...pila,
     style: 'movimiento',
-    tooltip: '90 = derecha, 0 = arriba, 180 = abajo, -90 = izquierda.',
   },
   {
     type: 'mov_ir_a',
-    message0: 'ir a x: %1 y: %2',
     args0: [num('X'), num('Y')],
     ...pila,
     style: 'movimiento',
-    tooltip: 'Salta a un lugar del escenario.',
   },
   {
     type: 'mov_deslizar',
-    message0: 'deslizar en %1 seg a x: %2 y: %3',
     args0: [num('SEG'), num('X'), num('Y')],
     ...pila,
     style: 'movimiento',
-    tooltip: 'Se desliza suavemente hasta un lugar.',
   },
   {
     type: 'mov_cambiar_x',
-    message0: 'sumar %1 a x',
     args0: [num('N')],
     ...pila,
     style: 'movimiento',
-    tooltip: 'Mueve a los lados.',
   },
   {
     type: 'mov_cambiar_y',
-    message0: 'sumar %1 a y',
     args0: [num('N')],
     ...pila,
     style: 'movimiento',
-    tooltip: 'Mueve hacia arriba o abajo.',
   },
   {
     type: 'mov_rebotar',
-    message0: 'rebotar si toca el borde',
     ...pila,
     style: 'movimiento',
-    tooltip: 'Rebota si llega al borde del escenario.',
   },
 
   // ---------- Apariencia ----------
   {
     type: 'ap_decir',
-    message0: 'decir %1',
     args0: [txt('TEXTO')],
     ...pila,
     style: 'apariencia',
-    tooltip: 'Muestra un globo de texto.',
   },
   {
     type: 'ap_decir_seg',
-    message0: 'decir %1 durante %2 seg',
     args0: [txt('TEXTO'), num('SEG')],
     ...pila,
     style: 'apariencia',
-    tooltip: 'Habla por un rato.',
   },
   {
     type: 'ap_pensar',
-    message0: 'pensar %1',
     args0: [txt('TEXTO')],
     ...pila,
     style: 'apariencia',
-    tooltip: 'Muestra un pensamiento.',
   },
   {
     type: 'ap_pensar_seg',
-    message0: 'pensar %1 durante %2 seg',
     args0: [txt('TEXTO'), num('SEG')],
     ...pila,
     style: 'apariencia',
-    tooltip: 'Piensa por un rato.',
   },
   {
     type: 'ap_sig_disfraz',
-    message0: 'siguiente disfraz',
     ...pila,
     style: 'apariencia',
-    tooltip: 'Cambia la ropa del actor.',
   },
   {
     type: 'ap_cambiar_tamano',
-    message0: 'cambiar tamaño en %1',
     args0: [num('N')],
     ...pila,
     style: 'apariencia',
-    tooltip: 'Hace más grande o más pequeño.',
   },
   {
     type: 'ap_fijar_tamano',
-    message0: 'fijar tamaño a %1 %',
     args0: [num('N')],
     ...pila,
     style: 'apariencia',
-    tooltip: '100 es el tamaño normal.',
   },
   {
     type: 'ap_mostrar',
-    message0: 'mostrar',
     ...pila,
     style: 'apariencia',
-    tooltip: 'Hace visible al actor.',
   },
   {
     type: 'ap_ocultar',
-    message0: 'ocultar',
     ...pila,
     style: 'apariencia',
-    tooltip: 'Esconde al actor.',
   },
   {
     type: 'ap_fondo',
-    message0: 'cambiar escenario a %1',
-    args0: [lista('FONDO', OPCIONES_FONDOS)],
+    args0: [lista('FONDO', opcionesFondos)],
     ...pila,
     style: 'apariencia',
-    tooltip: 'Cambia el fondo del escenario.',
   },
 
   // ---------- Sonido ----------
   {
     type: 'son_tocar',
-    message0: 'tocar sonido %1',
-    args0: [lista('SONIDO', SONIDOS)],
+    args0: [lista('SONIDO', opcionesSonidos)],
     ...pila,
     style: 'sonido',
-    tooltip: 'Reproduce un efecto de sonido.',
   },
   {
     type: 'son_nota',
-    message0: 'tocar nota %1 por %2 seg',
-    args0: [lista('NOTA', NOTAS), num('SEG')],
+    args0: [lista('NOTA', opcionesNotas), num('SEG')],
     ...pila,
     style: 'sonido',
-    tooltip: 'Toca una nota musical.',
   },
 
   // ---------- Eventos (los que no son sombrero) ----------
   {
     type: 'ev_enviar',
-    message0: 'enviar mensaje %1',
-    args0: [lista('MENSAJE', MENSAJES)],
+    args0: [lista('MENSAJE', opcionesMensajes)],
     ...pila,
     style: 'eventos',
-    tooltip: 'Avisa a todos los actores.',
   },
 
   // ---------- Control ----------
   {
     type: 'ctrl_esperar',
-    message0: 'esperar %1 seg',
     args0: [num('SEG')],
     ...pila,
     style: 'control',
-    tooltip: 'Hace una pausa.',
   },
   {
     type: 'ctrl_repetir',
-    message0: 'repetir %1 veces %2 %3',
     args0: [num('VECES'), aqui, cuerpo()],
     ...pila,
     style: 'control',
-    tooltip: 'Repite los bloques de adentro.',
   },
   {
     type: 'ctrl_por_siempre',
-    message0: 'por siempre %1 %2',
     args0: [aqui, cuerpo()],
     previousStatement: null,
     style: 'control',
-    tooltip: 'Repite sin parar hasta que presiones ■.',
   },
   {
     type: 'ctrl_repetir_hasta',
-    message0: 'repetir hasta que %1 %2 %3',
     args0: [bool('COND'), aqui, cuerpo()],
     ...pila,
     style: 'control',
-    tooltip: 'Repite hasta que se cumpla la condición.',
   },
   {
     type: 'ctrl_si',
-    message0: 'si %1 entonces %2 %3',
     args0: [bool('COND'), aqui, cuerpo()],
     ...pila,
     style: 'control',
-    tooltip: 'Hace algo solo si se cumple la condición.',
   },
   {
     type: 'ctrl_si_sino',
-    message0: 'si %1 entonces %2 %3 si no %4 %5',
     args0: [bool('COND'), aqui, cuerpo(), aqui, cuerpo('CUERPO_SINO')],
     ...pila,
     style: 'control',
-    tooltip: 'Elige entre dos caminos.',
   },
   {
     type: 'ctrl_esperar_hasta',
-    message0: 'esperar hasta que %1',
     args0: [bool('COND')],
     ...pila,
     style: 'control',
-    tooltip: 'Espera a que se cumpla la condición.',
   },
   {
     type: 'ctrl_detener',
-    message0: 'detener todo',
     previousStatement: null,
     style: 'control',
-    tooltip: 'Detiene todos los programas.',
   },
 
   // ---------- Sensores ----------
   {
     type: 'sen_tecla',
-    message0: '¿tecla %1 presionada?',
-    args0: [lista('TECLA', TECLAS)],
+    args0: [lista('TECLA', opcionesTeclas)],
     output: 'Boolean',
     style: 'sensores',
-    tooltip: 'Es verdadero mientras sostienes la tecla.',
   },
   {
     type: 'sen_borde',
-    message0: '¿tocando el borde?',
     output: 'Boolean',
     style: 'sensores',
-    tooltip: 'Es verdadero si llegó al borde del escenario.',
   },
   {
     type: 'sen_x',
-    message0: 'posición x',
     output: 'Number',
     style: 'sensores',
-    tooltip: 'Dónde está, de lado a lado.',
   },
   {
     type: 'sen_y',
-    message0: 'posición y',
     output: 'Number',
     style: 'sensores',
-    tooltip: 'Dónde está, de arriba a abajo.',
   },
   {
     type: 'sen_dir',
-    message0: 'dirección',
     output: 'Number',
     style: 'sensores',
-    tooltip: 'Hacia dónde mira, en grados.',
   },
 
   // ---------- Operadores ----------
   {
     type: 'op_suma',
-    message0: '%1 + %2',
     args0: [num('A'), num('B')],
     output: 'Number',
     style: 'operadores',
-    tooltip: 'Suma.',
   },
   {
     type: 'op_resta',
-    message0: '%1 − %2',
     args0: [num('A'), num('B')],
     output: 'Number',
     style: 'operadores',
-    tooltip: 'Resta.',
   },
   {
     type: 'op_mult',
-    message0: '%1 × %2',
     args0: [num('A'), num('B')],
     output: 'Number',
     style: 'operadores',
-    tooltip: 'Multiplica.',
   },
   {
     type: 'op_div',
-    message0: '%1 ÷ %2',
     args0: [num('A'), num('B')],
     output: 'Number',
     style: 'operadores',
-    tooltip: 'Divide.',
   },
   {
     type: 'op_aleatorio',
-    message0: 'número al azar entre %1 y %2',
     args0: [num('DESDE'), num('HASTA')],
     output: 'Number',
     style: 'operadores',
-    tooltip: 'Elige un número al azar.',
   },
   {
     type: 'sen_preguntar',
-    message0: 'preguntar %1 y esperar',
     args0: [txt('TEXTO')],
     ...pila,
     style: 'sensores',
-    tooltip: 'Hace una pregunta y espera lo que escribas. La respuesta queda en "respuesta".',
   },
   {
     type: 'sen_respuesta',
-    message0: 'respuesta',
     output: 'String',
     style: 'sensores',
-    tooltip: 'Lo último que se escribió al preguntar.',
   },
   {
     type: 'sen_raton_x',
-    message0: 'ratón x',
     output: 'Number',
     style: 'sensores',
-    tooltip: 'Dónde está el ratón, de lado a lado.',
   },
   {
     type: 'sen_raton_y',
-    message0: 'ratón y',
     output: 'Number',
     style: 'sensores',
-    tooltip: 'Dónde está el ratón, de arriba a abajo.',
   },
   {
     type: 'sen_raton_abajo',
-    message0: '¿ratón presionado?',
     output: 'Boolean',
     style: 'sensores',
-    tooltip: 'Es verdadero mientras mantienes presionado el ratón sobre el escenario.',
   },
   {
     type: 'sen_temporizador',
-    message0: 'temporizador',
     output: 'Number',
     style: 'sensores',
-    tooltip: 'Segundos desde que empezó el programa (o desde que lo reiniciaste).',
   },
   {
     type: 'sen_reiniciar_temporizador',
-    message0: 'reiniciar temporizador',
     ...pila,
     style: 'sensores',
-    tooltip: 'Vuelve el temporizador a 0.',
   },
   {
     type: 'op_unir',
-    message0: 'unir %1 con %2',
     args0: [cualquiera('A'), cualquiera('B')],
     output: 'String',
     style: 'operadores',
-    tooltip: 'Junta dos textos (o números) en uno.',
   },
   {
     type: 'op_letra',
-    message0: 'letra %1 de %2',
     args0: [num('N'), txt('TEXTO')],
     output: 'String',
     style: 'operadores',
-    tooltip: 'La letra que está en ese lugar. La primera es la 1.',
   },
   {
     type: 'op_longitud_texto',
-    message0: 'longitud de %1',
     args0: [txt('A')],
     output: 'Number',
     style: 'operadores',
-    tooltip: 'Cuántas letras tiene un texto.',
   },
   {
     type: 'op_contiene_texto',
-    message0: '%1 contiene %2 ?',
     args0: [txt('A'), txt('B')],
     output: 'Boolean',
     style: 'operadores',
-    tooltip: '¿El primer texto tiene al segundo adentro?',
   },
   {
     type: 'op_resto',
-    message0: 'resto de %1 ÷ %2',
     args0: [num('A'), num('B')],
     output: 'Number',
     style: 'operadores',
-    tooltip: 'Lo que sobra al dividir. Sirve para saber si un número es par.',
   },
   {
     type: 'op_redondear',
-    message0: 'redondear %1',
     args0: [num('A')],
     output: 'Number',
     style: 'operadores',
-    tooltip: 'Quita los decimales al número más cercano.',
   },
   {
     type: 'op_funcion',
-    message0: '%1 de %2',
-    args0: [
-      lista('FUNC', [
-        ['valor absoluto', 'abs'],
-        ['raíz cuadrada', 'raiz'],
-        ['piso', 'piso'],
-        ['techo', 'techo'],
-        ['seno', 'sen'],
-        ['coseno', 'cos'],
-      ]),
-      num('A'),
-    ],
+    args0: [lista('FUNC', opcionesFunciones), num('A')],
     output: 'Number',
     style: 'operadores',
-    tooltip: 'Operaciones matemáticas de uso común.',
   },
   {
     type: 'cmp_mayor',
-    message0: '%1 > %2',
     args0: [cualquiera('A'), cualquiera('B')],
     output: 'Boolean',
     style: 'operadores',
-    tooltip: '¿El primero es mayor?',
   },
   {
     type: 'cmp_menor',
-    message0: '%1 < %2',
     args0: [cualquiera('A'), cualquiera('B')],
     output: 'Boolean',
     style: 'operadores',
-    tooltip: '¿El primero es menor?',
   },
   {
     type: 'cmp_igual',
-    message0: '%1 = %2',
     args0: [cualquiera('A'), cualquiera('B')],
     output: 'Boolean',
     style: 'operadores',
-    tooltip: '¿Son iguales?',
   },
   {
     type: 'op_y',
-    message0: '%1 y %2',
     args0: [bool('A'), bool('B')],
     output: 'Boolean',
     style: 'operadores',
-    tooltip: 'Verdadero si se cumplen las dos.',
   },
   {
     type: 'op_o',
-    message0: '%1 o %2',
     args0: [bool('A'), bool('B')],
     output: 'Boolean',
     style: 'operadores',
-    tooltip: 'Verdadero si se cumple al menos una.',
   },
   {
     type: 'op_no',
-    message0: 'no %1',
     args0: [bool('A')],
     output: 'Boolean',
     style: 'operadores',
-    tooltip: 'Cambia verdadero por falso.',
   },
 ];
 
+type Def = Record<string, unknown> & { type: string };
+
+/** Resuelve lo que depende del idioma: etiqueta, ayuda y opciones de las listas desplegables. */
+function traducir(def: Def): object {
+  const args0 = (def.args0 as { options?: unknown }[] | undefined)?.map((a) =>
+    typeof a.options === 'function' ? { ...a, options: (a.options as () => unknown)() } : a,
+  );
+  return {
+    ...def,
+    message0: tDinamica(`b.${def.type}`),
+    tooltip: tDinamica(`b.${def.type}.ayuda`),
+    ...(args0 ? { args0 } : {}),
+  };
+}
+
 /** Bloque sombrero con "gorro" (zelos dibuja el gorro con hat = 'cap'). */
-function sombrero(definicion: object) {
+function sombrero(def: Def) {
   return {
     init(this: Blockly.Block) {
-      this.jsonInit({ nextStatement: null, style: 'eventos', ...definicion });
+      this.jsonInit(traducir({ nextStatement: null, style: 'eventos', ...def }));
       (this as unknown as { hat: string }).hat = 'cap';
     },
   };
@@ -600,19 +481,15 @@ export const nombresDe = (tipo: 'variable' | 'lista') =>
   tipo === 'variable' ? proveedorDatos.variables() : proveedorDatos.listas();
 
 type Parte =
-  | string
-  | { dato: 'variable' | 'lista'; name: string }
-  | { entrada: string; check?: string | string[] };
+  { dato: 'variable' | 'lista'; name: string } | { entrada: string; check?: string | string[] };
 
-const VACIO: [string, string] = ['(crea una primero)', ''];
-
-/** Define un bloque que mezcla texto, nombres de variables/listas y casillas para encajar valores. */
+/** Define un bloque que mezcla texto, nombres de variables/listas y casillas para encajar valores.
+ *  El texto sale del diccionario (`b.<tipo>`) con marcas %1, %2… que apuntan a `partes`. */
 function bloqueDato(
   tipo: string,
   estilo: 'variables' | 'listas',
   partes: Parte[],
   forma: 'pila' | 'numero' | 'texto' | 'logico',
-  ayuda: string,
 ) {
   Blockly.Blocks[tipo] = {
     init(this: Blockly.Block) {
@@ -622,15 +499,22 @@ function bloqueDato(
         for (const f of pendientes) entrada.appendField(f.campo as never, f.nombre);
         pendientes = [];
       };
-      for (const p of partes) {
-        if (typeof p === 'string') pendientes.push({ campo: p });
-        else if ('dato' in p) {
+      for (const trozo of tDinamica(`b.${tipo}`).split(/(%\d)/)) {
+        const marca = /^%(\d)$/.exec(trozo);
+        if (!marca) {
+          const texto = trozo.trim();
+          if (texto) pendientes.push({ campo: texto });
+          continue;
+        }
+        const p = partes[Number(marca[1]) - 1];
+        if (!p) continue;
+        if ('dato' in p) {
           const quien = p.dato;
           pendientes.push({
             nombre: p.name,
             campo: new Blockly.FieldDropdown(() => {
               const o = nombresDe(quien).map((n): [string, string] => [n, n]);
-              return o.length ? o : [VACIO];
+              return o.length ? o : [[t('op.vacio'), '']];
             }),
           });
         } else {
@@ -651,161 +535,80 @@ function bloqueDato(
         );
       }
       this.setStyle(estilo);
-      this.setTooltip(ayuda);
+      this.setTooltip(tDinamica(`b.${tipo}.ayuda`));
     },
   };
 }
 
 let registrado = false;
 
-/** Registra todos los bloques (idempotente). */
+/** Registra todos los bloques (idempotente). Los textos se leen al crear cada bloque. */
 export function registrarBloques() {
   if (registrado) return;
   registrado = true;
-  Blockly.common.defineBlocksWithJsonArray(bloques);
+  for (const def of bloques as Def[]) {
+    Blockly.Blocks[def.type] = {
+      init(this: Blockly.Block) {
+        this.jsonInit(traducir(def));
+      },
+    };
+  }
 
-  Blockly.Blocks['evento_al_ejecutar'] = sombrero({
-    message0: 'al hacer clic en ▶',
-    tooltip: 'Aquí empieza tu programa.',
-  });
+  Blockly.Blocks['evento_al_ejecutar'] = sombrero({ type: 'evento_al_ejecutar' });
   Blockly.Blocks['evento_tecla'] = sombrero({
-    message0: 'al presionar la tecla %1',
-    args0: [lista('TECLA', TECLAS)],
-    tooltip: 'Se ejecuta cuando presionas esa tecla.',
+    type: 'evento_tecla',
+    args0: [lista('TECLA', opcionesTeclas)],
   });
-  Blockly.Blocks['evento_clic_actor'] = sombrero({
-    message0: 'al hacer clic en este actor',
-    tooltip: 'Se ejecuta cuando tocas al actor en el escenario.',
-  });
-  Blockly.Blocks['evento_clon'] = sombrero({
-    message0: 'al comenzar como clon',
-    style: 'control',
-    tooltip: 'Cada clon nuevo empieza su programa aquí.',
-  });
+  Blockly.Blocks['evento_clic_actor'] = sombrero({ type: 'evento_clic_actor' });
+  Blockly.Blocks['evento_clon'] = sombrero({ type: 'evento_clon', style: 'control' });
   Blockly.Blocks['evento_mensaje'] = sombrero({
-    message0: 'al recibir %1',
-    args0: [lista('MENSAJE', MENSAJES)],
-    tooltip: 'Se ejecuta cuando otro actor envía ese mensaje.',
+    type: 'evento_mensaje',
+    args0: [lista('MENSAJE', opcionesMensajes)],
   });
 
   const V = (name = 'VAR') => ({ dato: 'variable' as const, name });
   const L = (name = 'LISTA') => ({ dato: 'lista' as const, name });
   const e = (entrada: string, check?: string | string[]) => ({ entrada, check });
   const ANY = ['Number', 'String'];
-  bloqueDato('var_valor', 'variables', [V()], 'numero', 'El valor de la variable.');
-  bloqueDato(
-    'var_fijar',
-    'variables',
-    ['fijar', V(), 'a', e('VALOR', ANY)],
-    'pila',
-    'Guarda un valor en la variable.',
-  );
-  bloqueDato(
-    'var_cambiar',
-    'variables',
-    ['cambiar', V(), 'en', e('N', 'Number')],
-    'pila',
-    'Suma (o resta) a la variable.',
-  );
-  bloqueDato(
-    'var_mostrar',
-    'variables',
-    ['mostrar variable', V()],
-    'pila',
-    'La muestra en el escenario.',
-  );
-  bloqueDato(
-    'var_ocultar',
-    'variables',
-    ['ocultar variable', V()],
-    'pila',
-    'La esconde del escenario.',
-  );
-  bloqueDato(
-    'lis_valor',
-    'listas',
-    [L()],
-    'texto',
-    'Todos los elementos de la lista, separados por espacios.',
-  );
-  bloqueDato(
-    'lis_agregar',
-    'listas',
-    ['agregar', e('ITEM', ANY), 'a', L()],
-    'pila',
-    'Pone un elemento al final de la lista.',
-  );
-  bloqueDato(
-    'lis_borrar',
-    'listas',
-    ['borrar el elemento', e('N', 'Number'), 'de', L()],
-    'pila',
-    'Quita un elemento de la lista.',
-  );
-  bloqueDato('lis_borrar_todo', 'listas', ['borrar todo de', L()], 'pila', 'Deja la lista vacía.');
-  bloqueDato(
-    'lis_insertar',
-    'listas',
-    ['insertar', e('ITEM', ANY), 'en la posición', e('N', 'Number'), 'de', L()],
-    'pila',
-    'Mete un elemento en un lugar de la lista.',
-  );
-  bloqueDato(
-    'lis_reemplazar',
-    'listas',
-    ['reemplazar el elemento', e('N', 'Number'), 'de', L(), 'con', e('ITEM', ANY)],
-    'pila',
-    'Cambia un elemento de la lista.',
-  );
-  bloqueDato(
-    'lis_elemento',
-    'listas',
-    ['elemento', e('N', 'Number'), 'de', L()],
-    'numero',
-    'Lee un elemento. El primero es el 1.',
-  );
-  bloqueDato(
-    'lis_posicion',
-    'listas',
-    ['posición de', e('ITEM', ANY), 'en', L()],
-    'numero',
-    'Dice en qué lugar está (0 si no está).',
-  );
-  bloqueDato(
-    'lis_longitud',
-    'listas',
-    ['longitud de', L()],
-    'numero',
-    'Cuántos elementos tiene la lista.',
-  );
-  bloqueDato(
-    'lis_contiene',
-    'listas',
-    [L(), 'contiene', e('ITEM', ANY)],
-    'logico',
-    '¿Está ese elemento en la lista?',
-  );
-  bloqueDato(
-    'lis_mostrar',
-    'listas',
-    ['mostrar lista', L()],
-    'pila',
-    'La muestra en el escenario.',
-  );
-  bloqueDato('lis_ocultar', 'listas', ['ocultar lista', L()], 'pila', 'La esconde del escenario.');
+  bloqueDato('var_valor', 'variables', [V()], 'numero');
+  bloqueDato('var_fijar', 'variables', [V(), e('VALOR', ANY)], 'pila');
+  bloqueDato('var_cambiar', 'variables', [V(), e('N', 'Number')], 'pila');
+  bloqueDato('var_mostrar', 'variables', [V()], 'pila');
+  bloqueDato('var_ocultar', 'variables', [V()], 'pila');
+  bloqueDato('lis_valor', 'listas', [L()], 'texto');
+  bloqueDato('lis_agregar', 'listas', [e('ITEM', ANY), L()], 'pila');
+  bloqueDato('lis_borrar', 'listas', [e('N', 'Number'), L()], 'pila');
+  bloqueDato('lis_borrar_todo', 'listas', [L()], 'pila');
+  bloqueDato('lis_insertar', 'listas', [e('ITEM', ANY), e('N', 'Number'), L()], 'pila');
+  bloqueDato('lis_reemplazar', 'listas', [e('N', 'Number'), L(), e('ITEM', ANY)], 'pila');
+  bloqueDato('lis_elemento', 'listas', [e('N', 'Number'), L()], 'numero');
+  bloqueDato('lis_posicion', 'listas', [e('ITEM', ANY), L()], 'numero');
+  bloqueDato('lis_longitud', 'listas', [L()], 'numero');
+  bloqueDato('lis_contiene', 'listas', [L(), e('ITEM', ANY)], 'logico');
+  bloqueDato('lis_mostrar', 'listas', [L()], 'pila');
+  bloqueDato('lis_ocultar', 'listas', [L()], 'pila');
+
+  /** Pone una lista desplegable de actores en el lugar de %1 del texto del bloque. */
+  const conDesplegable = (b: Blockly.Block, tipo: string, campo: Blockly.Field, nombre: string) => {
+    const fila = b.appendDummyInput();
+    for (const trozo of tDinamica(`b.${tipo}`).split(/(%1)/)) {
+      if (trozo === '%1') fila.appendField(campo, nombre);
+      else if (trozo.trim()) fila.appendField(trozo.trim());
+    }
+  };
 
   Blockly.Blocks['clon_crear'] = {
     init(this: Blockly.Block) {
-      this.appendDummyInput()
-        .appendField('crear un clon de')
-        .appendField(
-          new Blockly.FieldDropdown(() => [['mí mismo', '__yo__'], ...proveedorActores()]),
-          'ACTOR',
-        );
+      conDesplegable(
+        this,
+        'clon_crear',
+        new Blockly.FieldDropdown(() => [[t('op.yo'), '__yo__'], ...proveedorActores()]),
+        'ACTOR',
+      );
       this.setPreviousStatement(true);
       this.setNextStatement(true);
       this.setStyle('control');
-      this.setTooltip('Hace una copia que corre su propio programa "al comenzar como clon".');
+      this.setTooltip(t('b.clon_crear.ayuda'));
     },
   };
 
@@ -831,16 +634,16 @@ export function registrarBloques() {
     if (b.getInput('CAB')) b.removeInput('CAB');
     const fila = b
       .appendDummyInput('CAB')
-      .appendField('definir')
+      .appendField(t('b.fun_definir'))
       .appendField(new Blockly.FieldLabel(b.nombre || '…'));
     if (b.params.length) {
-      fila.appendField('con');
+      fila.appendField(t('b.fun_definir.con'));
       for (const p of b.params) fila.appendField(new Blockly.FieldLabel(`⟨${p}⟩`));
     }
     b.setNextStatement(true);
     b.setStyle('mis_bloques');
     (b as unknown as { hat: string }).hat = 'cap';
-    b.setTooltip('Aquí armas lo que hace tu bloque. Después úsalo desde Mis bloques.');
+    b.setTooltip(t('b.fun_definir.ayuda'));
   });
   Blockly.Blocks['fun_llamar'] = conEstado((b) => {
     for (const i of [...b.inputList]) b.removeInput(i.name);
@@ -854,48 +657,44 @@ export function registrarBloques() {
     b.setPreviousStatement(true);
     b.setNextStatement(true);
     b.setStyle('mis_bloques');
-    b.setTooltip('Usa un bloque que tú armaste.');
+    b.setTooltip(t('b.fun_llamar.ayuda'));
   });
   Blockly.Blocks['fun_param'] = conEstado((b) => {
     for (const i of [...b.inputList]) b.removeInput(i.name);
     b.appendDummyInput('CAB').appendField(new Blockly.FieldLabel(b.nombre || '…'));
     b.setOutput(true, ['Number', 'String']);
     b.setStyle('mis_bloques');
-    b.setTooltip('El dato que recibe tu bloque. Arrástralo adentro de "definir".');
+    b.setTooltip(t('b.fun_param.ayuda'));
   });
 
   Blockly.Blocks['sen_distancia'] = {
     init(this: Blockly.Block) {
-      this.appendDummyInput()
-        .appendField('distancia a')
-        .appendField(
-          new Blockly.FieldDropdown(() => [
-            ['puntero del ratón', '__raton__'],
-            ...proveedorActores(),
-          ]),
-          'ACTOR',
-        );
+      conDesplegable(
+        this,
+        'sen_distancia',
+        new Blockly.FieldDropdown(() => [[t('op.raton'), '__raton__'], ...proveedorActores()]),
+        'ACTOR',
+      );
       this.setOutput(true, 'Number');
       this.setStyle('sensores');
-      this.setTooltip('Qué tan lejos está del ratón o de otro actor.');
+      this.setTooltip(t('b.sen_distancia.ayuda'));
     },
   };
 
   Blockly.Blocks['sen_tocando'] = {
     init(this: Blockly.Block) {
-      this.appendDummyInput()
-        .appendField('¿tocando a')
-        .appendField(
-          new Blockly.FieldDropdown(() => {
-            const o = proveedorActores();
-            return o.length ? o : [['(no hay otros actores)', '']];
-          }),
-          'ACTOR',
-        )
-        .appendField('?');
+      conDesplegable(
+        this,
+        'sen_tocando',
+        new Blockly.FieldDropdown(() => {
+          const o = proveedorActores();
+          return o.length ? o : [[t('op.sinActores'), '']];
+        }),
+        'ACTOR',
+      );
       this.setOutput(true, 'Boolean');
       this.setStyle('sensores');
-      this.setTooltip('Es verdadero si choca con ese actor.');
+      this.setTooltip(t('b.sen_tocando.ayuda'));
     },
   };
 }

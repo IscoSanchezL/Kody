@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import type { ModoEjecucion, Monitores } from '../engine/tipos';
+import type { Clave, Vars } from '../i18n';
 
 export type Tema = 'claro' | 'gris' | 'oscuro';
+
+/** Lo que dice la mascota: una clave del diccionario (se traduce al cambiar de idioma) o un texto ya armado. */
+export type MensajeKody = { clave: Clave; vars?: Vars } | { texto: string };
 
 interface EstadoApp {
   tema: Tema;
@@ -9,7 +13,7 @@ interface EstadoApp {
   escala: number;
   modo: ModoEjecucion;
   /** Lo que dice la mascota Kody. */
-  mensaje: string;
+  mensaje: MensajeKody;
   /** Cambia en cada mensaje para re-animar el globo. */
   mensajeId: number;
   /** Pestaña del panel derecho. */
@@ -55,7 +59,10 @@ interface EstadoApp {
   ciclarTema: () => void;
   cambiarEscala: (delta: number) => void;
   setModo: (m: ModoEjecucion) => void;
-  decir: (m: string) => void;
+  /** La mascota dice un texto del diccionario. */
+  decir: (clave: Clave, vars?: Vars) => void;
+  /** La mascota dice un texto que ya viene armado (por ejemplo, un aviso del motor). */
+  decirTexto: (texto: string) => void;
 }
 
 const leer = <T>(clave: string, defecto: T): T => {
@@ -126,7 +133,7 @@ export const useApp = create<EstadoApp>((set, get) => ({
   },
   abrirBiblioteca: (bibliotecaAbierta) => set({ bibliotecaAbierta }),
   setPuntero: (puntero) => set({ puntero }),
-  mensaje: '¡Hola! Soy Kody 🦊 Arrastra bloques y presiona ▶ para ver la magia.',
+  mensaje: { clave: 'app.hola' },
   mensajeId: 0,
   setTema: (tema) => {
     guardar('kody.tema', tema);
@@ -139,5 +146,7 @@ export const useApp = create<EstadoApp>((set, get) => ({
     set({ escala });
   },
   setModo: (modo) => set({ modo }),
-  decir: (mensaje) => set((s) => ({ mensaje, mensajeId: s.mensajeId + 1 })),
+  decir: (clave, vars) =>
+    set((s) => ({ mensaje: { clave, ...(vars ? { vars } : {}) }, mensajeId: s.mensajeId + 1 })),
+  decirTexto: (texto) => set((s) => ({ mensaje: { texto }, mensajeId: s.mensajeId + 1 })),
 }));

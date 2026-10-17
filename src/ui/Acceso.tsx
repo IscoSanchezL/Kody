@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useT } from '../i18n';
 import { useSesion } from '../nube/sesion';
 import { useApp } from '../store/useApp';
+import { SelectorIdioma } from './SelectorIdioma';
 import { Ventana } from './Ventana';
 
 const GoogleG = () => (
@@ -26,6 +28,7 @@ const GoogleG = () => (
 
 /** Ventana para entrar: con Google o seguir sin cuenta. */
 export function Acceso() {
+  const t = useT();
   const abierta = useApp((s) => s.accesoAbierto);
   const abrirVentana = useApp((s) => s.abrirVentana);
   const googleActivo = useSesion((s) => s.googleActivo);
@@ -49,8 +52,11 @@ export function Acceso() {
   };
 
   return (
-    <Ventana abierta={abierta && !perfil} titulo="Entrar a Kody" alCerrar={cerrar}>
+    <Ventana abierta={abierta && !perfil} titulo={t('acceso.titulo')} alCerrar={cerrar}>
       <div className="flex flex-col gap-3">
+        <div className="flex justify-end">
+          <SelectorIdioma />
+        </div>
         <button
           type="button"
           className="tarjeta-boton !flex-row !justify-start !gap-3 !p-4 text-left disabled:opacity-60"
@@ -59,27 +65,23 @@ export function Acceso() {
         >
           <GoogleG />
           <span>
-            <span className="titulo block text-xl font-extrabold">Continuar con Google</span>
+            <span className="titulo block text-xl font-extrabold">{t('acceso.google')}</span>
             <span className="text-sm font-bold text-[var(--texto-suave)]">
               {googleActivo === false
-                ? 'Muy pronto'
+                ? t('acceso.pronto')
                 : googleActivo === null
-                  ? 'Revisando…'
+                  ? t('acceso.revisando')
                   : ocupado
-                    ? 'Abriendo Google…'
-                    : 'Con tu cuenta de Google'}
+                    ? t('acceso.abriendo')
+                    : t('acceso.conGoogle')}
             </span>
           </span>
         </button>
 
         <button type="button" className="btn btn-suave" onClick={cerrar}>
-          Seguir sin cuenta
+          {t('acceso.sinCuenta')}
         </button>
-        <p className="m-0 text-xs font-bold text-[var(--texto-suave)]">
-          Sin cuenta, tus proyectos solo quedan en este navegador. Con cuenta los guardas en la nube
-          y puedes abrirlos en cualquier computador. Kody solo muestra tu apodo, nunca tu correo ni
-          tu nombre.
-        </p>
+        <p className="m-0 text-xs font-bold text-[var(--texto-suave)]">{t('acceso.nota')}</p>
         {error && (
           <p
             role="alert"

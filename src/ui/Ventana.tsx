@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useT } from '../i18n';
 
 /** Ventana flotante accesible (se cierra con Esc o tocando fuera). */
 export function Ventana({
@@ -15,6 +16,7 @@ export function Ventana({
   children: ReactNode;
   ancho?: string;
 }) {
+  const t = useT();
   const idTitulo = useId();
   const cerrar = useRef<HTMLButtonElement>(null);
 
@@ -54,7 +56,7 @@ export function Ventana({
                 type="button"
                 className="btn btn-suave"
                 onClick={alCerrar}
-                aria-label="Cerrar"
+                aria-label={t('comun.cerrar')}
               >
                 ✕
               </button>

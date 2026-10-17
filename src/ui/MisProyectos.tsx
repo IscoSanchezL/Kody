@@ -7,11 +7,12 @@ import {
   renombrarProyecto,
   type ResumenProyecto,
 } from '../nube/proyectos';
+import { localeActual, useT } from '../i18n';
 import { useApp } from '../store/useApp';
 import { Ventana } from './Ventana';
 
 const fechaAmable = (iso: string) =>
-  new Date(iso).toLocaleString('es', {
+  new Date(iso).toLocaleString(localeActual(), {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
@@ -23,6 +24,7 @@ type Pendiente =
 
 /** Lista de los proyectos de la cuenta: abrir, renombrar, borrar o empezar uno nuevo. */
 export function MisProyectos() {
+  const t = useT();
   const abierta = useApp((s) => s.proyectosAbierto);
   const abrirVentana = useApp((s) => s.abrirVentana);
   const proyectoActual = useNube((s) => s.proyectoId);
@@ -41,9 +43,9 @@ export function MisProyectos() {
       setLista(await listarProyectos());
     } catch (e) {
       setLista([]);
-      setError(e instanceof ErrorNube ? e.message : 'No se pudieron cargar tus proyectos.');
+      setError(e instanceof ErrorNube ? e.message : t('proyectos.errCargar'));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!abierta) return;
@@ -71,7 +73,7 @@ export function MisProyectos() {
         await cargar();
       }
     } catch (e) {
-      setError(e instanceof ErrorNube ? e.message : 'No se pudo completar.');
+      setError(e instanceof ErrorNube ? e.message : t('proyectos.errCompletar'));
     } finally {
       setOcupado(false);
     }
@@ -82,7 +84,7 @@ export function MisProyectos() {
     const ok = await guardarEnNube();
     setOcupado(false);
     if (ok) void ejecutar(p);
-    else setError(useNube.getState().mensaje || 'No se pudo guardar tu proyecto actual.');
+    else setError(useNube.getState().mensaje || t('proyectos.errGuardarActual'));
   };
 
   const renombrar = async () => {
@@ -95,19 +97,19 @@ export function MisProyectos() {
       setEditando(null);
       await cargar();
     } catch (e) {
-      setError(e instanceof ErrorNube ? e.message : 'No se pudo cambiar el nombre.');
+      setError(e instanceof ErrorNube ? e.message : t('proyectos.errRenombrar'));
     }
   };
 
   return (
-    <Ventana abierta={abierta} titulo="Mis proyectos" alCerrar={cerrar} ancho="max-w-xl">
+    <Ventana abierta={abierta} titulo={t('proyectos.titulo')} alCerrar={cerrar} ancho="max-w-xl">
       <button
         type="button"
         className="btn mb-3"
         onClick={() => pedir({ tipo: 'nuevo' })}
         disabled={ocupado}
       >
-        ＋ Proyecto nuevo
+        {t('proyectos.nuevo')}
       </button>
 
       {pendiente && pendiente.tipo !== 'borrar' && (
@@ -115,28 +117,28 @@ export function MisProyectos() {
           role="alert"
           className="mb-3 rounded-2xl border-[3px] border-[var(--aviso)] p-3 text-sm font-bold"
         >
-          Tu proyecto actual todavía no está guardado en tu cuenta.
+          {t('proyectos.sinGuardar')}
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"
               className="btn !min-h-10 !px-3 !text-base"
               onClick={() => void guardarYSeguir(pendiente)}
             >
-              Guardarlo y seguir
+              {t('proyectos.guardarSeguir')}
             </button>
             <button
               type="button"
               className="btn btn-detener !min-h-10 !px-3 !text-base"
               onClick={() => void ejecutar(pendiente)}
             >
-              Seguir sin guardar
+              {t('proyectos.seguirSin')}
             </button>
             <button
               type="button"
               className="btn btn-suave !min-h-10 !px-3 !text-base"
               onClick={() => setPendiente(null)}
             >
-              Cancelar
+              {t('comun.cancelar')}
             </button>
           </div>
         </div>
@@ -152,12 +154,9 @@ export function MisProyectos() {
       )}
 
       {lista === null ? (
-        <p className="m-0 font-bold">Cargando tus proyectos…</p>
+        <p className="m-0 font-bold">{t('proyectos.cargando')}</p>
       ) : lista.length === 0 && !error ? (
-        <p className="m-0 font-bold">
-          Aún no tienes proyectos guardados. Usa «Guardar en mi cuenta» para guardar el que estás
-          haciendo.
-        </p>
+        <p className="m-0 font-bold">{t('proyectos.vacio')}</p>
       ) : (
         <ul className="m-0 flex max-h-80 list-none flex-col gap-2 overflow-y-auto p-0">
           {lista.map((p) => (
@@ -178,11 +177,11 @@ export function MisProyectos() {
                     value={editando.nombre}
                     maxLength={60}
                     autoFocus
-                    aria-label="Nuevo nombre del proyecto"
+                    aria-label={t('proyectos.nuevoNombre')}
                     onChange={(e) => setEditando({ id: p.id, nombre: e.target.value })}
                   />
                   <button type="submit" className="btn !min-h-10 !px-3 !text-base">
-                    Listo
+                    {t('comun.listo')}
                   </button>
                 </form>
               ) : (
@@ -190,7 +189,11 @@ export function MisProyectos() {
                   <div className="min-w-0 flex-1">
                     <div className="titulo truncate text-lg font-extrabold">
                       {p.nombre}{' '}
-                      {p.id === proyectoActual && <span aria-label="abierto ahora">· abierto</span>}
+                      {p.id === proyectoActual && (
+                        <span aria-label={t('proyectos.abiertoAhora')}>
+                          {t('proyectos.abierto')}
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs font-bold text-[var(--texto-suave)]">
                       {fechaAmable(p.actualizado)}
@@ -198,20 +201,20 @@ export function MisProyectos() {
                   </div>
                   {pendiente?.tipo === 'borrar' && pendiente.id === p.id ? (
                     <span className="flex items-center gap-1.5 text-sm font-bold">
-                      ¿Borrar?
+                      {t('proyectos.borrarPregunta')}
                       <button
                         type="button"
                         className="btn btn-detener !min-h-10 !px-3 !text-base"
                         onClick={() => void ejecutar(pendiente)}
                       >
-                        Sí
+                        {t('comun.si')}
                       </button>
                       <button
                         type="button"
                         className="btn btn-suave !min-h-10 !px-3 !text-base"
                         onClick={() => setPendiente(null)}
                       >
-                        No
+                        {t('comun.no')}
                       </button>
                     </span>
                   ) : (
@@ -222,13 +225,13 @@ export function MisProyectos() {
                         onClick={() => pedir({ tipo: 'abrir', id: p.id })}
                         disabled={ocupado}
                       >
-                        Abrir
+                        {t('proyectos.abrir')}
                       </button>
                       <button
                         type="button"
                         className="btn btn-suave !min-h-10 !px-3 !text-base"
                         onClick={() => setEditando({ id: p.id, nombre: p.nombre })}
-                        aria-label={`Cambiar el nombre de ${p.nombre}`}
+                        aria-label={t('proyectos.renombrar', { nombre: p.nombre })}
                       >
                         ✏️
                       </button>
@@ -236,7 +239,7 @@ export function MisProyectos() {
                         type="button"
                         className="btn btn-suave !min-h-10 !px-3 !text-base"
                         onClick={() => setPendiente({ tipo: 'borrar', id: p.id })}
-                        aria-label={`Borrar ${p.nombre}`}
+                        aria-label={t('proyectos.borrar', { nombre: p.nombre })}
                       >
                         🗑️
                       </button>

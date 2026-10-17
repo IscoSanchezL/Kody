@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { guardarEnNube, useNube } from '../nube/guardado';
-import { useSesion } from '../nube/sesion';
+import { useT } from '../i18n';
+import { esApodoInicial, useSesion } from '../nube/sesion';
 import { useApp } from '../store/useApp';
 import { validarApodo } from '../nube/sesion';
 import { DialogoTexto } from './DialogoTexto';
@@ -9,6 +10,7 @@ const CLAVE_APODO = 'kody.apodo-preguntado';
 
 /** Pregunta el apodo (la primera vez que alguien entra con Google) y el nombre del proyecto al guardarlo. */
 export function DialogosCuenta() {
+  const t = useT();
   const perfil = useSesion((s) => s.perfil);
   const cambiarApodo = useSesion((s) => s.cambiarApodo);
   const apodoAbierto = useApp((s) => s.apodoAbierto);
@@ -19,7 +21,7 @@ export function DialogosCuenta() {
 
   // Quien entra con Google aparece como "Explorador": se le invita a elegir un apodo.
   useEffect(() => {
-    if (!perfil || perfil.nombre !== 'Explorador') return;
+    if (!perfil || !esApodoInicial(perfil.nombre)) return;
     try {
       if (sessionStorage.getItem(CLAVE_APODO)) return;
       sessionStorage.setItem(CLAVE_APODO, '1');
@@ -33,37 +35,37 @@ export function DialogosCuenta() {
     <>
       <DialogoTexto
         abierta={apodoAbierto}
-        titulo="¿Cómo te llamamos?"
-        etiqueta="Tu apodo en Kody"
-        ayuda="Puedes usar un apodo: no hace falta tu nombre completo. Solo se ve en tu cuenta."
-        inicial={perfil && perfil.nombre !== 'Explorador' ? perfil.nombre : ''}
+        titulo={t('apodo.titulo')}
+        etiqueta={t('apodo.etiqueta')}
+        ayuda={t('apodo.ayuda')}
+        inicial={perfil && !esApodoInicial(perfil.nombre) ? perfil.nombre : ''}
         alCerrar={() => abrirVentana('apodo', false)}
         alGuardar={async (v) => {
           const problema = validarApodo(v) ?? (await cambiarApodo(v));
           if (!problema) {
             abrirVentana('apodo', false);
-            decir(`¡Mucho gusto, ${v.trim()}! 🦊`);
+            decir('apodo.hecho', { nombre: v.trim() });
           }
           return problema;
         }}
       />
       <DialogoTexto
         abierta={nombreAbierto}
-        titulo="Guardar en mi cuenta"
-        etiqueta="Nombre de tu proyecto"
-        inicial={nombreProyecto}
+        titulo={t('proyecto.guardarTitulo')}
+        etiqueta={t('proyecto.etiquetaNombre')}
+        inicial={nombreProyecto || t('proyecto.defecto')}
         maximo={60}
-        boton="Guardar"
+        boton={t('comun.guardar')}
         alCerrar={() => abrirVentana('nombre', false)}
         alGuardar={async (v) => {
-          if (!v.trim()) return 'Ponle un nombre a tu proyecto.';
+          if (!v.trim()) return t('proyecto.errNombre');
           const ok = await guardarEnNube(v.trim());
           if (ok) {
             abrirVentana('nombre', false);
-            decir('¡Guardado en tu cuenta! Desde ahora se guarda solo ☁️');
+            decir('proyecto.guardado');
             return null;
           }
-          return useNube.getState().mensaje || 'No se pudo guardar.';
+          return useNube.getState().mensaje || t('proyecto.errGuardar');
         }}
       />
     </>

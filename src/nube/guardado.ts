@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { guardarScriptActual, proyectoNuevo, runtime } from '../store/controlador';
 import { instantanea, useProyecto } from '../store/proyecto';
+import { t } from '../i18n';
 import { useApp } from '../store/useApp';
 import { ErrorNube, abrirProyecto, actualizarProyecto, crearProyecto } from './proyectos';
 import { useSesion } from './sesion';
@@ -15,6 +16,7 @@ export type EstadoGuardado = 'sin-cuenta' | 'sin-guardar' | 'guardando' | 'guard
 interface EstadoNube {
   /** Id del proyecto de la nube que se está editando (null = aún no está en la nube). */
   proyectoId: string | null;
+  /** Nombre del proyecto de la nube (vacío = aún sin nombre: se muestra "Mi proyecto"). */
   nombre: string;
   estado: EstadoGuardado;
   mensaje: string;
@@ -22,7 +24,7 @@ interface EstadoNube {
 
 export const useNube = create<EstadoNube>(() => ({
   proyectoId: null,
-  nombre: 'Mi proyecto',
+  nombre: '',
   estado: 'sin-cuenta',
   mensaje: '',
 }));
@@ -50,7 +52,7 @@ export async function guardarEnNube(nombre?: string): Promise<boolean> {
     guardarScriptActual();
     const proyecto = instantanea();
     const { proyectoId, nombre: actual } = useNube.getState();
-    const nombreFinal = (nombre ?? actual).trim() || 'Mi proyecto';
+    const nombreFinal = (nombre ?? actual).trim() || t('proyecto.defecto');
     if (proyectoId) {
       await actualizarProyecto(proyectoId, proyecto, nombre ? nombreFinal : undefined);
       poner({ nombre: nombreFinal });
@@ -62,7 +64,7 @@ export async function guardarEnNube(nombre?: string): Promise<boolean> {
     poner({ estado: 'guardado', mensaje: '' });
     return true;
   } catch (e) {
-    const mensaje = e instanceof ErrorNube ? e.message : 'No se pudo guardar. Inténtalo de nuevo.';
+    const mensaje = e instanceof ErrorNube ? e.message : t('nube.reintentar');
     poner({ estado: 'error', mensaje });
     if (useNube.getState().proyectoId) {
       // Reintenta solo (por ejemplo si se fue el internet un momento).
@@ -83,10 +85,11 @@ export async function abrirDeNube(id: string): Promise<boolean> {
     useProyecto.getState().reemplazar(proyecto);
     ultimaCopia = JSON.stringify(instantanea());
     poner({ proyectoId: id, nombre, estado: 'guardado', mensaje: '' });
-    useApp.getState().decir(`¡Abrí "${nombre}"! Presiona ▶ para verlo en acción.`);
+    useApp.getState().decir('nube.abierto', { nombre });
     return true;
   } catch (e) {
-    useApp.getState().decir(e instanceof ErrorNube ? e.message : 'No se pudo abrir el proyecto.');
+    if (e instanceof ErrorNube) useApp.getState().decirTexto(e.message);
+    else useApp.getState().decir('nube.noAbrir');
     return false;
   }
 }
@@ -98,7 +101,7 @@ export function nuevoProyectoNube() {
   ultimaCopia = '';
   poner({
     proyectoId: null,
-    nombre: 'Mi proyecto',
+    nombre: '',
     estado: useSesion.getState().perfil ? 'sin-guardar' : 'sin-cuenta',
     mensaje: '',
   });
@@ -116,7 +119,7 @@ export async function salirYLimpiar() {
   clearTimeout(temporizador);
   await useSesion.getState().salir();
   nuevoProyectoNube();
-  useApp.getState().decir('Sesión cerrada. ¡Hasta pronto! 👋');
+  useApp.getState().decir('cuenta.sesionCerrada');
 }
 
 let conectado = false;

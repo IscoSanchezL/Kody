@@ -1,10 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { uriPersonaje } from '../stage/uris';
 import { useIconos } from './useIconos';
+import { useT } from '../i18n';
 import { useApp } from '../store/useApp';
 
 /** Kody, la mascota guía: muestra pistas y celebra con un globo de texto. */
 export function Mascota() {
+  const t = useT();
   useIconos();
   const mensaje = useApp((s) => s.mensaje);
   const id = useApp((s) => s.mensajeId);
@@ -15,7 +17,7 @@ export function Mascota() {
     <div className="flex items-end gap-3" aria-live="polite">
       <motion.img
         src={uriPersonaje('kody', variante)}
-        alt="Kody, tu guía"
+        alt={t('mascota.alt')}
         width={84}
         height={84}
         className="shrink-0"
@@ -31,7 +33,7 @@ export function Mascota() {
           transition={{ duration: 0.2 }}
           className="relative m-0 flex-1 rounded-2xl border-[3px] border-[var(--borde)] bg-[var(--panel)] px-4 py-3 text-base font-bold leading-snug"
         >
-          {mensaje}
+          {'texto' in mensaje ? mensaje.texto : t(mensaje.clave, mensaje.vars)}
         </motion.p>
       </AnimatePresence>
     </div>
