@@ -10,9 +10,14 @@ Los estudiantes pueden **entrar con Google** y **guardar sus proyectos en la nub
 
 ## Versión web
 
-Kody se publica solo en **GitHub Pages**: https://iscosanchezl.github.io/Kody/
+Kody se publica en **Firebase Hosting** (proyecto `kody-56d9b`). Cada vez que se sube código a `main`, el flujo
+`.github/workflows/firebase-hosting-merge.yml` ejecuta las pruebas, compila y publica. Cada pull request genera además
+una URL de vista previa (`firebase-hosting-pull-request.yml`), sin tocar el sitio en línea.
 
-Cada vez que se sube código a `main`, el flujo `.github/workflows/pages.yml` ejecuta las pruebas, compila y publica. Si no abre, revisa que en el repositorio esté activado **Settings → Pages → Source: GitHub Actions**.
+Requiere el secreto `FIREBASE_SERVICE_ACCOUNT_KODY_56D9B` en Settings → Secrets and variables → Actions.
+
+> Transición: mientras se completa el cambio de dirección sigue activo el flujo de GitHub Pages
+> (`.github/workflows/pages.yml`, https://iscosanchezl.github.io/Kody/). Se retirará cuando el nuevo dominio esté en uso.
 
 ## Requisitos
 
