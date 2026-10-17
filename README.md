@@ -16,8 +16,7 @@ una URL de vista previa (`firebase-hosting-pull-request.yml`), sin tocar el siti
 
 Requiere el secreto `FIREBASE_SERVICE_ACCOUNT_KODY_56D9B` en Settings → Secrets and variables → Actions.
 
-> Transición: mientras se completa el cambio de dirección sigue activo el flujo de GitHub Pages
-> (`.github/workflows/pages.yml`, https://iscosanchezl.github.io/Kody/). Se retirará cuando el nuevo dominio esté en uso.
+Dirección: https://kody.iscosanchez.com
 
 ## Requisitos
 
