@@ -8,6 +8,7 @@ import {
   type FederatedPointerEvent,
 } from 'pixi.js';
 import type { Runtime } from '../engine/runtime';
+import { t } from '../i18n';
 import { ESCENARIO, RADIO_ACTOR, type Dialogo, type EstadoActor } from '../engine/tipos';
 import { alDataUri } from './disfraces';
 import { fondoPorId, personajePorId } from './biblioteca';
@@ -76,7 +77,7 @@ export class Escenario {
     }
     host.appendChild(this.app.canvas);
     this.app.canvas.setAttribute('role', 'img');
-    this.app.canvas.setAttribute('aria-label', 'Escenario donde se mueven los actores');
+    this.app.canvas.setAttribute('aria-label', t('escenario.aria'));
     this.app.canvas.style.touchAction = 'none';
 
     this.fondo.position.set(-ESCENARIO.mitadX, -ESCENARIO.mitadY);

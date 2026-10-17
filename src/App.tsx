@@ -8,7 +8,8 @@ import { DialogoBloquePropio } from './ui/DialogoBloquePropio';
 import { DialogosDatos } from './ui/DialogosDatos';
 import { MisProyectos } from './ui/MisProyectos';
 import { conectarGuardado } from './nube/guardado';
-import { useSesion } from './nube/sesion';
+import { apodoVisible, useSesion } from './nube/sesion';
+import { useIdioma, useT } from './i18n';
 import { EditorBloques } from './ui/EditorBloques';
 import { Mascota } from './ui/Mascota';
 import { PanelActores } from './ui/PanelActores';
@@ -17,6 +18,8 @@ import { conectarTeclado } from './store/controlador';
 import { useApp } from './store/useApp';
 
 export default function App() {
+  const t = useT();
+  const idioma = useIdioma((s) => s.idioma);
   const tema = useApp((s) => s.tema);
   const escala = useApp((s) => s.escala);
   const grande = useApp((s) => s.escenarioGrande);
@@ -40,7 +43,7 @@ export default function App() {
     iniciarSesion();
   }, [iniciarSesion]);
   useEffect(() => {
-    if (perfil) decir(`¡Hola, ${perfil.nombre}! 👋 Ya puedes guardar tus proyectos en tu cuenta.`);
+    if (perfil) decir('app.holaPerfil', { nombre: apodoVisible(perfil.nombre) });
     // Solo al entrar o salir una persona, no cada vez que cambia su apodo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perfil?.id]);
@@ -79,9 +82,10 @@ export default function App() {
       >
         <section
           className="tarjeta relative min-h-[34rem] overflow-hidden lg:min-h-[24rem]"
-          aria-label="Zona de bloques"
+          aria-label={t('app.zonaBloques')}
         >
-          <EditorBloques />
+          {/* Al cambiar de idioma se rehace el editor (guardando y recargando los bloques del alumno). */}
+          <EditorBloques key={idioma} />
         </section>
         <aside className="flex min-h-0 flex-col gap-3 lg:overflow-y-auto [&>*]:shrink-0">
           <PanelEscenario />

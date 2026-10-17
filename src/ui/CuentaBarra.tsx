@@ -1,26 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  guardarEnNube,
-  hayCambiosSinGuardar,
-  salirYLimpiar,
-  useNube,
-  type EstadoGuardado,
-} from '../nube/guardado';
-import { useSesion, type Rol } from '../nube/sesion';
+import { guardarEnNube, hayCambiosSinGuardar, salirYLimpiar, useNube } from '../nube/guardado';
+import { useT } from '../i18n';
+import { apodoVisible, useSesion, type Rol } from '../nube/sesion';
 import { useApp } from '../store/useApp';
 
 const ROL: Record<Rol, string> = { student: '' };
 
-const ESTADO: Record<EstadoGuardado, string> = {
-  'sin-cuenta': '',
-  'sin-guardar': '☁️ Sin guardar',
-  guardando: '☁️ Guardando…',
-  guardado: '☁️ Guardado',
-  error: '⚠️ No se guardó',
-};
+const CLAVE_ESTADO = {
+  'sin-guardar': 'cuenta.sinGuardar',
+  guardando: 'cuenta.guardando',
+  guardado: 'cuenta.guardado',
+  error: 'cuenta.error',
+} as const;
 
 /** Botón "Entrar" o, con sesión, el estado del guardado y el menú de la persona. */
 export function CuentaBarra() {
+  const t = useT();
   const perfil = useSesion((s) => s.perfil);
   const abrirVentana = useApp((s) => s.abrirVentana);
   const estado = useNube((s) => s.estado);
@@ -51,7 +46,7 @@ export function CuentaBarra() {
   if (!perfil) {
     return (
       <button type="button" className="btn" onClick={() => abrirVentana('acceso', true)}>
-        👤 Entrar
+        {t('cuenta.entrar')}
       </button>
     );
   }
@@ -66,7 +61,7 @@ export function CuentaBarra() {
           role="status"
           title={mensaje}
         >
-          {ESTADO[estado]}
+          {estado === 'sin-cuenta' ? '' : t(CLAVE_ESTADO[estado])}
         </span>
       ) : (
         <button
@@ -74,7 +69,7 @@ export function CuentaBarra() {
           className="btn btn-ejecutar !min-h-11 !px-4 !text-base"
           onClick={guardarAhora}
         >
-          ☁️ Guardar
+          {t('cuenta.guardar')}
         </button>
       )}
       <button
@@ -84,7 +79,7 @@ export function CuentaBarra() {
         aria-expanded={abierto}
         onClick={() => setAbierto((v) => !v)}
       >
-        <span aria-hidden="true">{perfil.avatar}</span> {perfil.nombre} ▾
+        <span aria-hidden="true">{perfil.avatar}</span> {apodoVisible(perfil.nombre)} ▾
       </button>
       <button
         type="button"
@@ -94,7 +89,7 @@ export function CuentaBarra() {
           setConfirmarSalida(true);
         }}
       >
-        🚪 Salir
+        {t('cuenta.salir')}
       </button>
       {abierto && (
         <div role="menu" className="menu-flotante">
@@ -112,7 +107,7 @@ export function CuentaBarra() {
               guardarAhora();
             }}
           >
-            ☁️ Guardar ahora
+            {t('cuenta.guardarAhora')}
           </button>
           <button
             role="menuitem"
@@ -123,7 +118,7 @@ export function CuentaBarra() {
               abrirVentana('proyectos', true);
             }}
           >
-            📂 Mis proyectos
+            {t('cuenta.misProyectos')}
           </button>
           <button
             role="menuitem"
@@ -134,13 +129,11 @@ export function CuentaBarra() {
               abrirVentana('apodo', true);
             }}
           >
-            ✏️ Cambiar mi apodo
+            {t('cuenta.cambiarApodo')}
           </button>
           {confirmarSalida ? (
             <div className="px-3 py-2 text-sm font-bold">
-              {hayCambiosSinGuardar()
-                ? 'Tu proyecto actual no está guardado en tu cuenta y se borrará de este computador. ¿Salir igual?'
-                : 'Se cerrará tu sesión y se limpiará este computador. ¿Salir?'}
+              {hayCambiosSinGuardar() ? t('cuenta.salirSinGuardar') : t('cuenta.salirConfirmar')}
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
@@ -150,14 +143,14 @@ export function CuentaBarra() {
                     void salirYLimpiar();
                   }}
                 >
-                  Sí, salir
+                  {t('cuenta.siSalir')}
                 </button>
                 <button
                   type="button"
                   className="btn btn-suave !min-h-10 !px-3 !text-base"
                   onClick={() => setConfirmarSalida(false)}
                 >
-                  No
+                  {t('comun.no')}
                 </button>
               </div>
             </div>
@@ -168,7 +161,7 @@ export function CuentaBarra() {
               className="opcion-menu"
               onClick={() => setConfirmarSalida(true)}
             >
-              🚪 Salir
+              {t('cuenta.salir')}
             </button>
           )}
         </div>

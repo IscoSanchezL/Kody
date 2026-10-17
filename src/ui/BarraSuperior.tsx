@@ -8,18 +8,15 @@ import {
   proyectoNuevo,
   siguientePaso,
 } from '../store/controlador';
-import { useApp, type Tema } from '../store/useApp';
+import { useT } from '../i18n';
+import { useApp } from '../store/useApp';
 import { useIconos } from './useIconos';
 import { uriPersonaje } from '../stage/uris';
 import { CuentaBarra } from './CuentaBarra';
-
-const NOMBRE_TEMA: Record<Tema, string> = {
-  claro: '☀️ Claro',
-  gris: '🌫️ Gris',
-  oscuro: '🌌 Cristal',
-};
+import { SelectorIdioma } from './SelectorIdioma';
 
 function MenuProyecto() {
+  const t = useT();
   const [abierto, setAbierto] = useState(false);
   const caja = useRef<HTMLDivElement>(null);
   const archivo = useRef<HTMLInputElement>(null);
@@ -51,7 +48,7 @@ function MenuProyecto() {
         aria-expanded={abierto}
         onClick={() => setAbierto((v) => !v)}
       >
-        📁 Proyecto ▾
+        {t('menu.proyecto')}
       </button>
       {abierto && (
         <div role="menu" className="menu-flotante">
@@ -64,7 +61,7 @@ function MenuProyecto() {
               cerrar();
             }}
           >
-            💾 Guardar en un archivo
+            {t('menu.guardarArchivo')}
           </button>
           <button
             role="menuitem"
@@ -72,11 +69,11 @@ function MenuProyecto() {
             className="opcion-menu"
             onClick={() => archivo.current?.click()}
           >
-            📂 Abrir un archivo
+            {t('menu.abrirArchivo')}
           </button>
           {confirmarNuevo ? (
             <div className="px-3 py-2 text-sm font-bold">
-              Se borrará tu proyecto actual. ¿Seguro?
+              {t('menu.confirmarNuevo')}
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
@@ -86,14 +83,14 @@ function MenuProyecto() {
                     cerrar();
                   }}
                 >
-                  Sí, nuevo
+                  {t('menu.siNuevo')}
                 </button>
                 <button
                   type="button"
                   className="btn btn-suave !min-h-10 !px-3 !text-base"
                   onClick={() => setConfirmarNuevo(false)}
                 >
-                  No
+                  {t('comun.no')}
                 </button>
               </div>
             </div>
@@ -104,7 +101,7 @@ function MenuProyecto() {
               className="opcion-menu"
               onClick={() => setConfirmarNuevo(true)}
             >
-              ✨ Proyecto nuevo
+              {t('menu.nuevo')}
             </button>
           )}
         </div>
@@ -126,6 +123,7 @@ function MenuProyecto() {
 }
 
 export function BarraSuperior() {
+  const t = useT();
   useIconos();
   const modo = useApp((s) => s.modo);
   const tema = useApp((s) => s.tema);
@@ -147,27 +145,27 @@ export function BarraSuperior() {
           type="button"
           className="btn btn-ejecutar"
           onClick={() => ejecutar(false)}
-          aria-label="Ejecutar programa"
+          aria-label={t('barra.ejecutarAria')}
         >
-          ▶ Ejecutar
+          {t('barra.ejecutar')}
         </button>
         <button
           type="button"
           className="btn btn-detener"
           onClick={detener}
           disabled={!activo}
-          aria-label="Detener programa"
+          aria-label={t('barra.detenerAria')}
         >
-          ■ Detener
+          {t('barra.detener')}
         </button>
         <button
           type="button"
           className="btn btn-suave"
           onClick={siguientePaso}
-          aria-label="Paso a paso: ejecutar un bloque"
-          title="Ejecuta un bloque a la vez para ver qué hace"
+          aria-label={t('barra.pasoAria')}
+          title={t('barra.pasoTitulo')}
         >
-          👣 Paso a paso
+          {t('barra.paso')}
         </button>
       </div>
 
@@ -176,8 +174,8 @@ export function BarraSuperior() {
           type="button"
           className="btn btn-suave"
           onClick={() => deshacer(false)}
-          aria-label="Deshacer"
-          title="Deshacer"
+          aria-label={t('barra.deshacer')}
+          title={t('barra.deshacer')}
         >
           ↶
         </button>
@@ -185,18 +183,19 @@ export function BarraSuperior() {
           type="button"
           className="btn btn-suave"
           onClick={() => deshacer(true)}
-          aria-label="Rehacer"
-          title="Rehacer"
+          aria-label={t('barra.rehacer')}
+          title={t('barra.rehacer')}
         >
           ↷
         </button>
         <CuentaBarra />
         <MenuProyecto />
+        <SelectorIdioma />
         <button
           type="button"
           className="btn btn-suave"
           onClick={() => cambiarEscala(-0.1)}
-          aria-label="Hacer la letra más pequeña"
+          aria-label={t('barra.letraMenos')}
         >
           A−
         </button>
@@ -204,7 +203,7 @@ export function BarraSuperior() {
           type="button"
           className="btn btn-suave"
           onClick={() => cambiarEscala(0.1)}
-          aria-label="Hacer la letra más grande"
+          aria-label={t('barra.letraMas')}
         >
           A+
         </button>
@@ -212,9 +211,9 @@ export function BarraSuperior() {
           type="button"
           className="btn btn-suave"
           onClick={ciclarTema}
-          aria-label={`Cambiar tema. Actual: ${tema}`}
+          aria-label={t('barra.temaAria', { tema: t(`tema.${tema}` as const) })}
         >
-          {NOMBRE_TEMA[tema]}
+          {t(`tema.${tema}` as const)}
         </button>
       </div>
     </header>

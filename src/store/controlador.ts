@@ -7,6 +7,7 @@ import { sonidoExito, sonidoInicio, tocarEfecto, tocarNota } from '../audio';
 import { teclaABloque } from '../blocks/opciones';
 import { instantanea, proyectoInicial, useProyecto } from './proyecto';
 import { aEstado, validarProyecto } from './proyectoModelo';
+import { t } from '../i18n';
 import { uriPersonaje } from '../stage/uris';
 import { useApp } from './useApp';
 
@@ -31,7 +32,7 @@ export const capaLapiz: { dibujar: ((e: EventoLapiz) => void) | null } = { dibuj
 
 export const runtime = new Runtime({
   alActivarBloques: resaltar,
-  alAviso: (m) => useApp.getState().decir(m),
+  alAviso: (m) => useApp.getState().decirTexto(m),
   alCambiarMonitores: (m) => useApp.getState().setMonitores(m),
   alLapiz: (e) => capaLapiz.dibujar?.(e),
   alPreguntar: (t) => useApp.getState().setPregunta(t),
@@ -44,7 +45,7 @@ export const runtime = new Runtime({
     const anterior = useApp.getState().modo;
     useApp.getState().setModo(modo);
     if (modo === 'detenido' && anterior !== 'detenido' && !detenidoAMano) {
-      useApp.getState().decir('¡Listo! Tu programa terminó 🎉 ¿Quieres probar algo más?');
+      useApp.getState().decir('ctl.terminado');
       sonidoExito();
     }
   },
@@ -143,7 +144,7 @@ export function nombresBloquesPropios(): string[] {
 
 /** Crea el bloque "definir …" de un bloque propio en el espacio de trabajo. Devuelve un error o null. */
 export function crearBloquePropio(nombre: string, params: string[]): string | null {
-  if (!espacio) return 'El editor aún no está listo.';
+  if (!espacio) return t('bp.editorNoListo');
   const r = validarBloquePropio(nombre, params, nombresBloquesPropios());
   if (!r.ok) return r.mensaje;
   const vista = espacio.getMetricsManager().getViewMetrics(true);
@@ -177,30 +178,20 @@ export function ejecutar(paso = false) {
     total += porActor[a.id].length;
   }
   if (total === 0) {
-    useApp
-      .getState()
-      .decir('Necesito un bloque amarillo 🚩 "al hacer clic en ▶" para empezar. ¡Arrástralo!');
+    useApp.getState().decir('ctl.sinInicio');
     return;
   }
   detenidoAMano = false;
   sonidoInicio();
   runtime.iniciar(porActor, paso, { variables, listas });
   const escucha = runtime.escuchando;
-  useApp
-    .getState()
-    .decir(
-      paso
-        ? 'Paso a paso: toca 👣 para avanzar un bloque.'
-        : escucha
-          ? '¡En marcha! Prueba tus teclas o haz clic en un actor. Presiona ■ para parar.'
-          : '¡Allá vamos! 🚀',
-    );
+  useApp.getState().decir(paso ? 'ctl.pasoAPaso' : escucha ? 'ctl.enMarcha' : 'ctl.vamos');
 }
 
 export function detener() {
   detenidoAMano = true;
   runtime.detener();
-  useApp.getState().decir('Detenido. Cuando quieras, vuelve a presionar ▶.');
+  useApp.getState().decir('ctl.detenido');
 }
 
 export function siguientePaso() {
@@ -246,7 +237,7 @@ export function guardarArchivo() {
   a.download = 'mi-proyecto.kody.json';
   a.click();
   URL.revokeObjectURL(url);
-  useApp.getState().decir('¡Proyecto guardado! Lo encuentras en tu carpeta de descargas 📁');
+  useApp.getState().decir('ctl.archivoGuardado');
 }
 
 /** Abre un proyecto desde un archivo .json. Devuelve true si funcionó. */
@@ -257,10 +248,10 @@ export async function abrirArchivo(archivo: File): Promise<boolean> {
     if (!p) throw new Error('invalido');
     runtime.detener();
     useProyecto.getState().reemplazar(p);
-    useApp.getState().decir('¡Proyecto abierto! Presiona ▶ para verlo en acción.');
+    useApp.getState().decir('ctl.abierto');
     return true;
   } catch {
-    useApp.getState().decir('Ese archivo no es un proyecto de Kody 🤔 Prueba con otro.');
+    useApp.getState().decir('ctl.noEsKody');
     return false;
   }
 }
@@ -269,5 +260,5 @@ export async function abrirArchivo(archivo: File): Promise<boolean> {
 export function proyectoNuevo() {
   runtime.detener();
   useProyecto.getState().reemplazar(proyectoInicial());
-  useApp.getState().decir('Proyecto nuevo listo. ¡A crear! ✨');
+  useApp.getState().decir('ctl.nuevo');
 }

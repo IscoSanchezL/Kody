@@ -15,6 +15,7 @@ import {
 import type { Proyecto } from '../store/proyectoModelo';
 import { validarProyecto } from '../store/proyectoModelo';
 import { autenticacion, baseDatos } from './cliente';
+import { t } from '../i18n';
 import { MAX_BYTES_PROYECTO, MAX_PROYECTOS } from './config';
 
 /**
@@ -33,15 +34,12 @@ export interface ResumenProyecto {
 export function mensajeDeError(error: { message?: string; code?: string } | null): string {
   const m = error?.message ?? '';
   const c = error?.code ?? '';
-  if (m.includes('limite_proyectos'))
-    return `Ya tienes ${MAX_PROYECTOS} proyectos. Borra alguno para guardar otro.`;
-  if (m.includes('proyecto_grande'))
-    return 'Este proyecto es demasiado grande para guardarlo. Quita algunos bloques o actores.';
+  if (m.includes('limite_proyectos')) return t('nube.limite', { max: MAX_PROYECTOS });
+  if (m.includes('proyecto_grande')) return t('nube.grande');
   if (c === 'unavailable' || m.includes('Failed to fetch') || m.includes('network'))
-    return 'No hay conexión. Kody lo guardará cuando vuelva el internet.';
-  if (c === 'unauthenticated' || c === 'permission-denied')
-    return 'Tu sesión terminó. Vuelve a entrar para guardar.';
-  return 'No se pudo guardar. Inténtalo de nuevo en un momento.';
+    return t('nube.sinConexion');
+  if (c === 'unauthenticated' || c === 'permission-denied') return t('nube.sesion');
+  return t('nube.generico');
 }
 
 export class ErrorNube extends Error {}
@@ -76,7 +74,7 @@ export async function listarProyectos(): Promise<ResumenProyecto[]> {
     );
     return r.docs.map((d) => ({
       id: d.id,
-      nombre: String(d.data().nombre ?? 'Sin nombre'),
+      nombre: String(d.data().nombre ?? t('proyecto.sinNombre')),
       actualizado: aTexto(d.data().actualizado),
     }));
   } catch (e) {
@@ -95,7 +93,7 @@ export async function abrirProyecto(id: string): Promise<{ nombre: string; proye
       bruto = null;
     }
     const proyecto = validarProyecto(bruto);
-    if (!datos || !proyecto) throw new ErrorNube('Este proyecto no se pudo abrir.');
+    if (!datos || !proyecto) throw new ErrorNube(t('nube.noSePudoAbrir'));
     return { nombre: String(datos.nombre), proyecto };
   } catch (e) {
     lanzar(e);

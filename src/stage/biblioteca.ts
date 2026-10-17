@@ -1,3 +1,4 @@
+import { tDinamica } from '../i18n';
 import { kodySVG } from './disfraces';
 import { desierto, espacio, nieve, noche, oceano, pradera } from './escenarios';
 
@@ -8,14 +9,16 @@ import { desierto, espacio, nieve, noche, oceano, pradera } from './escenarios';
 
 export interface Personaje {
   id: string;
-  nombre: string;
+  /** Nombre en el idioma actual (se calcula al leerlo). */
+  readonly nombre: string;
   /** Dibuja el disfraz 0 o 1. */
   svg: (disfraz: 0 | 1) => string;
 }
 
 export interface Fondo {
   id: string;
-  nombre: string;
+  /** Nombre en el idioma actual (se calcula al leerlo). */
+  readonly nombre: string;
   svg: string;
 }
 
@@ -143,15 +146,31 @@ const estrella = (v: 0 | 1) =>
   <path d="M51 76q9 9 18 0" stroke="${TINTA}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
   <circle cx="39" cy="74" r="4.5" fill="#fb7185" opacity=".55"/><circle cx="81" cy="74" r="4.5" fill="#fb7185" opacity=".55"/>`);
 
+const nuevoPersonaje = (id: string, svg: Personaje['svg']): Personaje => ({
+  id,
+  get nombre() {
+    return tDinamica(`personaje.${id}`);
+  },
+  svg,
+});
+
+const nuevoFondo = (id: string, svg: string): Fondo => ({
+  id,
+  get nombre() {
+    return tDinamica(`fondo.${id}`);
+  },
+  svg,
+});
+
 export const PERSONAJES: Personaje[] = [
-  { id: 'kody', nombre: 'Kody', svg: (v) => kodySVG(v) },
-  { id: 'robo', nombre: 'Robo', svg: robo },
-  { id: 'gato', nombre: 'Gato', svg: gato },
-  { id: 'dino', nombre: 'Dino', svg: dino },
-  { id: 'cohete', nombre: 'Cohete', svg: cohete },
-  { id: 'pez', nombre: 'Pez', svg: pez },
-  { id: 'abeja', nombre: 'Abeja', svg: abeja },
-  { id: 'estrella', nombre: 'Estrella', svg: estrella },
+  nuevoPersonaje('kody', (v) => kodySVG(v)),
+  nuevoPersonaje('robo', robo),
+  nuevoPersonaje('gato', gato),
+  nuevoPersonaje('dino', dino),
+  nuevoPersonaje('cohete', cohete),
+  nuevoPersonaje('pez', pez),
+  nuevoPersonaje('abeja', abeja),
+  nuevoPersonaje('estrella', estrella),
 ];
 
 export const personajePorId = (id: string): Personaje =>
@@ -190,14 +209,14 @@ const blanco = escenario(`<rect width="480" height="360" fill="#ffffff"/>
   <rect x="2" y="2" width="476" height="356" fill="none" stroke="#e0e7ff" stroke-width="2"/>`);
 
 export const FONDOS: Fondo[] = [
-  { id: 'pradera', nombre: 'Pradera', svg: pradera() },
-  { id: 'espacio', nombre: 'Espacio', svg: espacio() },
-  { id: 'oceano', nombre: 'Océano', svg: oceano() },
-  { id: 'noche', nombre: 'Ciudad de noche', svg: noche() },
-  { id: 'desierto', nombre: 'Desierto', svg: desierto() },
-  { id: 'nieve', nombre: 'Montañas con nieve', svg: nieve() },
-  { id: 'cuadricula', nombre: 'Cuadrícula', svg: cuadricula() },
-  { id: 'blanco', nombre: 'En blanco', svg: blanco },
+  nuevoFondo('pradera', pradera()),
+  nuevoFondo('espacio', espacio()),
+  nuevoFondo('oceano', oceano()),
+  nuevoFondo('noche', noche()),
+  nuevoFondo('desierto', desierto()),
+  nuevoFondo('nieve', nieve()),
+  nuevoFondo('cuadricula', cuadricula()),
+  nuevoFondo('blanco', blanco),
 ];
 
 export const fondoPorId = (id: string): Fondo => FONDOS.find((f) => f.id === id) ?? FONDOS[0];

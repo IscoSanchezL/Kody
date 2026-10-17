@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 /** Reglas para crear un bloque propio ("Mis bloques"). Puro: se prueba sin navegador. */
 
 export const MAX_LARGO_BLOQUE = 20;
@@ -18,17 +20,16 @@ export function validarBloquePropio(
   existentes: string[],
 ): { ok: true; bloque: BloquePropio } | { ok: false; mensaje: string } {
   const n = limpiar(nombre);
-  if (!n) return { ok: false, mensaje: 'Escribe un nombre para tu bloque.' };
+  if (!n) return { ok: false, mensaje: t('bp.errNombre') };
   if (n.length > MAX_LARGO_BLOQUE)
-    return { ok: false, mensaje: `El nombre puede tener hasta ${MAX_LARGO_BLOQUE} letras.` };
+    return { ok: false, mensaje: t('bp.errLargo', { max: MAX_LARGO_BLOQUE }) };
   if (existentes.some((e) => e.toLowerCase() === n.toLowerCase()))
-    return { ok: false, mensaje: 'Ya tienes un bloque con ese nombre.' };
+    return { ok: false, mensaje: t('bp.errRepetido') };
   const ps = params.map(limpiar).filter(Boolean);
-  if (ps.length > MAX_PARAMS)
-    return { ok: false, mensaje: `Un bloque puede recibir hasta ${MAX_PARAMS} datos.` };
+  if (ps.length > MAX_PARAMS) return { ok: false, mensaje: t('bp.errParams', { max: MAX_PARAMS }) };
   if (ps.some((p) => p.length > MAX_LARGO_PARAM))
-    return { ok: false, mensaje: `Cada dato puede tener hasta ${MAX_LARGO_PARAM} letras.` };
+    return { ok: false, mensaje: t('bp.errParamLargo', { max: MAX_LARGO_PARAM }) };
   if (new Set(ps.map((p) => p.toLowerCase())).size !== ps.length)
-    return { ok: false, mensaje: 'Los datos no pueden llamarse igual.' };
+    return { ok: false, mensaje: t('bp.errParamRepetido') };
   return { ok: true, bloque: { nombre: n, params: ps } };
 }

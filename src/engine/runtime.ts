@@ -10,6 +10,7 @@ import type {
   Sentencia,
 } from './tipos';
 import { ESCENARIO, RADIO_ACTOR } from './tipos';
+import { t } from '../i18n';
 
 /** Máximo de bloques por hilo y por cuadro antes de cortar (protege contra bucles locos). */
 const PRESUPUESTO_PASOS = 5000;
@@ -346,9 +347,7 @@ export class Runtime {
     this.hiloActual = h;
     for (;;) {
       if (++gastados > PRESUPUESTO_PASOS) {
-        this.oyentes.alAviso?.(
-          '¡Uy! Tu programa se quedó dando vueltas muy rápido. Revisa tus bucles 🔍',
-        );
+        this.oyentes.alAviso?.(t('rt.bucle'));
         h.terminado = true;
         return;
       }
@@ -751,9 +750,7 @@ export class Runtime {
         const h = this.hiloActual;
         if (!def || !h) break;
         if (h.marcos.length >= MAX_PROFUNDIDAD) {
-          this.oyentes.alAviso?.(
-            '¡Uy! Un bloque tuyo se llama a sí mismo muchas veces. Revisa que termine 🔍',
-          );
+          this.oyentes.alAviso?.(t('rt.recursion'));
           h.terminado = true;
           yield { k: 'cuadro' };
           return;

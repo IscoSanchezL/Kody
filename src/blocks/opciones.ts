@@ -1,49 +1,37 @@
 import { FONDOS } from '../stage/biblioteca';
+import { tDinamica } from '../i18n';
 
-/** Opciones de las listas desplegables de los bloques. */
+/**
+ * Opciones de las listas desplegables de los bloques.
+ * Son funciones: las etiquetas se traducen al crear cada bloque; los valores (lo que se guarda
+ * en los proyectos) no cambian nunca.
+ */
 
-export const TECLAS: [string, string][] = [
-  ['espacio', 'espacio'],
-  ['↑ flecha arriba', 'arriba'],
-  ['↓ flecha abajo', 'abajo'],
-  ['← flecha izquierda', 'izquierda'],
-  ['→ flecha derecha', 'derecha'],
+type Opciones = [string, string][];
+const traducir = (prefijo: string, valores: string[]): Opciones =>
+  valores.map((v) => [tDinamica(`${prefijo}.${v}`), v]);
+
+export const opcionesTeclas = (): Opciones => [
+  ...traducir('tecla', ['espacio', 'arriba', 'abajo', 'izquierda', 'derecha']),
   ['w', 'w'],
   ['a', 'a'],
   ['s', 's'],
   ['d', 'd'],
 ];
 
-export const MENSAJES: [string, string][] = [
-  ['¡hola!', 'hola'],
-  ['¡vamos!', 'vamos'],
-  ['¡ganaste!', 'ganaste'],
-  ['¡perdiste!', 'perdiste'],
-  ['mensaje 1', 'm1'],
-  ['mensaje 2', 'm2'],
-];
+export const opcionesMensajes = (): Opciones =>
+  traducir('mensaje', ['hola', 'vamos', 'ganaste', 'perdiste', 'm1', 'm2']);
 
-export const NOTAS: [string, string][] = [
-  ['Do', '60'],
-  ['Re', '62'],
-  ['Mi', '64'],
-  ['Fa', '65'],
-  ['Sol', '67'],
-  ['La', '69'],
-  ['Si', '71'],
-  ['Do agudo', '72'],
-];
+export const opcionesNotas = (): Opciones =>
+  traducir('nota', ['60', '62', '64', '65', '67', '69', '71', '72']);
 
-export const SONIDOS: [string, string][] = [
-  ['pop', 'pop'],
-  ['boing', 'boing'],
-  ['ding', 'ding'],
-  ['láser', 'laser'],
-  ['tambor', 'tambor'],
-  ['aplauso', 'aplauso'],
-];
+export const opcionesSonidos = (): Opciones =>
+  traducir('sonido', ['pop', 'boing', 'ding', 'laser', 'tambor', 'aplauso']);
 
-export const OPCIONES_FONDOS: [string, string][] = FONDOS.map((f) => [f.nombre, f.id]);
+export const opcionesFondos = (): Opciones => FONDOS.map((f) => [f.nombre, f.id]);
+
+export const opcionesFunciones = (): Opciones =>
+  traducir('func', ['abs', 'raiz', 'piso', 'techo', 'sen', 'cos']);
 
 /** Traduce una tecla del teclado al nombre usado en los bloques (o null si no se usa). */
 export function teclaABloque(e: { key: string }): string | null {
@@ -64,13 +52,13 @@ export function teclaABloque(e: { key: string }): string | null {
 }
 
 /** Colores del lápiz: la etiqueta lleva un emoji para reconocerlos aunque no se vean bien. */
-export const COLORES_LAPIZ: [string, string][] = [
-  ['🔴 rojo', '#dc2626'],
-  ['🟠 naranja', '#ea580c'],
-  ['🟡 amarillo', '#eab308'],
-  ['🟢 verde', '#16a34a'],
-  ['🔵 azul', '#2563eb'],
-  ['🟣 morado', '#7c3aed'],
-  ['⚫ negro', '#111827'],
-  ['⚪ blanco', '#f8fafc'],
+export const opcionesColoresLapiz = (): Opciones => [
+  [tDinamica('color.rojo'), '#dc2626'],
+  [tDinamica('color.naranja'), '#ea580c'],
+  [tDinamica('color.amarillo'), '#eab308'],
+  [tDinamica('color.verde'), '#16a34a'],
+  [tDinamica('color.azul'), '#2563eb'],
+  [tDinamica('color.morado'), '#7c3aed'],
+  [tDinamica('color.negro'), '#111827'],
+  [tDinamica('color.blanco'), '#f8fafc'],
 ];

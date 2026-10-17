@@ -5,6 +5,7 @@ import { PreguntaEscenario } from './PreguntaEscenario';
 import { Escenario, type PuenteEscenario } from '../stage/Escenario';
 import { clicEnActor, ratonAbajo, runtime } from '../store/controlador';
 import { useProyecto } from '../store/proyecto';
+import { useIdioma, useT } from '../i18n';
 import { useApp } from '../store/useApp';
 import { seleccionarActor } from '../store/controlador';
 
@@ -27,6 +28,8 @@ const crearPuente = (): PuenteEscenario => ({
 
 /** Escenario (4:3) donde PixiJS dibuja a los actores, con sus botones de ayuda. */
 export function PanelEscenario() {
+  const t = useT();
+  const idioma = useIdioma((s) => s.idioma);
   const envoltorio = useRef<HTMLDivElement>(null);
   const host = useRef<HTMLDivElement>(null);
   const cuadricula = useApp((s) => s.cuadricula);
@@ -60,9 +63,7 @@ export function PanelEscenario() {
         if (modo3d && !cancelado) {
           // Sin WebGL o con un equipo muy limitado: se vuelve al 2D sin romper nada.
           useApp.getState().setModo3d(false);
-          useApp
-            .getState()
-            .decir('Tu equipo no puede mostrar el 3D, así que usaré el escenario 2D 🙂');
+          useApp.getState().decir('escenario.sin3d');
         }
       }
     })();
@@ -72,6 +73,13 @@ export function PanelEscenario() {
       el.replaceChildren();
     };
   }, [modo3d]);
+
+  // La etiqueta del lienzo (que dibuja Pixi o Three) sigue el idioma sin rehacer el escenario.
+  useEffect(() => {
+    host.current
+      ?.querySelector('canvas')
+      ?.setAttribute('aria-label', t(modo3d ? 'escenario.aria3d' : 'escenario.aria'));
+  }, [idioma, modo3d, t]);
 
   const pantallaCompleta = () => {
     const el = envoltorio.current;
@@ -103,8 +111,8 @@ export function PanelEscenario() {
           type="button"
           className="btn-icono !w-auto px-2.5 text-sm font-extrabold"
           aria-pressed={modo3d}
-          aria-label="Cambiar entre escenario 3D y 2D"
-          title={modo3d ? 'Ver en 2D' : 'Ver en 3D'}
+          aria-label={t('escenario.cambiar3d')}
+          title={modo3d ? t('escenario.ver2d') : t('escenario.ver3d')}
           onClick={() => setModo3d(!modo3d)}
         >
           {modo3d ? '3D' : '2D'}
@@ -113,8 +121,8 @@ export function PanelEscenario() {
           type="button"
           className="btn-icono"
           aria-pressed={cuadricula}
-          aria-label="Mostrar u ocultar la cuadrícula de coordenadas"
-          title="Cuadrícula de coordenadas"
+          aria-label={t('escenario.cuadriculaAria')}
+          title={t('escenario.cuadricula')}
           onClick={alternarCuadricula}
         >
           ▦
@@ -123,8 +131,8 @@ export function PanelEscenario() {
           type="button"
           className="btn-icono"
           aria-pressed={grande}
-          aria-label="Hacer el escenario más grande o más pequeño"
-          title={grande ? 'Escenario normal' : 'Escenario grande'}
+          aria-label={t('escenario.grandeAria')}
+          title={grande ? t('escenario.normal') : t('escenario.grande')}
           onClick={alternarGrande}
         >
           {grande ? '🗗' : '🗖'}
@@ -132,8 +140,8 @@ export function PanelEscenario() {
         <button
           type="button"
           className="btn-icono"
-          aria-label="Pantalla completa"
-          title="Pantalla completa"
+          aria-label={t('escenario.pantallaCompleta')}
+          title={t('escenario.pantallaCompleta')}
           onClick={pantallaCompleta}
         >
           ⛶
