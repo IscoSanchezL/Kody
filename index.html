@@ -4,17 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#4f46e5" />
-    <meta name="description" content="Kody: aprende a programar con bloques jugando." />
+    <meta
+      name="description"
+      content="Kody: aprende a programar con bloques jugando. · Learn to code with blocks by playing."
+    />
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%kody.svg" />
-    <title>Kody · Programa con bloques</title>
+    <title>Kody · Programa con bloques · Block programming</title>
   </head>
   <body>
     <div id="root"></div>
-    <noscript>Kody necesita JavaScript. Actívalo en tu navegador para jugar.</noscript>
+    <noscript
+      >Kody necesita JavaScript. Actívalo en tu navegador para jugar. · Kody needs JavaScript. Turn
+      it on in your browser to play.</noscript
+    >
     <script>
       /* Red de seguridad: si Kody no logra iniciar, en vez de una pantalla en blanco
          se muestra el motivo para poder arreglarlo. */
       (function () {
+        // Idioma: el guardado por la aplicación ('labs-lang'); si no hay, el del navegador.
+        var en = false;
+        try {
+          var guardado = localStorage.getItem('labs-lang');
+          en = guardado === 'en' || (guardado !== 'es' && /^en/i.test(navigator.language || ''));
+        } catch (e) {
+          en = /^en/i.test(navigator.language || '');
+        }
+        if (en) document.documentElement.lang = 'en';
         function mostrar(detalle) {
           var raiz = document.getElementById('root');
           if (!raiz || raiz.childNodes.length) return;
@@ -23,14 +38,19 @@
             'font-family:system-ui,sans-serif;max-width:34rem;margin:12vh auto;padding:1.5rem;' +
             'border:3px solid #c7d2fe;border-radius:20px;color:#1e1b4b;background:#fff';
           var t = document.createElement('h1');
-          t.textContent = 'Kody no pudo iniciar 🦊';
+          t.textContent = en ? 'Kody could not start 🦊' : 'Kody no pudo iniciar 🦊';
           var p = document.createElement('p');
-          p.textContent =
-            'Prueba recargar con Cmd+Shift+R (o Ctrl+Shift+R). Si sigue igual, abre Kody en Chrome o Edge y avísale a tu docente.';
+          p.textContent = en
+            ? 'Try reloading with Cmd+Shift+R (or Ctrl+Shift+R). If it stays the same, open Kody in Chrome or Edge and tell your teacher.'
+            : 'Prueba recargar con Cmd+Shift+R (o Ctrl+Shift+R). Si sigue igual, abre Kody en Chrome o Edge y avísale a tu docente.';
           var d = document.createElement('pre');
           d.style.cssText =
             'white-space:pre-wrap;font-size:.8rem;background:#eef2ff;padding:.75rem;border-radius:10px';
-          d.textContent = 'Detalle técnico: ' + detalle + '\n' + navigator.userAgent;
+          d.textContent =
+            (en ? 'Technical detail: ' : 'Detalle técnico: ') +
+            detalle +
+            '\n' +
+            navigator.userAgent;
           caja.appendChild(t);
           caja.appendChild(p);
           caja.appendChild(d);
@@ -42,7 +62,9 @@
             var t = e.target;
             if (t && t !== window && t.tagName) {
               // Fallo al cargar un archivo (script, estilo, imagen...)
-              mostrar('No se pudo cargar ' + (t.src || t.href || t.tagName));
+              mostrar(
+                (en ? 'Could not load ' : 'No se pudo cargar ') + (t.src || t.href || t.tagName),
+              );
               return;
             }
             mostrar(
@@ -52,11 +74,20 @@
           true,
         );
         window.addEventListener('unhandledrejection', function (e) {
-          mostrar(String((e.reason && (e.reason.message || e.reason)) || 'promesa rechazada'));
+          mostrar(
+            String(
+              (e.reason && (e.reason.message || e.reason)) ||
+                (en ? 'promise rejected' : 'promesa rechazada'),
+            ),
+          );
         });
         setTimeout(function () {
           if (!window.__kodyListo)
-            mostrar('Kody tardó demasiado en iniciar (¿falló la carga de archivos?)');
+            mostrar(
+              en
+                ? 'Kody took too long to start (did a file fail to load?)'
+                : 'Kody tardó demasiado en iniciar (¿falló la carga de archivos?)',
+            );
         }, 10000);
       })();
     </script>
