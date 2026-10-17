@@ -23,7 +23,7 @@ Al salir, Kody borra la sesión y el proyecto local del equipo (importante en co
 
 1. En https://console.firebase.google.com crea el proyecto **Kody** (sin Analytics).
 2. **Authentication → Método de acceso:** activa **Google**.
-3. **Authentication → Configuración → Dominios autorizados:** agrega `iscosanchezl.github.io`.
+3. **Authentication → Configuración → Dominios autorizados:** agrega `kody.iscosanchez.com` (y `kody-56d9b.web.app`).
 4. **Firestore Database → Crear base de datos** (modo producción, región cercana).
 5. **Firestore Database → Reglas:** pega el contenido de `firestore.rules` y pulsa **Publicar**.
 6. **Configuración del proyecto → Tus apps → Web:** copia `apiKey`, `authDomain`, `projectId` y `appId` en `src/nube/config.ts` (son públicos por diseño; la seguridad la dan las reglas).
