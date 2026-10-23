@@ -194,6 +194,8 @@ export const en: Record<Clave, string> = {
   'escenario.grandeAria': 'Make the stage bigger or smaller',
   'escenario.normal': 'Normal stage',
   'escenario.grande': 'Large stage',
+  'divisor.aria': 'Resize the stage',
+  'divisor.titulo': 'Drag to make the stage bigger · double-click to reset the size',
   'escenario.pantallaCompleta': 'Full screen',
   'escenario.sin3d': "Your device can't show 3D, so I'll use the 2D stage 🙂",
   'mascota.alt': 'Kody, your guide',

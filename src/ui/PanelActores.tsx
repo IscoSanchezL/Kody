@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FONDOS, PERSONAJES } from '../stage/biblioteca';
 import { uriFondo, uriPersonaje } from '../stage/uris';
 import { useIconos } from './useIconos';
 import { runtime, seleccionarActor } from '../store/controlador';
 import { useProyecto } from '../store/proyecto';
-import { MAX_ACTORES, type ActorProyecto } from '../store/proyectoModelo';
+import { MAX_ACTORES, limitarCampo, type ActorProyecto } from '../store/proyectoModelo';
 import { useT } from '../i18n';
 import { useApp } from '../store/useApp';
 
@@ -19,6 +19,11 @@ function useVivo(id: string, activo: boolean) {
   return activo ? runtime.actores.get(id) : undefined;
 }
 
+/**
+ * Cuadro numérico del actor. Mientras se escribe se deja el texto como está (así se puede poner
+ * un "-", borrar todo o escribir 3 cifras); cada número completo y válido se aplica al instante,
+ * y al salir del cuadro (o con Enter) se corrige lo que quedó incompleto o fuera de rango.
+ */
 function Campo({
   etiqueta,
   valor,
@@ -34,19 +39,53 @@ function Campo({
   deshabilitado: boolean;
   alCambiar: (v: number) => void;
 }) {
+  const [texto, setTexto] = useState<string | null>(null); // null = no se está escribiendo
+  const cancelado = useRef(false);
+  const alEntrar = useRef(valor); // valor con el que se entró al cuadro (para Escape)
+
+  const terminar = () => {
+    if (cancelado.current) cancelado.current = false;
+    else if (texto !== null) {
+      const v = Number(texto.replace(',', '.'));
+      if (texto.trim() !== '' && Number.isFinite(v)) alCambiar(limitarCampo(v, min, max));
+    }
+    setTexto(null);
+  };
+
   return (
     <label className="flex flex-col gap-0.5 text-xs font-bold text-[var(--texto-suave)]">
       {etiqueta}
       <input
         type="number"
         className="campo tabular-nums"
-        value={Math.round(valor)}
+        value={texto ?? String(Math.round(valor))}
         min={min}
         max={max}
+        step={1}
         disabled={deshabilitado}
+        onFocus={(e) => {
+          alEntrar.current = Math.round(valor);
+          e.target.select();
+        }}
         onChange={(e) => {
-          const v = Number(e.target.value);
-          if (Number.isFinite(v)) alCambiar(Math.min(max, Math.max(min, v)));
+          const crudo = e.target.value;
+          setTexto(crudo);
+          const v = Number(crudo);
+          if (crudo.trim() !== '' && Number.isFinite(v) && v >= min && v <= max) {
+            alCambiar(Math.round(v));
+          }
+        }}
+        onBlur={terminar}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            terminar();
+            e.currentTarget.blur();
+          } else if (e.key === 'Escape') {
+            cancelado.current = true;
+            alCambiar(alEntrar.current);
+            setTexto(null);
+            e.currentTarget.blur();
+          }
         }}
       />
     </label>

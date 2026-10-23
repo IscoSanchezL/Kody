@@ -107,6 +107,10 @@ export function quitarUsosDeDato(script: object, campo: 'VAR' | 'LISTA', nombre:
   return copia;
 }
 
+/** Recorta un valor al rango y lo redondea (el escenario trabaja con enteros). */
+export const limitarCampo = (v: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, Math.round(v)));
+
 export const SCRIPT_VACIO = { blocks: { languageVersion: 0, blocks: [] } };
 
 const limitar = (n: unknown, min: number, max: number, defecto: number) => {

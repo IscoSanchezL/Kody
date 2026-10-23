@@ -11,10 +11,12 @@ import { conectarGuardado } from './nube/guardado';
 import { apodoVisible, useSesion } from './nube/sesion';
 import { useIdioma, useT } from './i18n';
 import { EditorBloques } from './ui/EditorBloques';
+import { DivisorEscenario } from './ui/DivisorEscenario';
 import { Mascota } from './ui/Mascota';
 import { PanelActores } from './ui/PanelActores';
 import { PanelEscenario } from './ui/PanelEscenario';
 import { conectarTeclado } from './store/controlador';
+import { ANCHO_GRANDE, ANCHO_NORMAL } from './store/disposicion';
 import { useApp } from './store/useApp';
 
 export default function App() {
@@ -23,6 +25,8 @@ export default function App() {
   const tema = useApp((s) => s.tema);
   const escala = useApp((s) => s.escala);
   const grande = useApp((s) => s.escenarioGrande);
+  const anchoPanel = useApp((s) => s.anchoPanel);
+  const ancho = anchoPanel ?? (grande ? ANCHO_GRANDE : ANCHO_NORMAL);
 
   useEffect(() => {
     document.documentElement.dataset.tema = tema;
@@ -74,11 +78,8 @@ export default function App() {
     <div className="flex h-full flex-col">
       <BarraSuperior />
       <main
-        className={`grid min-h-0 flex-1 gap-3 overflow-y-auto p-3 lg:overflow-hidden ${
-          grande
-            ? 'lg:grid-cols-[minmax(0,1fr)_minmax(26rem,46rem)]'
-            : 'lg:grid-cols-[minmax(0,1fr)_minmax(22rem,34rem)]'
-        }`}
+        className="relative grid min-h-0 flex-1 gap-3 overflow-y-auto p-3 lg:grid-cols-[minmax(0,1fr)_var(--ancho-panel)] lg:overflow-hidden"
+        style={{ '--ancho-panel': `${ancho}px` } as React.CSSProperties}
       >
         <section
           className="tarjeta relative min-h-[34rem] overflow-hidden lg:min-h-[24rem]"
@@ -87,6 +88,7 @@ export default function App() {
           {/* Al cambiar de idioma se rehace el editor (guardando y recargando los bloques del alumno). */}
           <EditorBloques key={idioma} />
         </section>
+        <DivisorEscenario ancho={ancho} />
         <aside className="flex min-h-0 flex-col gap-3 lg:overflow-y-auto [&>*]:shrink-0">
           <PanelEscenario />
           <Mascota />

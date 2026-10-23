@@ -20,6 +20,9 @@ interface EstadoApp {
   panel: 'actores' | 'fondos';
   /** Escenario ampliado. */
   escenarioGrande: boolean;
+  /** Ancho (px) del panel del escenario si la persona lo arrastró; null = el normal o el grande. */
+  anchoPanel: number | null;
+  setAnchoPanel: (px: number | null) => void;
   /** Cuadrícula de coordenadas sobre el escenario. */
   cuadricula: boolean;
   /** Escenario en 3D (si no, 2D). */
@@ -95,6 +98,11 @@ export const useApp = create<EstadoApp>((set, get) => ({
   modo: 'detenido',
   panel: 'actores',
   escenarioGrande: leer<boolean>('kody.grande', false),
+  anchoPanel: leer<number | null>('kody.anchoPanel', null),
+  setAnchoPanel: (anchoPanel) => {
+    guardar('kody.anchoPanel', anchoPanel);
+    set({ anchoPanel });
+  },
   cuadricula: false,
   modo3d: leer<boolean>('kody.3d', true),
   pantalla: 'inicio',
@@ -124,7 +132,9 @@ export const useApp = create<EstadoApp>((set, get) => ({
   alternarEscenarioGrande: () => {
     const v = !get().escenarioGrande;
     guardar('kody.grande', v);
-    set({ escenarioGrande: v });
+    // El botón vuelve a los tamaños de siempre (normal / grande), olvidando lo arrastrado.
+    guardar('kody.anchoPanel', null);
+    set({ escenarioGrande: v, anchoPanel: null });
   },
   alternarCuadricula: () => set((s) => ({ cuadricula: !s.cuadricula })),
   setModo3d: (modo3d) => {

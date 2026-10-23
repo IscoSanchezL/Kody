@@ -190,6 +190,8 @@ export const es = {
   'escenario.grandeAria': 'Hacer el escenario más grande o más pequeño',
   'escenario.normal': 'Escenario normal',
   'escenario.grande': 'Escenario grande',
+  'divisor.aria': 'Cambiar el tamaño del escenario',
+  'divisor.titulo': 'Arrastra para agrandar el escenario · doble clic para volver al tamaño normal',
   'escenario.pantallaCompleta': 'Pantalla completa',
   'escenario.sin3d': 'Tu equipo no puede mostrar el 3D, así que usaré el escenario 2D 🙂',
   'mascota.alt': 'Kody, tu guía',

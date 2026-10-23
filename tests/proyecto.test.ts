@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_ACTORES,
   crearActor,
+  limitarCampo,
   nombreUnico,
   posicionLibre,
   validarProyecto,
@@ -93,5 +94,28 @@ describe('validarProyecto', () => {
     const r = validarProyecto(p)!;
     expect(r.seleccionado).toBe('a');
     expect(r.scripts.a).toBeTruthy();
+  });
+});
+
+describe('cuadros numéricos del actor', () => {
+  it('recortan al rango y redondean', () => {
+    expect(limitarCampo(999, -180, 180)).toBe(180);
+    expect(limitarCampo(-999, -180, 180)).toBe(-180);
+    expect(limitarCampo(10.6, -240, 240)).toBe(11);
+    expect(limitarCampo(-0.4, -240, 240)).toBe(-0);
+    expect(limitarCampo(5, 10, 300)).toBe(10);
+  });
+});
+
+import { ANCHO_MIN, ANCHO_MIN_EDITOR, limitarAncho } from '../src/store/disposicion';
+
+describe('ancho del panel del escenario', () => {
+  it('no baja del mínimo ni deja el editor demasiado angosto', () => {
+    expect(limitarAncho(50, 1400)).toBe(ANCHO_MIN);
+    expect(limitarAncho(5000, 1400)).toBe(1400 - ANCHO_MIN_EDITOR - 24);
+    expect(limitarAncho(800.4, 1600)).toBe(800);
+  });
+  it('en una pantalla muy chica sigue dando un valor usable', () => {
+    expect(limitarAncho(900, 500)).toBe(ANCHO_MIN);
   });
 });
