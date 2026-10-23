@@ -1,6 +1,6 @@
-# Kody 🦊
+# Kody 🤖
 
-Plataforma web de **programación por bloques** para estudiantes de primaria y más allá, en español. Mascota guía: **Kody**, un zorro robot.
+Plataforma web de **programación por bloques** para estudiantes de primaria y más allá, en español. Mascota guía: **Kody**, un robot.
 
 > Estado: **Fase 2** (varios actores y escenarios, eventos, sensores, sonido, interfaz renovada). La Fase 1 sentó las bases (layout, tema, Blockly, escenario, intérprete). Ver [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 

@@ -63,7 +63,7 @@ async function generar() {
         m.variantes[1].visible = disfraz === 1;
         m.animar?.(0.25);
         // Vista en tres cuartos, como en el escenario.
-        m.grupo.rotation.y = m.perfil ? -0.5 : 0.28;
+        m.grupo.rotation.y = m.perfil ? -0.5 : p.id === 'kody' ? 0.12 : 0.28;
         escena.add(m.grupo);
         const caja = new THREE.Box3().setFromObject(m.grupo);
         const tam = caja.getSize(new THREE.Vector3());

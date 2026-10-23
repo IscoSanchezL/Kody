@@ -44,7 +44,7 @@ export const esApodoInicial = (nombre: string) => nombre === APODO_INICIAL || no
 /** Lo que se muestra de un apodo: el inicial se escribe en el idioma actual. */
 export const apodoVisible = (nombre: string) =>
   esApodoInicial(nombre) ? t('cuenta.explorador') : nombre;
-const AVATAR_INICIAL = '🦊';
+const AVATAR_INICIAL = '🤖';
 
 /** Lee el apodo guardado (usuarios/{id}) o lo crea la primera vez. */
 async function cargarPerfil(id: string): Promise<Perfil> {

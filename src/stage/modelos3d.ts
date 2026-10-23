@@ -177,10 +177,10 @@ function ojoLateral(x: number, y: number, z: number, r = 3.4, color = 0x14110f) 
 const espejo = (f: (lado: 1 | -1) => THREE.Object3D | THREE.Object3D[]): THREE.Object3D[] =>
   ([1, -1] as const).flatMap((l) => f(l));
 
-// ------------------------------------------------------------------- Kody
-// Zorro robot: cuerpo esbelto de cuatro patas, cola larga y una antenita en la cabeza.
+// ----------------------------------------------------------------- Zorro
+// Zorro de cuatro patas: cuerpo esbelto, cola larga con punta crema y una antenita en la cabeza.
 
-function kody(): Modelo3D {
+function zorro(): Modelo3D {
   const { grupo, v0, v1, perfil } = nuevo(true);
   const NAR = 0xec8a2e;
   const OSC = 0x4a2b17;
@@ -309,10 +309,11 @@ function kody(): Modelo3D {
   return ajustar({ grupo, variantes: [v0, v1], perfil });
 }
 
-// ------------------------------------------------------------------- Robo
-// Humanoide de proporciones esbeltas: cabeza, cuello, torso, brazos articulados y piernas.
+// ------------------------------------------------------------------- Kody
+// Kody, el robot guía: humanoide esbelto, simétrico (se ven sus dos lados) con cabeza, cuello,
+// torso, brazos articulados y piernas.
 
-function robo(): Modelo3D {
+function kody(): Modelo3D {
   const { grupo, v0, v1, perfil } = nuevo();
   const AZUL = 0x5b9cf0;
   const CLARO = 0xb6d4fb;
@@ -1086,7 +1087,7 @@ function estrella(): Modelo3D {
 
 const CONSTRUCTORES: Record<string, () => Modelo3D> = {
   kody,
-  robo,
+  zorro,
   gato,
   dino,
   cohete,
@@ -1095,7 +1096,7 @@ const CONSTRUCTORES: Record<string, () => Modelo3D> = {
   estrella,
 };
 
-/** Crea el modelo 3D de un personaje de la biblioteca (Kody si no existe). */
+/** Crea el modelo 3D de un personaje de la biblioteca (Kody, el robot, si no existe). */
 export function crearModelo3D(personaje: string): Modelo3D {
   return (CONSTRUCTORES[personaje] ?? kody)();
 }

@@ -1,5 +1,5 @@
 import { tDinamica } from '../i18n';
-import { kodySVG } from './disfraces';
+import { kodySVG, zorroSVG } from './disfraces';
 import { desierto, espacio, nieve, noche, oceano, pradera } from './escenarios';
 
 /**
@@ -29,22 +29,6 @@ const personaje = (contenido: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 120 120">${contenido}</svg>`;
 
 // ---------------------------------------------------------------- Personajes
-
-const robo = (v: 0 | 1) =>
-  personaje(`
-  <line x1="60" y1="30" x2="60" y2="16" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="60" cy="13" r="6" fill="${v ? '#f472b6' : '#facc15'}" stroke="#fff" stroke-width="2"/>
-  <rect x="14" y="54" width="12" height="26" rx="6" fill="#93c5fd" stroke="#1e3a8a" stroke-width="3"/>
-  <rect x="94" y="54" width="12" height="26" rx="6" fill="#93c5fd" stroke="#1e3a8a" stroke-width="3"/>
-  <rect x="24" y="30" width="72" height="72" rx="20" fill="#60a5fa" stroke="#1e3a8a" stroke-width="3.5"/>
-  <rect x="34" y="42" width="52" height="38" rx="13" fill="#0f172a"/>
-  ${
-    v
-      ? `<path d="M40 62q7-11 14 0M66 62q7-11 14 0" stroke="#22d3ee" stroke-width="5" fill="none" stroke-linecap="round"/>`
-      : `<circle cx="47" cy="60" r="7" fill="#22d3ee"/><circle cx="73" cy="60" r="7" fill="#22d3ee"/><circle cx="49" cy="57" r="2.5" fill="#fff"/><circle cx="75" cy="57" r="2.5" fill="#fff"/>`
-  }
-  <path d="M50 72q10 7 20 0" stroke="#22d3ee" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-  <circle cx="44" cy="92" r="4" fill="#facc15"/><circle cx="60" cy="92" r="4" fill="#4ade80"/><circle cx="76" cy="92" r="4" fill="#f87171"/>`);
 
 const gato = (v: 0 | 1) =>
   personaje(`
@@ -164,7 +148,7 @@ const nuevoFondo = (id: string, svg: string): Fondo => ({
 
 export const PERSONAJES: Personaje[] = [
   nuevoPersonaje('kody', (v) => kodySVG(v)),
-  nuevoPersonaje('robo', robo),
+  nuevoPersonaje('zorro', (v) => zorroSVG(v)),
   nuevoPersonaje('gato', gato),
   nuevoPersonaje('dino', dino),
   nuevoPersonaje('cohete', cohete),

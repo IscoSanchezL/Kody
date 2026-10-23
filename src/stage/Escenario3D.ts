@@ -516,7 +516,7 @@ export class Escenario3D {
 
     let objetivo: number;
     if (v.modelo.perfil) objetivo = a.direccion < 0 ? Math.PI + 0.5 : -0.5;
-    else objetivo = Math.sin((a.direccion * Math.PI) / 180) * 0.28;
+    else objetivo = Math.sin((a.direccion * Math.PI) / 180) * 0.55; // se ve un lado u otro
     v.giro += (objetivo - v.giro) * Math.min(1, dt * 10);
 
     v.raiz.position.set(a.x, a.y + bob, 0);
