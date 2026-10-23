@@ -1,3 +1,4 @@
+import { INSTRUMENTOS } from '../engine/sonidos';
 import { FONDOS } from '../stage/biblioteca';
 import { tDinamica } from '../i18n';
 
@@ -25,8 +26,7 @@ export const opcionesMensajes = (): Opciones =>
 export const opcionesNotas = (): Opciones =>
   traducir('nota', ['60', '62', '64', '65', '67', '69', '71', '72']);
 
-export const opcionesSonidos = (): Opciones =>
-  traducir('sonido', ['pop', 'boing', 'ding', 'laser', 'tambor', 'aplauso']);
+export const opcionesInstrumentos = (): Opciones => traducir('instrumento', INSTRUMENTOS);
 
 export const opcionesModoDisfraz = (): Opciones => traducir('disfrazmodo', ['num', 'nombre']);
 

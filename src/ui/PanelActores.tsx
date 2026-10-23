@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FONDOS, PERSONAJES } from '../stage/biblioteca';
 import { uriFondo, uriPersonaje } from '../stage/uris';
 import { PanelDisfraces } from './PanelDisfraces';
+import { PanelSonidos } from './PanelSonidos';
 import { useIconos } from './useIconos';
 import { runtime, seleccionarActor } from '../store/controlador';
 import { useProyecto } from '../store/proyecto';
@@ -354,6 +355,7 @@ export function PanelActores() {
           [
             ['actores', t('panel.actores')],
             ['disfraces', t('panel.disfraces')],
+            ['sonidos', t('panel.sonidos')],
             ['fondos', t('panel.fondos')],
           ] as const
         ).map(([id, texto]) => (
@@ -373,6 +375,8 @@ export function PanelActores() {
         <ListaActores />
       ) : panel === 'disfraces' ? (
         <PanelDisfraces />
+      ) : panel === 'sonidos' ? (
+        <PanelSonidos />
       ) : (
         <ListaFondos />
       )}

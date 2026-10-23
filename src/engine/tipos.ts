@@ -27,6 +27,10 @@ export interface EstadoActor {
   totalDisfraces: number;
   /** Nombres de los disfraces, en orden (para "cambiar disfraz a …"). */
   nombresDisfraces?: string[];
+  /** Volumen del actor (0–100). Si falta, 100. */
+  volumen?: number;
+  /** Instrumento de "tocar nota". Si falta, el piano. */
+  instrumento?: string;
   dialogo: Dialogo | null;
   /** Si es un clon, el id del actor original (los clones solo existen mientras corre el programa). */
   clonDe?: string;
@@ -70,7 +74,8 @@ export type NombreSensor =
   | 'temporizador'
   | 'distancia'
   | 'disfraz-num'
-  | 'disfraz-nombre';
+  | 'disfraz-nombre'
+  | 'volumen';
 
 /** Expresión (valor) ya compilada. */
 export type Expr =
@@ -128,7 +133,15 @@ export interface Oyentes {
   alAviso?: (mensaje: string) => void;
   alCambiarModo?: (modo: ModoEjecucion) => void;
   /** Un bloque pidió un sonido o una nota. */
-  alSonido?: (tipo: 'sonido' | 'nota', dato: string | number, segundos: number) => void;
+  alSonido?: (
+    tipo: 'sonido' | 'nota',
+    dato: string | number,
+    segundos: number,
+    volumen?: number,
+    instrumento?: string,
+  ) => void;
+  /** "detener todos los sonidos" (o se detuvo el programa). */
+  alDetenerSonidos?: () => void;
   /** Un bloque hizo una pregunta: la interfaz la muestra y luego llama a `responder`. */
   alPreguntar?: (texto: string) => void;
   /** La pregunta terminó (se respondió o se detuvo el programa). */

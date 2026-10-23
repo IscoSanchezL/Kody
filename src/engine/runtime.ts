@@ -10,6 +10,7 @@ import type {
   Sentencia,
 } from './tipos';
 import { ESCENARIO, RADIO_ACTOR } from './tipos';
+import { INSTRUMENTOS, duracionSonido } from './sonidos';
 import { t } from '../i18n';
 
 /** Máximo de bloques por hilo y por cuadro antes de cortar (protege contra bucles locos). */
@@ -229,6 +230,7 @@ export class Runtime {
   }
 
   detener() {
+    this.oyentes.alDetenerSonidos?.();
     if (this.preguntando) {
       this.preguntando = false;
       this.oyentes.alTerminarPregunta?.();
@@ -415,6 +417,8 @@ export class Runtime {
         return a.direccion;
       case 'respuesta':
         return this.respuesta;
+      case 'volumen':
+        return a.volumen ?? 100;
       case 'disfraz-num':
         return a.disfrazActual + 1;
       case 'disfraz-nombre':
@@ -693,14 +697,40 @@ export class Runtime {
 
       // ----- Sonido -----
       case 'son_tocar':
-        this.oyentes.alSonido?.('sonido', s.campos.SONIDO ?? 'pop', 0.3);
+      case 'son_tocar_espera': {
+        const id = s.campos.SONIDO ?? '';
+        const dur = duracionSonido(id);
+        this.oyentes.alSonido?.('sonido', id, dur, a.volumen ?? 100, a.instrumento ?? 'piano');
+        if (s.tipo === 'son_tocar_espera') yield { k: 'espera', ms: dur * 1000 };
         break;
+      }
       case 'son_nota': {
         const seg = Math.min(4, Math.max(0.05, this.num(s, 'SEG', a)));
-        this.oyentes.alSonido?.('nota', Number(s.campos.NOTA ?? 60), seg);
+        this.oyentes.alSonido?.(
+          'nota',
+          Number(s.campos.NOTA ?? 60),
+          seg,
+          a.volumen ?? 100,
+          a.instrumento ?? 'piano',
+        );
         yield { k: 'espera', ms: seg * 1000 };
         break;
       }
+      case 'son_silencio':
+        yield { k: 'espera', ms: Math.min(10, Math.max(0, this.num(s, 'SEG', a))) * 1000 };
+        break;
+      case 'son_detener':
+        this.oyentes.alDetenerSonidos?.();
+        break;
+      case 'son_volumen_fijar':
+        a.volumen = Math.min(100, Math.max(0, this.num(s, 'N', a)));
+        break;
+      case 'son_volumen_cambiar':
+        a.volumen = Math.min(100, Math.max(0, (a.volumen ?? 100) + this.num(s, 'N', a)));
+        break;
+      case 'son_instrumento':
+        if (INSTRUMENTOS.includes(s.campos.INSTRUMENTO ?? '')) a.instrumento = s.campos.INSTRUMENTO;
+        break;
 
       // ----- Lápiz -----
       case 'lap_bajar': {

@@ -6,6 +6,7 @@ import {
   configurarActores,
   configurarDatos,
   configurarDisfraces,
+  configurarSonidos,
   registrarBloques,
 } from '../blocks/definiciones';
 import { crearTema } from '../blocks/tema';
@@ -15,7 +16,7 @@ import {
   contenidoVariables,
   crearToolbox,
 } from '../blocks/toolbox';
-import { sonidoEncaje } from '../audio';
+import { sonidoEncaje, tocarEfecto, tocarNota } from '../audio';
 import { idiomaActual, useT } from '../i18n';
 import { guardarScriptActual, registrarEspacio } from '../store/controlador';
 import { guardarYa, useProyecto } from '../store/proyecto';
@@ -78,6 +79,12 @@ export function EditorBloques() {
       const { actores, seleccionado: yo } = useProyecto.getState();
       return actores.find((a) => a.id === yo)?.disfraces.map((d) => d.nombre) ?? [];
     });
+    // Sonidos del actor que se está editando (para "tocar sonido").
+    configurarSonidos(
+      () =>
+        useProyecto.getState().actores.find((a) => a.id === useProyecto.getState().seleccionado)
+          ?.sonidos ?? [],
+    );
     // Variables y listas del proyecto (se leen al abrir cada lista desplegable).
     configurarDatos({
       variables: () => useProyecto.getState().variables,
@@ -111,6 +118,7 @@ export function EditorBloques() {
       () => contenidoMisBloques(w as never) as never,
     );
     w.registerButtonCallback('KODY_CREAR_BLOQUE', () => useApp.getState().abrirBloquePropio(true));
+    w.registerButtonCallback('KODY_SONIDOS', () => useApp.getState().abrirSonidos(true));
     const abrir = useApp.getState().abrirDatos;
     w.registerButtonCallback('KODY_CREAR_VARIABLE', () =>
       abrir({ tipo: 'variable', accion: 'crear' }),
@@ -137,6 +145,19 @@ export function EditorBloques() {
       if (e.type === Blockly.Events.BLOCK_MOVE) {
         const m = e as Blockly.Events.BlockMove;
         if (m.newParentId && m.newParentId !== m.oldParentId) sonidoEncaje();
+      }
+      // Al elegir un sonido, una nota o un instrumento en un bloque, se escucha al instante.
+      if (e.type === Blockly.Events.BLOCK_CHANGE) {
+        const c = e as Blockly.Events.BlockChange;
+        const b = c.blockId ? w.getBlockById(c.blockId) : null;
+        if (c.element === 'field' && b) {
+          const valor = String(c.newValue ?? '');
+          if (c.name === 'SONIDO' && (b.type === 'son_tocar' || b.type === 'son_tocar_espera'))
+            tocarEfecto(valor);
+          else if (c.name === 'NOTA' && b.type === 'son_nota') tocarNota(Number(valor), 0.35);
+          else if (c.name === 'INSTRUMENTO' && b.type === 'son_instrumento')
+            tocarNota(64, 0.5, 100, valor);
+        }
       }
       // Mis bloques: la paleta se actualiza al crear o borrar una definición, y al borrar una
       // definición también se quitan sus llamadas.

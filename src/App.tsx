@@ -3,6 +3,7 @@ import { BarraSuperior } from './ui/BarraSuperior';
 import { Inicio } from './ui/Inicio';
 import { Acceso } from './ui/Acceso';
 import { BibliotecaPersonajes } from './ui/BibliotecaPersonajes';
+import { BibliotecaSonidos } from './ui/BibliotecaSonidos';
 import { DialogosCuenta } from './ui/DialogosCuenta';
 import { DialogoBloquePropio } from './ui/DialogoBloquePropio';
 import { DialogosDatos } from './ui/DialogosDatos';
@@ -96,6 +97,7 @@ export default function App() {
         </aside>
       </main>
       <BibliotecaPersonajes />
+      <BibliotecaSonidos />
       <Acceso />
       <MisProyectos />
       <DialogosCuenta />

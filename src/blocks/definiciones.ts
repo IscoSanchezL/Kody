@@ -7,7 +7,7 @@ import {
   opcionesModoDisfraz,
   opcionesMensajes,
   opcionesNotas,
-  opcionesSonidos,
+  opcionesInstrumentos,
   opcionesTeclas,
 } from './opciones';
 
@@ -201,9 +201,37 @@ const bloques = [
 
   // ---------- Sonido ----------
   {
-    type: 'son_tocar',
-    args0: [lista('SONIDO', opcionesSonidos)],
+    type: 'son_detener',
     ...pila,
+    style: 'sonido',
+  },
+  {
+    type: 'son_silencio',
+    args0: [num('SEG')],
+    ...pila,
+    style: 'sonido',
+  },
+  {
+    type: 'son_instrumento',
+    args0: [lista('INSTRUMENTO', opcionesInstrumentos)],
+    ...pila,
+    style: 'sonido',
+  },
+  {
+    type: 'son_volumen_cambiar',
+    args0: [num('N')],
+    ...pila,
+    style: 'sonido',
+  },
+  {
+    type: 'son_volumen_fijar',
+    args0: [num('N')],
+    ...pila,
+    style: 'sonido',
+  },
+  {
+    type: 'son_volumen',
+    output: 'Number',
     style: 'sonido',
   },
   {
@@ -476,6 +504,12 @@ export function configurarActores(fn: () => [string, string][]) {
   proveedorActores = fn;
 }
 
+/** Quién da los sonidos del actor que se está editando (los configura la aplicación). */
+let proveedorSonidos: () => string[] = () => [];
+export function configurarSonidos(fn: () => string[]) {
+  proveedorSonidos = fn;
+}
+
 /** Quién da los nombres de los disfraces del actor que se está editando (la configura la aplicación). */
 let proveedorDisfraces: () => string[] = () => [];
 export function configurarDisfraces(fn: () => string[]) {
@@ -609,6 +643,29 @@ export function registrarBloques() {
       else if (trozo.trim()) fila.appendField(trozo.trim());
     }
   };
+
+  // "tocar sonido": la lista ofrece los sonidos que tiene el actor.
+  for (const tipo of ['son_tocar', 'son_tocar_espera']) {
+    Blockly.Blocks[tipo] = {
+      init(this: Blockly.Block) {
+        conDesplegable(
+          this,
+          tipo,
+          new Blockly.FieldDropdown(() => {
+            const ids = proveedorSonidos();
+            return ids.length
+              ? ids.map((id): [string, string] => [tDinamica(`sonido.${id}`), id])
+              : [[t('op.vacio'), '']];
+          }),
+          'SONIDO',
+        );
+        this.setPreviousStatement(true);
+        this.setNextStatement(true);
+        this.setStyle('sonido');
+        this.setTooltip(tDinamica(`b.${tipo}.ayuda`));
+      },
+    };
+  }
 
   Blockly.Blocks['ap_disfraz_a'] = {
     init(this: Blockly.Block) {

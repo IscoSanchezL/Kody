@@ -4,6 +4,7 @@ import { crearScriptEjemplo } from './ejemplo';
 import {
   MAX_ACTORES,
   agregarDisfrazA,
+  agregarSonidoA,
   disfracesDe,
   quitarDisfrazDe,
   renombrarDisfrazEn,
@@ -75,6 +76,9 @@ interface EstadoProyecto extends Proyecto {
   quitarDisfraz: (id: string, indice: number) => void;
   renombrarDisfraz: (id: string, indice: number, nombre: string) => boolean;
   cambiarPersonaje: (id: string, personaje: string) => void;
+  /** Sonidos de un actor: agregar (devuelve 'ya' o 'max' si no se pudo) y quitar. */
+  agregarSonido: (id: string, sonido: string) => 'ok' | 'ya' | 'max';
+  quitarSonido: (id: string, sonido: string) => void;
   /** Crean o borran variables y listas; devuelven un mensaje si no se pudo (o null). */
   crearDato: (tipo: 'variable' | 'lista', nombre: string) => string | null;
   borrarDato: (tipo: 'variable' | 'lista', nombre: string) => void;
@@ -138,6 +142,20 @@ export const useProyecto = create<EstadoProyecto>((set, get) => ({
     set((s) => ({ actores: s.actores.map((a) => (a.id === id ? { ...a, disfraces: lista } : a)) }));
     return true;
   },
+  agregarSonido: (id, sonido) => {
+    const actor = get().actores.find((a) => a.id === id);
+    if (!actor) return 'max';
+    const r = agregarSonidoA(actor.sonidos, sonido);
+    if (typeof r === 'string') return r;
+    set((s) => ({ actores: s.actores.map((a) => (a.id === id ? { ...a, sonidos: r } : a)) }));
+    return 'ok';
+  },
+  quitarSonido: (id, sonido) =>
+    set((s) => ({
+      actores: s.actores.map((a) =>
+        a.id === id ? { ...a, sonidos: a.sonidos.filter((x) => x !== sonido) } : a,
+      ),
+    })),
   // Elegir otro personaje deja al actor con los dos disfraces de ese personaje.
   cambiarPersonaje: (id, personaje) =>
     set((s) => ({

@@ -1,5 +1,6 @@
 import { FONDOS, PERSONAJES } from '../stage/biblioteca';
 import type { EstadoActor } from '../engine/tipos';
+import { MAX_SONIDOS, SONIDOS, SONIDOS_INICIALES } from '../engine/sonidos';
 import { t } from '../i18n';
 
 /** Modelo del proyecto de Kody (versión 2) y utilidades puras, sin React ni navegador. */
@@ -30,6 +31,8 @@ export interface ActorProyecto {
   disfraces: Disfraz[];
   /** Posición (empezando en 0) del disfraz con el que empieza el programa. */
   disfraz: number;
+  /** Sonidos de la biblioteca que tiene el actor (los que ofrece "tocar sonido"). */
+  sonidos: string[];
 }
 
 export interface Proyecto {
@@ -205,6 +208,26 @@ export function validarDisfraces(entrada: unknown, personajeBase: string): Disfr
   return lista.length ? lista : disfracesDe(personajeBase);
 }
 
+/** Limpia la lista de sonidos de un actor guardado: solo los que existen, sin repetir. */
+export function validarSonidos(entrada: unknown): string[] {
+  // Los proyectos de antes no tenían lista: reciben los sonidos de siempre.
+  if (!Array.isArray(entrada)) return [...SONIDOS_INICIALES];
+  const lista: string[] = [];
+  for (const x of entrada) {
+    if (typeof x === 'string' && SONIDOS.some((s) => s.id === x) && !lista.includes(x))
+      lista.push(x);
+    if (lista.length >= MAX_SONIDOS) break;
+  }
+  return lista;
+}
+
+/** Agrega un sonido a un actor. Devuelve 'ya' si lo tenía, 'max' si no cabe, o la lista nueva. */
+export function agregarSonidoA(sonidos: string[], id: string): string[] | 'ya' | 'max' {
+  if (sonidos.includes(id)) return 'ya';
+  if (sonidos.length >= MAX_SONIDOS) return 'max';
+  return [...sonidos, id];
+}
+
 /** Resultado de cambiar la lista de disfraces: la lista nueva y cuál queda puesto. */
 export interface CambioDisfraces {
   disfraces: Disfraz[];
@@ -276,6 +299,7 @@ export function crearActor(personajeId: string, existentes: ActorProyecto[]): Ac
     visible: true,
     disfraces: disfracesDe(p.id),
     disfraz: 0,
+    sonidos: [...SONIDOS_INICIALES],
   };
 }
 
@@ -290,6 +314,8 @@ export const aEstado = (a: ActorProyecto): EstadoActor => ({
   disfrazActual: a.disfraz,
   totalDisfraces: a.disfraces.length,
   nombresDisfraces: a.disfraces.map((d) => d.nombre),
+  volumen: 100,
+  instrumento: 'piano',
   dialogo: null,
 });
 
@@ -325,6 +351,7 @@ export function validarProyecto(entrada: unknown): Proyecto | null {
       visible: a.visible !== false,
       disfraces,
       disfraz: Math.floor(limitar(a.disfraz, 0, disfraces.length - 1, 0)),
+      sonidos: validarSonidos(a.sonidos),
     });
   }
   if (actores.length === 0) return null;

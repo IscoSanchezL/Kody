@@ -115,6 +115,8 @@ function compilarExpr(b: BloqueJSON | undefined): Expr {
         tipo: 'sensor',
         nombre: b.fields?.MODO === 'nombre' ? 'disfraz-nombre' : 'disfraz-num',
       };
+    case 'son_volumen':
+      return { tipo: 'sensor', nombre: 'volumen' };
     case 'sen_respuesta':
       return { tipo: 'sensor', nombre: 'respuesta' };
     case 'sen_raton_x':

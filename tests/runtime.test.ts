@@ -421,8 +421,8 @@ describe('apariencia, sonido y fondo', () => {
       ),
     });
     avanzar(rt, 100);
-    expect(sonidos[0]).toEqual(['sonido', 'ding', 0.3]);
-    expect(sonidos[1]).toEqual(['nota', 64, 0.5]);
+    expect(sonidos[0]).toEqual(['sonido', 'ding', 0.55, 100, 'piano']);
+    expect(sonidos[1]).toEqual(['nota', 64, 0.5, 100, 'piano']);
   });
 });
 

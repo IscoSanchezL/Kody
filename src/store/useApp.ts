@@ -48,6 +48,9 @@ interface EstadoApp {
   /** Pregunta abierta de "preguntar ... y esperar" (null = ninguna). */
   pregunta: string | null;
   setPregunta: (p: string | null) => void;
+  /** Ventana de la biblioteca de sonidos. */
+  sonidosAbierto: boolean;
+  abrirSonidos: (abierta: boolean) => void;
   /** Ventana de la biblioteca de personajes (para agregar un actor o un disfraz). */
   bibliotecaAbierta: boolean;
   bibliotecaModo: 'actor' | 'disfraz';
@@ -127,6 +130,8 @@ export const useApp = create<EstadoApp>((set, get) => ({
   setMonitores: (monitores) => set({ monitores }),
   pregunta: null,
   setPregunta: (pregunta) => set({ pregunta }),
+  sonidosAbierto: false,
+  abrirSonidos: (sonidosAbierto) => set({ sonidosAbierto }),
   bibliotecaAbierta: false,
   bibliotecaModo: 'actor',
   puntero: null,

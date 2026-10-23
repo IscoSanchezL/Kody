@@ -3,7 +3,7 @@ import { compilar } from '../engine/compilar';
 import { Runtime } from '../engine/runtime';
 import type { EventoLapiz, Programa } from '../engine/tipos';
 import { validarBloquePropio } from '../blocks/misBloques';
-import { sonidoExito, sonidoInicio, tocarEfecto, tocarNota } from '../audio';
+import { detenerSonidos, sonidoExito, sonidoInicio, tocarEfecto, tocarNota } from '../audio';
 import { teclaABloque } from '../blocks/opciones';
 import { instantanea, proyectoInicial, useProyecto } from './proyecto';
 import { aEstado, disfrazActivo, validarProyecto } from './proyectoModelo';
@@ -37,10 +37,11 @@ export const runtime = new Runtime({
   alLapiz: (e) => capaLapiz.dibujar?.(e),
   alPreguntar: (t) => useApp.getState().setPregunta(t),
   alTerminarPregunta: () => useApp.getState().setPregunta(null),
-  alSonido: (tipo, dato, seg) => {
-    if (tipo === 'sonido') tocarEfecto(String(dato));
-    else tocarNota(Number(dato), seg);
+  alSonido: (tipo, dato, seg, volumen, instrumento) => {
+    if (tipo === 'sonido') tocarEfecto(String(dato), volumen);
+    else tocarNota(Number(dato), seg, volumen, instrumento);
   },
+  alDetenerSonidos: detenerSonidos,
   alCambiarModo: (modo) => {
     const anterior = useApp.getState().modo;
     useApp.getState().setModo(modo);
