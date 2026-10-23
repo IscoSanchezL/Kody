@@ -4,6 +4,7 @@ import {
   opcionesColoresLapiz,
   opcionesFondos,
   opcionesFunciones,
+  opcionesModoDisfraz,
   opcionesMensajes,
   opcionesNotas,
   opcionesSonidos,
@@ -161,6 +162,12 @@ const bloques = [
   {
     type: 'ap_sig_disfraz',
     ...pila,
+    style: 'apariencia',
+  },
+  {
+    type: 'ap_disfraz_num',
+    args0: [lista('MODO', opcionesModoDisfraz)],
+    output: ['Number', 'String'],
     style: 'apariencia',
   },
   {
@@ -469,6 +476,12 @@ export function configurarActores(fn: () => [string, string][]) {
   proveedorActores = fn;
 }
 
+/** Quién da los nombres de los disfraces del actor que se está editando (la configura la aplicación). */
+let proveedorDisfraces: () => string[] = () => [];
+export function configurarDisfraces(fn: () => string[]) {
+  proveedorDisfraces = fn;
+}
+
 /** Quién da los nombres de variables y listas del proyecto (los configura la aplicación). */
 let proveedorDatos = {
   variables: (): string[] => [],
@@ -595,6 +608,26 @@ export function registrarBloques() {
       if (trozo === '%1') fila.appendField(campo, nombre);
       else if (trozo.trim()) fila.appendField(trozo.trim());
     }
+  };
+
+  Blockly.Blocks['ap_disfraz_a'] = {
+    init(this: Blockly.Block) {
+      conDesplegable(
+        this,
+        'ap_disfraz_a',
+        new Blockly.FieldDropdown(() => {
+          const nombres = proveedorDisfraces();
+          return nombres.length
+            ? nombres.map((n): [string, string] => [n, n])
+            : [[t('op.vacio'), '']];
+        }),
+        'DISFRAZ',
+      );
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setStyle('apariencia');
+      this.setTooltip(t('b.ap_disfraz_a.ayuda'));
+    },
   };
 
   Blockly.Blocks['clon_crear'] = {

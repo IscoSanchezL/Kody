@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { FONDOS, PERSONAJES } from '../stage/biblioteca';
 import { uriFondo, uriPersonaje } from '../stage/uris';
+import { PanelDisfraces } from './PanelDisfraces';
 import { useIconos } from './useIconos';
 import { runtime, seleccionarActor } from '../store/controlador';
 import { useProyecto } from '../store/proyecto';
-import { MAX_ACTORES, limitarCampo, type ActorProyecto } from '../store/proyectoModelo';
+import {
+  MAX_ACTORES,
+  disfrazActivo,
+  limitarCampo,
+  type ActorProyecto,
+} from '../store/proyectoModelo';
 import { useT } from '../i18n';
 import { useApp } from '../store/useApp';
 
@@ -96,6 +102,7 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
   const t = useT();
   useIconos();
   const editar = useProyecto((s) => s.editarActor);
+  const cambiarPersonaje = useProyecto((s) => s.cambiarPersonaje);
   const quitar = useProyecto((s) => s.quitarActor);
   const total = useProyecto((s) => s.actores.length);
   const modo = useApp((s) => s.modo);
@@ -105,6 +112,7 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
   const vivo = useVivo(actor.id, corriendo);
   const a = vivo ?? { ...actor, disfrazActual: actor.disfraz };
   const bloqueado = corriendo;
+  const disfrazActual = disfrazActivo(actor, a.disfrazActual);
 
   useEffect(() => setConfirmar(false), [actor.id]);
 
@@ -112,7 +120,7 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
     <div className="mt-3 rounded-2xl border-[3px] border-[var(--borde)] p-3">
       <div className="mb-2 flex items-center gap-2">
         <img
-          src={uriPersonaje(actor.personaje, a.disfrazActual)}
+          src={uriPersonaje(disfrazActual.personaje, disfrazActual.variante)}
           alt=""
           width={52}
           height={52}
@@ -139,7 +147,7 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
           className="campo !w-auto flex-1"
           value={actor.personaje}
           disabled={bloqueado}
-          onChange={(e) => editar(actor.id, { personaje: e.target.value })}
+          onChange={(e) => cambiarPersonaje(actor.id, e.target.value)}
         >
           {PERSONAJES.map((p) => (
             <option key={p.id} value={p.id}>
@@ -199,10 +207,15 @@ function PropiedadesActor({ actor }: { actor: ActorProyecto }) {
           type="button"
           className="btn btn-suave !min-h-10 !px-3 !text-base"
           disabled={bloqueado}
-          onClick={() => editar(actor.id, { disfraz: actor.disfraz === 0 ? 1 : 0 })}
+          onClick={() =>
+            editar(actor.id, { disfraz: (actor.disfraz + 1) % actor.disfraces.length })
+          }
           aria-label={t('actor.cambiarDisfraz')}
         >
-          {t('actor.disfraz', { n: (a.disfrazActual % 2) + 1 })}
+          {t('actor.disfraz', {
+            n: (a.disfrazActual % actor.disfraces.length) + 1,
+            total: actor.disfraces.length,
+          })}
         </button>
         {confirmar ? (
           <span className="ml-auto flex items-center gap-1.5 text-sm font-bold">
@@ -263,7 +276,15 @@ function ListaActores() {
               aria-pressed={a.id === seleccionado}
               onClick={() => seleccionarActor(a.id)}
             >
-              <img src={uriPersonaje(a.personaje, a.disfraz)} alt="" width={52} height={52} />
+              <img
+                src={uriPersonaje(
+                  disfrazActivo(a, a.disfraz).personaje,
+                  disfrazActivo(a, a.disfraz).variante,
+                )}
+                alt=""
+                width={52}
+                height={52}
+              />
               <span className="max-w-[4.5rem] truncate text-xs font-extrabold">{a.nombre}</span>
             </button>
           </li>
@@ -328,10 +349,11 @@ export function PanelActores() {
   const setPanel = useApp((s) => s.setPanel);
   return (
     <section className="tarjeta p-3" aria-label={t('panel.etiqueta')}>
-      <div role="tablist" className="mb-3 flex gap-2">
+      <div role="tablist" className="mb-3 flex flex-wrap gap-2">
         {(
           [
             ['actores', t('panel.actores')],
+            ['disfraces', t('panel.disfraces')],
             ['fondos', t('panel.fondos')],
           ] as const
         ).map(([id, texto]) => (
@@ -347,7 +369,13 @@ export function PanelActores() {
           </button>
         ))}
       </div>
-      {panel === 'actores' ? <ListaActores /> : <ListaFondos />}
+      {panel === 'actores' ? (
+        <ListaActores />
+      ) : panel === 'disfraces' ? (
+        <PanelDisfraces />
+      ) : (
+        <ListaFondos />
+      )}
     </section>
   );
 }

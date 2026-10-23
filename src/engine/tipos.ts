@@ -25,6 +25,8 @@ export interface EstadoActor {
   visible: boolean;
   disfrazActual: number;
   totalDisfraces: number;
+  /** Nombres de los disfraces, en orden (para "cambiar disfraz a …"). */
+  nombresDisfraces?: string[];
   dialogo: Dialogo | null;
   /** Si es un clon, el id del actor original (los clones solo existen mientras corre el programa). */
   clonDe?: string;
@@ -66,7 +68,9 @@ export type NombreSensor =
   | 'raton-y'
   | 'raton-abajo'
   | 'temporizador'
-  | 'distancia';
+  | 'distancia'
+  | 'disfraz-num'
+  | 'disfraz-nombre';
 
 /** Expresión (valor) ya compilada. */
 export type Expr =

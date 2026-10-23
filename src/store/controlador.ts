@@ -6,7 +6,7 @@ import { validarBloquePropio } from '../blocks/misBloques';
 import { sonidoExito, sonidoInicio, tocarEfecto, tocarNota } from '../audio';
 import { teclaABloque } from '../blocks/opciones';
 import { instantanea, proyectoInicial, useProyecto } from './proyecto';
-import { aEstado, validarProyecto } from './proyectoModelo';
+import { aEstado, disfrazActivo, validarProyecto } from './proyectoModelo';
 import { t } from '../i18n';
 import { uriPersonaje } from '../stage/uris';
 import { useApp } from './useApp';
@@ -86,8 +86,9 @@ useProyecto.subscribe((s) => {
 /** Imagen del actor para sellarlo (los clones usan la de su original). */
 export function imagenDeActor(actorId: string, disfraz: number): string {
   const base = actorId.split('~')[0];
-  const personaje = useProyecto.getState().actores.find((a) => a.id === base)?.personaje ?? 'kody';
-  return uriPersonaje(personaje, disfraz);
+  const actor = useProyecto.getState().actores.find((a) => a.id === base);
+  const d = actor ? disfrazActivo(actor, disfraz) : { personaje: 'kody', variante: 0 as const };
+  return uriPersonaje(d.personaje, d.variante);
 }
 
 // El ratón: el runtime lee su posición sobre el escenario y si está presionado.

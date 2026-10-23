@@ -6,6 +6,16 @@ import { t } from '../i18n';
 
 export const MAX_ACTORES = 8;
 
+export const MAX_DISFRACES = 12;
+export const MAX_LARGO_DISFRAZ = 20;
+
+/** Un disfraz: cualquier personaje de la biblioteca (y cuál de sus dos variantes). */
+export interface Disfraz {
+  personaje: string;
+  variante: 0 | 1;
+  nombre: string;
+}
+
 export interface ActorProyecto {
   id: string;
   nombre: string;
@@ -16,7 +26,9 @@ export interface ActorProyecto {
   direccion: number;
   tamano: number;
   visible: boolean;
-  /** Disfraz inicial (0 o 1). */
+  /** Los disfraces del actor, en orden. Siempre hay al menos uno. */
+  disfraces: Disfraz[];
+  /** Posición (empezando en 0) del disfraz con el que empieza el programa. */
   disfraz: number;
 }
 
@@ -148,6 +160,106 @@ export function posicionLibre(existentes: ActorProyecto[]): { x: number; y: numb
   return { x: Math.round(Math.random() * 300 - 150), y: Math.round(Math.random() * 200 - 100) };
 }
 
+/** Los dos disfraces de un personaje de la biblioteca (lo que trae un actor nuevo). */
+export function disfracesDe(personajeId: string): Disfraz[] {
+  const p = PERSONAJES.find((x) => x.id === personajeId) ?? PERSONAJES[0];
+  return ([0, 1] as const).map((variante) => ({
+    personaje: p.id,
+    variante,
+    nombre: `${p.nombre} ${variante + 1}`,
+  }));
+}
+
+/** Personaje y variante que se ven con el disfraz número `indice` (da la vuelta si se pasa). */
+export function disfrazActivo(
+  actor: { personaje: string; disfraces?: Disfraz[] },
+  indice: number,
+): { personaje: string; variante: 0 | 1 } {
+  const lista = actor.disfraces?.length ? actor.disfraces : disfracesDe(actor.personaje);
+  const d = lista[((Math.floor(indice) % lista.length) + lista.length) % lista.length];
+  return { personaje: d.personaje, variante: d.variante };
+}
+
+/** Limpia la lista de disfraces de un proyecto guardado (si no sirve, usa los del personaje). */
+export function validarDisfraces(entrada: unknown, personajeBase: string): Disfraz[] {
+  const lista: Disfraz[] = [];
+  if (Array.isArray(entrada)) {
+    for (const crudo of entrada.slice(0, MAX_DISFRACES)) {
+      if (!crudo || typeof crudo !== 'object') continue;
+      const d = crudo as Record<string, unknown>;
+      if (!PERSONAJES.some((p) => p.id === d.personaje)) continue;
+      const base =
+        typeof d.nombre === 'string' && d.nombre.trim()
+          ? d.nombre.trim().replace(/\s+/g, ' ').slice(0, MAX_LARGO_DISFRAZ)
+          : String(d.personaje);
+      lista.push({
+        personaje: String(d.personaje),
+        variante: d.variante === 1 ? 1 : 0,
+        nombre: nombreUnico(
+          base,
+          lista.map((x) => x.nombre),
+        ),
+      });
+    }
+  }
+  return lista.length ? lista : disfracesDe(personajeBase);
+}
+
+/** Resultado de cambiar la lista de disfraces: la lista nueva y cuál queda puesto. */
+export interface CambioDisfraces {
+  disfraces: Disfraz[];
+  disfraz: number;
+}
+
+/** Agrega un disfraz al final y lo deja puesto. Devuelve null si ya hay el máximo. */
+export function agregarDisfrazA(
+  disfraces: Disfraz[],
+  nuevo: { personaje: string; variante: 0 | 1; nombre?: string },
+): CambioDisfraces | null {
+  if (disfraces.length >= MAX_DISFRACES) return null;
+  const p = PERSONAJES.find((x) => x.id === nuevo.personaje) ?? PERSONAJES[0];
+  const base = (nuevo.nombre?.trim() || `${p.nombre} ${nuevo.variante + 1}`).slice(
+    0,
+    MAX_LARGO_DISFRAZ,
+  );
+  const disfraz: Disfraz = {
+    personaje: p.id,
+    variante: nuevo.variante,
+    nombre: nombreUnico(
+      base,
+      disfraces.map((d) => d.nombre),
+    ),
+  };
+  return { disfraces: [...disfraces, disfraz], disfraz: disfraces.length };
+}
+
+/** Quita un disfraz (siempre queda al menos uno) y ajusta cuál queda puesto. */
+export function quitarDisfrazDe(
+  disfraces: Disfraz[],
+  indice: number,
+  actual: number,
+): CambioDisfraces | null {
+  if (disfraces.length <= 1 || indice < 0 || indice >= disfraces.length) return null;
+  const lista = disfraces.filter((_, i) => i !== indice);
+  let disfraz = actual;
+  if (indice < actual) disfraz = actual - 1;
+  else if (indice === actual) disfraz = Math.min(actual, lista.length - 1);
+  return { disfraces: lista, disfraz: Math.max(0, Math.min(disfraz, lista.length - 1)) };
+}
+
+/** Cambia el nombre de un disfraz; devuelve null si el nombre ya lo tiene otro o no sirve. */
+export function renombrarDisfrazEn(
+  disfraces: Disfraz[],
+  indice: number,
+  nombre: string,
+): Disfraz[] | null {
+  const limpio = nombre.trim().replace(/\s+/g, ' ').slice(0, MAX_LARGO_DISFRAZ);
+  if (!limpio || indice < 0 || indice >= disfraces.length) return null;
+  if (disfraces.some((d, i) => i !== indice && d.nombre.toLowerCase() === limpio.toLowerCase()))
+    return null;
+  return disfraces.map((d, i) => (i === indice ? { ...d, nombre: limpio } : d));
+}
+
 /** Crea un actor con un personaje de la biblioteca. */
 export function crearActor(personajeId: string, existentes: ActorProyecto[]): ActorProyecto {
   const p = PERSONAJES.find((x) => x.id === personajeId) ?? PERSONAJES[0];
@@ -162,6 +274,7 @@ export function crearActor(personajeId: string, existentes: ActorProyecto[]): Ac
     direccion: 90,
     tamano: 100,
     visible: true,
+    disfraces: disfracesDe(p.id),
     disfraz: 0,
   };
 }
@@ -175,7 +288,8 @@ export const aEstado = (a: ActorProyecto): EstadoActor => ({
   tamano: a.tamano,
   visible: a.visible,
   disfrazActual: a.disfraz,
-  totalDisfraces: 2,
+  totalDisfraces: a.disfraces.length,
+  nombresDisfraces: a.disfraces.map((d) => d.nombre),
   dialogo: null,
 });
 
@@ -196,6 +310,7 @@ export function validarProyecto(entrada: unknown): Proyecto | null {
     const id = typeof a.id === 'string' && a.id && !ids.has(a.id) ? a.id : nuevoId();
     ids.add(id);
     const personaje = PERSONAJES.some((p) => p.id === a.personaje) ? String(a.personaje) : 'kody';
+    const disfraces = validarDisfraces(a.disfraces, personaje);
     actores.push({
       id,
       nombre:
@@ -208,7 +323,8 @@ export function validarProyecto(entrada: unknown): Proyecto | null {
       direccion: limitar(a.direccion, -180, 180, 90),
       tamano: limitar(a.tamano, 10, 500, 100),
       visible: a.visible !== false,
-      disfraz: limitar(a.disfraz, 0, 1, 0) >= 0.5 ? 1 : 0,
+      disfraces,
+      disfraz: Math.floor(limitar(a.disfraz, 0, disfraces.length - 1, 0)),
     });
   }
   if (actores.length === 0) return null;

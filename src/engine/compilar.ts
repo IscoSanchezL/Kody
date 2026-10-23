@@ -110,6 +110,11 @@ function compilarExpr(b: BloqueJSON | undefined): Expr {
         a: compilarEntrada(b, 'N'),
         b: compilarEntrada(b, 'TEXTO'),
       };
+    case 'ap_disfraz_num':
+      return {
+        tipo: 'sensor',
+        nombre: b.fields?.MODO === 'nombre' ? 'disfraz-nombre' : 'disfraz-num',
+      };
     case 'sen_respuesta':
       return { tipo: 'sensor', nombre: 'respuesta' };
     case 'sen_raton_x':

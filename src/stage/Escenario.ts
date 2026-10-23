@@ -21,7 +21,8 @@ const TEX_FONDO = { ancho: 960, alto: 720 };
 
 /** Lo que el escenario necesita saber de la aplicación (sin depender de React). */
 export interface PuenteEscenario {
-  personajeDe: (actorId: string) => string;
+  /** Personaje y variante que se ven con el disfraz `indice` del actor. */
+  disfrazDe: (actorId: string, indice: number) => { personaje: string; variante: 0 | 1 };
   seleccionado: () => string;
   cuadricula: () => boolean;
   /** Solo se puede arrastrar cuando el programa está detenido. */
@@ -269,8 +270,8 @@ export class Escenario {
     v.cont.position.set(a.x, -a.y);
     v.sprite.cursor = parado ? 'grab' : 'pointer';
 
-    const pers = personajePorId(this.puente.personajeDe(a.id));
-    const disfraz = (a.disfrazActual % 2) as 0 | 1;
+    const { personaje, variante: disfraz } = this.puente.disfrazDe(a.id, a.disfrazActual);
+    const pers = personajePorId(personaje);
     const tex = this.textura(
       `p:${pers.id}:${disfraz}:${esIcono3D(pers.id, disfraz) ? '3d' : 'svg'}`,
       () => uriPersonaje(pers.id, disfraz),

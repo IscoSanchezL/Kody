@@ -17,7 +17,7 @@ interface EstadoApp {
   /** Cambia en cada mensaje para re-animar el globo. */
   mensajeId: number;
   /** Pestaña del panel derecho. */
-  panel: 'actores' | 'fondos';
+  panel: 'actores' | 'disfraces' | 'sonidos' | 'fondos';
   /** Escenario ampliado. */
   escenarioGrande: boolean;
   /** Ancho (px) del panel del escenario si la persona lo arrastró; null = el normal o el grande. */
@@ -48,15 +48,16 @@ interface EstadoApp {
   /** Pregunta abierta de "preguntar ... y esperar" (null = ninguna). */
   pregunta: string | null;
   setPregunta: (p: string | null) => void;
-  /** Ventana de la biblioteca de personajes. */
+  /** Ventana de la biblioteca de personajes (para agregar un actor o un disfraz). */
   bibliotecaAbierta: boolean;
+  bibliotecaModo: 'actor' | 'disfraz';
   /** Posición del puntero sobre el escenario (null si está fuera). */
   puntero: { x: number; y: number } | null;
-  setPanel: (p: 'actores' | 'fondos') => void;
+  setPanel: (p: 'actores' | 'disfraces' | 'sonidos' | 'fondos') => void;
   alternarEscenarioGrande: () => void;
   alternarCuadricula: () => void;
   setModo3d: (v: boolean) => void;
-  abrirBiblioteca: (abierta: boolean) => void;
+  abrirBiblioteca: (abierta: boolean, modo?: 'actor' | 'disfraz') => void;
   setPuntero: (p: { x: number; y: number } | null) => void;
   setTema: (t: Tema) => void;
   ciclarTema: () => void;
@@ -127,6 +128,7 @@ export const useApp = create<EstadoApp>((set, get) => ({
   pregunta: null,
   setPregunta: (pregunta) => set({ pregunta }),
   bibliotecaAbierta: false,
+  bibliotecaModo: 'actor',
   puntero: null,
   setPanel: (panel) => set({ panel }),
   alternarEscenarioGrande: () => {
@@ -141,7 +143,8 @@ export const useApp = create<EstadoApp>((set, get) => ({
     guardar('kody.3d', modo3d);
     set({ modo3d });
   },
-  abrirBiblioteca: (bibliotecaAbierta) => set({ bibliotecaAbierta }),
+  abrirBiblioteca: (bibliotecaAbierta, modo) =>
+    set((s) => ({ bibliotecaAbierta, bibliotecaModo: modo ?? s.bibliotecaModo })),
   setPuntero: (puntero) => set({ puntero }),
   mensaje: { clave: 'app.hola' },
   mensajeId: 0,

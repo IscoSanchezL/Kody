@@ -492,7 +492,7 @@ export class Escenario3D {
   }
 
   private actualizarActor(a: EstadoActor, modo: string, dt: number) {
-    const personaje = this.puente.personajeDe(a.id);
+    const { personaje, variante } = this.puente.disfrazDe(a.id, a.disfrazActual);
     let v = this.vistas.get(a.id);
     if (v && v.personaje !== personaje) {
       this.quitarVista(a.id, v);
@@ -524,8 +524,8 @@ export class Escenario3D {
     v.raiz.scale.setScalar(escala);
     v.raiz.visible = a.visible;
     v.cuerpo.rotation.set(0, v.giro, v.inclinacion);
-    v.modelo.variantes[0].visible = a.disfrazActual % 2 === 0;
-    v.modelo.variantes[1].visible = a.disfrazActual % 2 === 1;
+    v.modelo.variantes[0].visible = variante === 0;
+    v.modelo.variantes[1].visible = variante === 1;
     v.modelo.animar?.(this.tiempo);
 
     v.sombra.visible = a.visible;

@@ -28,6 +28,8 @@ export const opcionesNotas = (): Opciones =>
 export const opcionesSonidos = (): Opciones =>
   traducir('sonido', ['pop', 'boing', 'ding', 'laser', 'tambor', 'aplauso']);
 
+export const opcionesModoDisfraz = (): Opciones => traducir('disfrazmodo', ['num', 'nombre']);
+
 export const opcionesFondos = (): Opciones => FONDOS.map((f) => [f.nombre, f.id]);
 
 export const opcionesFunciones = (): Opciones =>

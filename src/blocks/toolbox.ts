@@ -49,6 +49,8 @@ const contenido = (): Partial<Record<IdCategoria, object[]>> => ({
     bloque('ap_pensar', { TEXTO: txt(tr('tb.mmm')) }),
     bloque('ap_pensar_seg', { TEXTO: txt(tr('tb.mmm')), SEG: n(2) }),
     bloque('ap_sig_disfraz'),
+    bloque('ap_disfraz_a'),
+    bloque('ap_disfraz_num'),
     bloque('ap_cambiar_tamano', { N: n(10) }),
     bloque('ap_fijar_tamano', { N: n(100) }),
     bloque('ap_mostrar'),

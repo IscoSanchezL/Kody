@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react';
 import * as Blockly from 'blockly';
 import * as En from 'blockly/msg/en';
 import * as Es from 'blockly/msg/es';
-import { configurarActores, configurarDatos, registrarBloques } from '../blocks/definiciones';
+import {
+  configurarActores,
+  configurarDatos,
+  configurarDisfraces,
+  registrarBloques,
+} from '../blocks/definiciones';
 import { crearTema } from '../blocks/tema';
 import {
   contenidoListas,
@@ -68,6 +73,11 @@ export function EditorBloques() {
       return actores.filter((a) => a.id !== yo).map((a) => [a.nombre, a.id] as [string, string]);
     });
 
+    // Disfraces del actor que se está editando (para "cambiar disfraz a …").
+    configurarDisfraces(() => {
+      const { actores, seleccionado: yo } = useProyecto.getState();
+      return actores.find((a) => a.id === yo)?.disfraces.map((d) => d.nombre) ?? [];
+    });
     // Variables y listas del proyecto (se leen al abrir cada lista desplegable).
     configurarDatos({
       variables: () => useProyecto.getState().variables,

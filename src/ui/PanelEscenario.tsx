@@ -5,6 +5,7 @@ import { PreguntaEscenario } from './PreguntaEscenario';
 import { Escenario, type PuenteEscenario } from '../stage/Escenario';
 import { clicEnActor, ratonAbajo, runtime } from '../store/controlador';
 import { useProyecto } from '../store/proyecto';
+import { disfrazActivo } from '../store/proyectoModelo';
 import { useIdioma, useT } from '../i18n';
 import { useApp } from '../store/useApp';
 import { seleccionarActor } from '../store/controlador';
@@ -12,8 +13,10 @@ import { seleccionarActor } from '../store/controlador';
 /** Lo que el escenario (2D o 3D) necesita de la aplicación. */
 const crearPuente = (): PuenteEscenario => ({
   // Un clon se dibuja como su original: su id es `original~n`.
-  personajeDe: (id) =>
-    useProyecto.getState().actores.find((a) => a.id === id.split('~')[0])?.personaje ?? 'kody',
+  disfrazDe: (id, indice) => {
+    const actor = useProyecto.getState().actores.find((a) => a.id === id.split('~')[0]);
+    return actor ? disfrazActivo(actor, indice) : { personaje: 'kody', variante: 0 };
+  },
   seleccionado: () => useProyecto.getState().seleccionado,
   cuadricula: () => useApp.getState().cuadricula,
   puedeArrastrar: () => runtime.modo === 'detenido',

@@ -415,6 +415,10 @@ export class Runtime {
         return a.direccion;
       case 'respuesta':
         return this.respuesta;
+      case 'disfraz-num':
+        return a.disfrazActual + 1;
+      case 'disfraz-nombre':
+        return a.nombresDisfraces?.[a.disfrazActual] ?? '';
       case 'raton-x':
         return this.raton.x;
       case 'raton-y':
@@ -661,6 +665,11 @@ export class Runtime {
       case 'ap_sig_disfraz':
         a.disfrazActual = (a.disfrazActual + 1) % Math.max(1, a.totalDisfraces);
         break;
+      case 'ap_disfraz_a': {
+        const i = (a.nombresDisfraces ?? []).indexOf(s.campos.DISFRAZ ?? '');
+        if (i >= 0) a.disfrazActual = i;
+        break;
+      }
       case 'ap_cambiar_tamano':
         a.tamano = Math.min(500, Math.max(10, a.tamano + this.num(s, 'N', a)));
         break;

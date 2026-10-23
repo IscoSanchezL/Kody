@@ -3,6 +3,10 @@ import { PERSONAJES } from '../stage/biblioteca';
 import { crearScriptEjemplo } from './ejemplo';
 import {
   MAX_ACTORES,
+  agregarDisfrazA,
+  disfracesDe,
+  quitarDisfrazDe,
+  renombrarDisfrazEn,
   SCRIPT_VACIO,
   crearActor,
   limpiarNombreDato,
@@ -65,6 +69,12 @@ interface EstadoProyecto extends Proyecto {
   fijarFondo: (id: string) => void;
   guardarScript: (id: string, json: object) => void;
   reemplazar: (p: Proyecto) => void;
+  /** Disfraces de un actor: ponerse uno, agregar, duplicar, quitar y cambiar de nombre. */
+  ponerDisfraz: (id: string, indice: number) => void;
+  agregarDisfraz: (id: string, d: { personaje: string; variante: 0 | 1 }) => string | null;
+  quitarDisfraz: (id: string, indice: number) => void;
+  renombrarDisfraz: (id: string, indice: number, nombre: string) => boolean;
+  cambiarPersonaje: (id: string, personaje: string) => void;
   /** Crean o borran variables y listas; devuelven un mensaje si no se pudo (o null). */
   crearDato: (tipo: 'variable' | 'lista', nombre: string) => string | null;
   borrarDato: (tipo: 'variable' | 'lista', nombre: string) => void;
@@ -102,6 +112,39 @@ export const useProyecto = create<EstadoProyecto>((set, get) => ({
   fijarFondo: (fondo) => set({ fondo }),
   guardarScript: (id, json) => set((s) => ({ scripts: { ...s.scripts, [id]: json } })),
   reemplazar: (p) => set((s) => ({ ...p, revision: s.revision + 1 })),
+  ponerDisfraz: (id, indice) =>
+    set((s) => ({
+      actores: s.actores.map((a) =>
+        a.id === id && indice >= 0 && indice < a.disfraces.length ? { ...a, disfraz: indice } : a,
+      ),
+    })),
+  agregarDisfraz: (id, d) => {
+    const actor = get().actores.find((a) => a.id === id);
+    const cambio = actor && agregarDisfrazA(actor.disfraces, d);
+    if (!cambio) return null;
+    set((s) => ({ actores: s.actores.map((a) => (a.id === id ? { ...a, ...cambio } : a)) }));
+    return cambio.disfraces[cambio.disfraz].nombre;
+  },
+  quitarDisfraz: (id, indice) => {
+    const actor = get().actores.find((a) => a.id === id);
+    const cambio = actor && quitarDisfrazDe(actor.disfraces, indice, actor.disfraz);
+    if (cambio)
+      set((s) => ({ actores: s.actores.map((a) => (a.id === id ? { ...a, ...cambio } : a)) }));
+  },
+  renombrarDisfraz: (id, indice, nombre) => {
+    const actor = get().actores.find((a) => a.id === id);
+    const lista = actor && renombrarDisfrazEn(actor.disfraces, indice, nombre);
+    if (!lista) return false;
+    set((s) => ({ actores: s.actores.map((a) => (a.id === id ? { ...a, disfraces: lista } : a)) }));
+    return true;
+  },
+  // Elegir otro personaje deja al actor con los dos disfraces de ese personaje.
+  cambiarPersonaje: (id, personaje) =>
+    set((s) => ({
+      actores: s.actores.map((a) =>
+        a.id === id ? { ...a, personaje, disfraces: disfracesDe(personaje), disfraz: 0 } : a,
+      ),
+    })),
   crearDato: (tipo, nombre) => {
     const clave = tipo === 'variable' ? 'variables' : 'listas';
     const problema = validarNombreDato(nombre, get()[clave]);
