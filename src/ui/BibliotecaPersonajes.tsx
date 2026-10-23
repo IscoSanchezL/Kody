@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import { PERSONAJES } from '../stage/biblioteca';
+import { CATEGORIAS_PERSONAJE, PERSONAJES, type CategoriaPersonaje } from '../stage/biblioteca';
 import { useIconos } from './useIconos';
 import { uriPersonaje } from '../stage/uris';
 import { useProyecto } from '../store/proyecto';
@@ -31,10 +31,14 @@ export function BibliotecaPersonajes() {
   );
   const cerrar = useRef<HTMLButtonElement>(null);
   const [elegido, setElegido] = useState<Eleccion>({ personaje: PERSONAJES[0].id, variante: 0 });
+  const [categoria, setCategoria] = useState<CategoriaPersonaje | 'todos'>('todos');
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     if (!abierta) return;
     setElegido({ personaje: PERSONAJES[0].id, variante: 0 });
+    setCategoria('todos');
+    setBusqueda('');
     cerrar.current?.focus();
     const tecla = (e: KeyboardEvent) => e.key === 'Escape' && abrir(false);
     window.addEventListener('keydown', tecla);
@@ -63,7 +67,13 @@ export function BibliotecaPersonajes() {
   };
 
   // En modo disfraz cada personaje ofrece sus dos variantes; en modo actor, una sola entrada.
-  const opciones: Eleccion[] = PERSONAJES.flatMap((p) =>
+  const texto = busqueda.trim().toLowerCase();
+  const visibles = PERSONAJES.filter(
+    (p) =>
+      (categoria === 'todos' || p.categoria === categoria) &&
+      (!texto || p.nombre.toLowerCase().includes(texto)),
+  );
+  const opciones: Eleccion[] = visibles.flatMap((p) =>
     modo === 'disfraz'
       ? ([0, 1] as const).map((variante) => ({ personaje: p.id, variante }))
       : [{ personaje: p.id, variante: 0 as const }],
@@ -110,34 +120,60 @@ export function BibliotecaPersonajes() {
               </p>
             ) : (
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_14rem]">
-                <ul className="m-0 grid max-h-[26rem] list-none grid-cols-2 gap-2.5 overflow-y-auto p-1 sm:grid-cols-3">
-                  {opciones.map((o) => {
-                    const activo =
-                      o.personaje === elegido.personaje && o.variante === elegido.variante;
-                    return (
-                      <li key={`${o.personaje}:${o.variante}`}>
-                        <button
-                          type="button"
-                          className="tarjeta-boton w-full"
-                          aria-pressed={activo}
-                          onClick={() => setElegido(o)}
-                          onDoubleClick={() => agregar(o)}
-                        >
-                          <img
-                            src={uriPersonaje(o.personaje, o.variante)}
-                            alt=""
-                            width={84}
-                            height={84}
-                          />
-                          <span className="titulo text-base font-extrabold">
-                            {nombreDe(o.personaje)}
-                            {modo === 'disfraz' && ` ${o.variante + 1}`}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <div className="min-w-0">
+                  <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                    {(['todos', ...CATEGORIAS_PERSONAJE] as const).map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className="btn btn-suave"
+                        aria-pressed={categoria === c}
+                        onClick={() => setCategoria(c)}
+                      >
+                        {t(`categoria.${c}`)}
+                      </button>
+                    ))}
+                    <input
+                      type="search"
+                      className="campo min-w-0 flex-1"
+                      placeholder={t('biblioteca.buscar')}
+                      aria-label={t('biblioteca.buscar')}
+                      value={busqueda}
+                      onChange={(e) => setBusqueda(e.target.value)}
+                    />
+                  </div>
+                  {opciones.length === 0 && (
+                    <p className="m-0 p-3 font-bold">{t('biblioteca.sinResultados')}</p>
+                  )}
+                  <ul className="m-0 grid max-h-[26rem] list-none grid-cols-2 gap-2.5 overflow-y-auto p-1 sm:grid-cols-3">
+                    {opciones.map((o) => {
+                      const activo =
+                        o.personaje === elegido.personaje && o.variante === elegido.variante;
+                      return (
+                        <li key={`${o.personaje}:${o.variante}`}>
+                          <button
+                            type="button"
+                            className="tarjeta-boton w-full"
+                            aria-pressed={activo}
+                            onClick={() => setElegido(o)}
+                            onDoubleClick={() => agregar(o)}
+                          >
+                            <img
+                              src={uriPersonaje(o.personaje, o.variante)}
+                              alt=""
+                              width={84}
+                              height={84}
+                            />
+                            <span className="titulo text-base font-extrabold">
+                              {nombreDe(o.personaje)}
+                              {modo === 'disfraz' && ` ${o.variante + 1}`}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
                 <div className="flex flex-col items-center gap-2 rounded-2xl border border-[var(--borde)] bg-[var(--fondo)]/60 p-3 text-center">
                   <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--texto-suave)]">
                     {t('biblioteca.vistaPrevia')}

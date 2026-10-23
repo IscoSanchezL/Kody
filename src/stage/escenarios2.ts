@@ -351,7 +351,7 @@ export function castillo() {
     techoH: number,
     banderaC: string,
   ) => {
-    let almenas = '';
+    const almenas = '';
     let ladrillos = '';
     for (let i = 0; i < h / 10; i++)
       ladrillos += `<path d="M${x} ${base - i * 10} h${w}" stroke="#6c675f" stroke-width=".6" opacity=".35"/>${Array.from({ length: 4 }, (_, j) => `<path d="M${n1(x + ((j * w) / 3.5 + (i % 2) * 5))} ${base - i * 10} v-10" stroke="#6c675f" stroke-width=".5" opacity=".3"/>`).join('')}`;

@@ -8,10 +8,19 @@ import { aula, bosque, carretera, castillo, cielo, ciudad, granja, playa } from 
  * Un solo origen de dibujos: los usa el escenario (Pixi) y las miniaturas de la interfaz.
  */
 
+export type CategoriaPersonaje = 'personajes' | 'animales' | 'vehiculos' | 'objetos';
+export const CATEGORIAS_PERSONAJE: CategoriaPersonaje[] = [
+  'personajes',
+  'animales',
+  'vehiculos',
+  'objetos',
+];
+
 export interface Personaje {
   id: string;
   /** Nombre en el idioma actual (se calcula al leerlo). */
   readonly nombre: string;
+  categoria: CategoriaPersonaje;
   /** Dibuja el disfraz 0 o 1. */
   svg: (disfraz: 0 | 1) => string;
 }
@@ -131,8 +140,19 @@ const estrella = (v: 0 | 1) =>
   <path d="M51 76q9 9 18 0" stroke="${TINTA}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
   <circle cx="39" cy="74" r="4.5" fill="#fb7185" opacity=".55"/><circle cx="81" cy="74" r="4.5" fill="#fb7185" opacity=".55"/>`);
 
-const nuevoPersonaje = (id: string, svg: Personaje['svg']): Personaje => ({
+/** Dibujo plano de respaldo (mientras se genera el 3D): un emoji grande; el 2.º disfraz lo inclina. */
+const emoji = (e: string, v: 0 | 1) =>
+  personaje(
+    `<text x="60" y="88" font-size="84" text-anchor="middle"${v ? ' transform="rotate(-8 60 60)"' : ''}>${e}</text>`,
+  );
+
+const nuevoPersonaje = (
+  id: string,
+  categoria: CategoriaPersonaje,
+  svg: Personaje['svg'],
+): Personaje => ({
   id,
+  categoria,
   get nombre() {
     return tDinamica(`personaje.${id}`);
   },
@@ -148,14 +168,26 @@ const nuevoFondo = (id: string, svg: string): Fondo => ({
 });
 
 export const PERSONAJES: Personaje[] = [
-  nuevoPersonaje('kody', (v) => kodySVG(v)),
-  nuevoPersonaje('zorro', (v) => zorroSVG(v)),
-  nuevoPersonaje('gato', gato),
-  nuevoPersonaje('dino', dino),
-  nuevoPersonaje('cohete', cohete),
-  nuevoPersonaje('pez', pez),
-  nuevoPersonaje('abeja', abeja),
-  nuevoPersonaje('estrella', estrella),
+  nuevoPersonaje('kody', 'personajes', (v) => kodySVG(v)),
+  nuevoPersonaje('zorro', 'animales', (v) => zorroSVG(v)),
+  nuevoPersonaje('gato', 'animales', gato),
+  nuevoPersonaje('dino', 'animales', dino),
+  nuevoPersonaje('cohete', 'vehiculos', cohete),
+  nuevoPersonaje('pez', 'animales', pez),
+  nuevoPersonaje('abeja', 'animales', abeja),
+  nuevoPersonaje('estrella', 'objetos', estrella),
+  nuevoPersonaje('perro', 'animales', (v) => emoji('🐶', v)),
+  nuevoPersonaje('conejo', 'animales', (v) => emoji('🐰', v)),
+  nuevoPersonaje('rana', 'animales', (v) => emoji('🐸', v)),
+  nuevoPersonaje('pinguino', 'animales', (v) => emoji('🐧', v)),
+  nuevoPersonaje('tortuga', 'animales', (v) => emoji('🐢', v)),
+  nuevoPersonaje('buho', 'animales', (v) => emoji('🦉', v)),
+  nuevoPersonaje('panda', 'animales', (v) => emoji('🐼', v)),
+  nuevoPersonaje('mariposa', 'animales', (v) => emoji('🦋', v)),
+  nuevoPersonaje('pulpo', 'animales', (v) => emoji('🐙', v)),
+  nuevoPersonaje('pelota', 'objetos', (v) => emoji('⚽', v)),
+  nuevoPersonaje('manzana', 'objetos', (v) => emoji('🍎', v)),
+  nuevoPersonaje('coche', 'vehiculos', (v) => emoji('🚗', v)),
 ];
 
 export const personajePorId = (id: string): Personaje =>

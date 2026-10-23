@@ -43,7 +43,7 @@ Kody **no se puede abrir haciendo doble clic en `index.html`** de la carpeta del
 ## Qué incluye la Fase 2
 
 - **Varios actores** (hasta 8), cada uno con su propio programa; se elige a quién programar en el panel de actores.
-- **Biblioteca de 8 personajes** con 2 disfraces (Kody, Robo, Gato, Dino, Cohete, Pez, Abeja, Estrella) y **8 escenarios** (pradera, espacio, océano, ciudad de noche, desierto, montañas con nieve, cuadrícula, en blanco). Se pueden cambiar en cualquier momento, también desde los bloques.
+- **Biblioteca de 20 personajes** con 2 disfraces y buscador por categorías (Kody el robot, Zorro, Gato, Perro, Conejo, Rana, Pingüino, Tortuga, Búho, Panda, Dino, Pez, Pulpo, Abeja, Mariposa, Cohete, Coche, Estrella, Pelota, Manzana) y **16 escenarios** (pradera, espacio, océano, ciudad de noche, desierto, montañas con nieve, playa, bosque, granja, ciudad, castillo, aula, carretera, cielo, cuadrícula, en blanco). Se pueden cambiar en cualquier momento, también desde los bloques.
 - **Arrastrar actores** en el escenario para posicionarlos, cuadrícula de coordenadas, escenario grande y pantalla completa.
 - **Eventos:** al presionar una tecla, al hacer clic en el actor, enviar y recibir mensajes entre actores.
 - **Control y lógica:** si / si no, repetir hasta que, esperar hasta que, detener todo; sensores (tecla, borde, tocando a otro actor, posición) y operadores (+ − × ÷, > < =, y / o / no, al azar).
