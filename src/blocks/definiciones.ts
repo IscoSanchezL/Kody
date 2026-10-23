@@ -2,7 +2,9 @@ import * as Blockly from 'blockly';
 import { t, tDinamica } from '../i18n';
 import {
   opcionesColoresLapiz,
+  opcionesFecha,
   opcionesFondos,
+  opcionesPropiedad,
   opcionesFunciones,
   opcionesModoDisfraz,
   opcionesMensajes,
@@ -33,6 +35,13 @@ const cuerpo = (name = 'CUERPO') => ({ type: 'input_statement', name });
 
 const pila = { previousStatement: null, nextStatement: null };
 
+/** A dónde ir / hacia dónde apuntar: un lugar al azar, el ratón o un actor del proyecto. */
+const objetivos = (conAzar: boolean): [string, string][] => [
+  ...(conAzar ? ([[t('op.azar'), '__azar__']] as [string, string][]) : []),
+  [t('op.raton'), '__raton__'],
+  ...proveedorActores(),
+];
+
 const bloques = [
   // ---------- Lápiz ----------
   {
@@ -42,6 +51,18 @@ const bloques = [
   },
   {
     type: 'lap_subir',
+    ...pila,
+    style: 'lapiz',
+  },
+  {
+    type: 'lap_tono',
+    args0: [num('N')],
+    ...pila,
+    style: 'lapiz',
+  },
+  {
+    type: 'lap_cambiar_tono',
+    args0: [num('N')],
     ...pila,
     style: 'lapiz',
   },
@@ -113,6 +134,36 @@ const bloques = [
   {
     type: 'mov_deslizar',
     args0: [num('SEG'), num('X'), num('Y')],
+    ...pila,
+    style: 'movimiento',
+  },
+  {
+    type: 'mov_ir_a_obj',
+    args0: [lista('OBJ', () => objetivos(true))],
+    ...pila,
+    style: 'movimiento',
+  },
+  {
+    type: 'mov_deslizar_obj',
+    args0: [num('SEG'), lista('OBJ', () => objetivos(true))],
+    ...pila,
+    style: 'movimiento',
+  },
+  {
+    type: 'mov_apuntar_obj',
+    args0: [lista('OBJ', () => objetivos(false))],
+    ...pila,
+    style: 'movimiento',
+  },
+  {
+    type: 'mov_fijar_x',
+    args0: [num('N')],
+    ...pila,
+    style: 'movimiento',
+  },
+  {
+    type: 'mov_fijar_y',
+    args0: [num('N')],
     ...pila,
     style: 'movimiento',
   },
@@ -199,6 +250,33 @@ const bloques = [
     style: 'apariencia',
   },
 
+  {
+    type: 'ap_sig_fondo',
+    ...pila,
+    style: 'apariencia',
+  },
+  {
+    type: 'ap_transparencia_fijar',
+    args0: [num('N')],
+    ...pila,
+    style: 'apariencia',
+  },
+  {
+    type: 'ap_transparencia_cambiar',
+    args0: [num('N')],
+    ...pila,
+    style: 'apariencia',
+  },
+  {
+    type: 'ap_tamano',
+    output: 'Number',
+    style: 'apariencia',
+  },
+  {
+    type: 'ap_fondo_num',
+    output: 'Number',
+    style: 'apariencia',
+  },
   // ---------- Sonido ----------
   {
     type: 'son_detener',
@@ -248,6 +326,12 @@ const bloques = [
     ...pila,
     style: 'eventos',
   },
+  {
+    type: 'ev_enviar_espera',
+    args0: [lista('MENSAJE', opcionesMensajes)],
+    ...pila,
+    style: 'eventos',
+  },
 
   // ---------- Control ----------
   {
@@ -289,6 +373,16 @@ const bloques = [
   {
     type: 'ctrl_esperar_hasta',
     args0: [bool('COND')],
+    ...pila,
+    style: 'control',
+  },
+  {
+    type: 'ctrl_detener_este',
+    previousStatement: null,
+    style: 'control',
+  },
+  {
+    type: 'ctrl_detener_otros',
     ...pila,
     style: 'control',
   },
@@ -375,6 +469,17 @@ const bloques = [
   },
   {
     type: 'sen_raton_y',
+    output: 'Number',
+    style: 'sensores',
+  },
+  {
+    type: 'sen_tocando_raton',
+    output: 'Boolean',
+    style: 'sensores',
+  },
+  {
+    type: 'sen_fecha',
+    args0: [lista('FECHA', opcionesFecha)],
     output: 'Number',
     style: 'sensores',
   },
@@ -608,6 +713,14 @@ export function registrarBloques() {
   });
   Blockly.Blocks['evento_clic_actor'] = sombrero({ type: 'evento_clic_actor' });
   Blockly.Blocks['evento_clon'] = sombrero({ type: 'evento_clon', style: 'control' });
+  Blockly.Blocks['evento_cuando'] = sombrero({
+    type: 'evento_cuando',
+    args0: [bool('COND')],
+  });
+  Blockly.Blocks['evento_fondo'] = sombrero({
+    type: 'evento_fondo',
+    args0: [lista('FONDO', opcionesFondos)],
+  });
   Blockly.Blocks['evento_mensaje'] = sombrero({
     type: 'evento_mensaje',
     args0: [lista('MENSAJE', opcionesMensajes)],
@@ -768,6 +881,29 @@ export function registrarBloques() {
       this.setOutput(true, 'Number');
       this.setStyle('sensores');
       this.setTooltip(t('b.sen_distancia.ayuda'));
+    },
+  };
+
+  // "[x] de [actor]": una propiedad de otro actor.
+  Blockly.Blocks['sen_de'] = {
+    init(this: Blockly.Block) {
+      this.jsonInit({
+        message0: tDinamica('b.sen_de'),
+        args0: [
+          { type: 'field_dropdown', name: 'PROP', options: opcionesPropiedad() },
+          {
+            type: 'field_dropdown',
+            name: 'ACTOR',
+            options: (() => {
+              const o = proveedorActores();
+              return o.length ? o : [[t('op.sinActores'), '']];
+            }) as never,
+          },
+        ],
+        output: 'Number',
+        style: 'sensores',
+        tooltip: tDinamica('b.sen_de.ayuda'),
+      });
     },
   };
 

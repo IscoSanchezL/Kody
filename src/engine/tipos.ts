@@ -27,6 +27,8 @@ export interface EstadoActor {
   totalDisfraces: number;
   /** Nombres de los disfraces, en orden (para "cambiar disfraz a …"). */
   nombresDisfraces?: string[];
+  /** Transparencia (0 = se ve entero, 100 = invisible). Si falta, 0. */
+  transparencia?: number;
   /** Volumen del actor (0–100). Si falta, 100. */
   volumen?: number;
   /** Instrumento de "tocar nota". Si falta, el piano. */
@@ -75,7 +77,12 @@ export type NombreSensor =
   | 'distancia'
   | 'disfraz-num'
   | 'disfraz-nombre'
-  | 'volumen';
+  | 'volumen'
+  | 'tamano'
+  | 'fondo-num'
+  | 'tocando-raton'
+  | 'fecha'
+  | 'de';
 
 /** Expresión (valor) ya compilada. */
 export type Expr =
@@ -117,6 +124,8 @@ export interface Programa {
   sombrero: string;
   id: string;
   campos: Record<string, string>;
+  /** Solo en "cuando <condición>": se vigila en cada fotograma. */
+  condicion?: Expr;
   cuerpo: Sentencia[];
 }
 

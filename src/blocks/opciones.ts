@@ -30,6 +30,12 @@ export const opcionesInstrumentos = (): Opciones => traducir('instrumento', INST
 
 export const opcionesModoDisfraz = (): Opciones => traducir('disfrazmodo', ['num', 'nombre']);
 
+export const opcionesFecha = (): Opciones =>
+  traducir('fecha', ['anio', 'mes', 'dia', 'semana', 'hora', 'minuto', 'segundo']);
+
+export const opcionesPropiedad = (): Opciones =>
+  traducir('prop', ['x', 'y', 'dir', 'tamano', 'disfraz']);
+
 export const opcionesFondos = (): Opciones => FONDOS.map((f) => [f.nombre, f.id]);
 
 export const opcionesFunciones = (): Opciones =>

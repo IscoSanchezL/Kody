@@ -267,6 +267,7 @@ export class Escenario {
     const v = this.vistas.get(a.id) ?? this.crearVista(a);
     const parado = modo === 'detenido';
     v.cont.visible = a.visible;
+    v.cont.alpha = 1 - (a.transparencia ?? 0) / 100;
     v.cont.position.set(a.x, -a.y);
     v.sprite.cursor = parado ? 'grab' : 'pointer';
 

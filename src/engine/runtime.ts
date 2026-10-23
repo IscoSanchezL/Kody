@@ -33,6 +33,29 @@ const limitarNumero = (n: number) => (Number.isFinite(n) ? n : 0);
 
 type Valor = number | string | boolean;
 
+/** Color del lápiz a partir de un tono 0–100 (como en Scratch: rueda de colores completa). */
+function colorDeTono(tono: number): string {
+  const h = (((tono % 100) + 100) % 100) * 3.6;
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const v = 0.5 - 0.5 * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return Math.round(v * 255)
+      .toString(16)
+      .padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+/** Tono 0–100 de un color "#rrggbb". */
+function tonoDeColor(c: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255);
+  const mx = Math.max(r, g, b);
+  const d = mx - Math.min(r, g, b);
+  if (d === 0) return 0;
+  const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (((h * 60 + 360) % 360) / 360) * 100;
+}
+
 interface Hilo {
   id: number;
   actorId: string;
@@ -49,6 +72,8 @@ interface Hilo {
 interface Manejador {
   actorId: string;
   programa: Programa;
+  /** Último valor de la condición de "cuando <condición>". */
+  previo?: boolean;
 }
 
 /**
@@ -82,7 +107,11 @@ export class Runtime {
   private raton = { x: 0, y: 0, abajo: false };
   private inicioTemporizador = 0;
   // Lápiz (por actor), clones, y "Mis bloques".
-  private lapices = new Map<string, { abajo: boolean; color: string; grosor: number }>();
+  private lapices = new Map<
+    string,
+    { abajo: boolean; color: string; grosor: number; tono: number }
+  >();
+  private listaFondos: string[] = [];
   private programas: Record<string, Programa[]> = {};
   private funciones = new Map<string, Programa>();
   private contadorClones = 0;
@@ -91,6 +120,7 @@ export class Runtime {
   constructor(
     private oyentes: Oyentes = {},
     aleatorio: () => number = Math.random,
+    private ahora: () => Date = () => new Date(),
   ) {
     this.aleatorio = aleatorio;
   }
@@ -114,6 +144,11 @@ export class Runtime {
   fijarInicial(actor: EstadoActor) {
     this.actores.set(actor.id, { ...actor, dialogo: null });
     this.inicial.set(actor.id, { ...actor, dialogo: null });
+  }
+
+  /** Ids de los escenarios disponibles, en orden (para "siguiente escenario"). */
+  fijarListaFondos(ids: string[]) {
+    this.listaFondos = ids;
   }
 
   fijarFondoInicial(id: string) {
@@ -255,11 +290,11 @@ export class Runtime {
 
   // ---------- Eventos externos ----------
 
-  private arrancarHilo(actorId: string, p: Programa) {
+  private arrancarHilo(actorId: string, p: Programa): Hilo {
     // Si el mismo programa ya corre, se reinicia (como en Scratch). Cada clon tiene el suyo.
     const clave = actorId === baseDe(actorId) ? p.id : `${p.id}@${actorId}`;
     this.hilos = this.hilos.filter((h) => h.programaId !== clave);
-    this.hilos.push({
+    const hilo: Hilo = {
       id: this.siguienteHilo++,
       actorId,
       programaId: clave,
@@ -268,7 +303,9 @@ export class Runtime {
       duermeHasta: 0,
       bloqueActivo: null,
       terminado: false,
-    });
+    };
+    this.hilos.push(hilo);
+    return hilo;
   }
 
   presionarTecla(tecla: string) {
@@ -296,11 +333,39 @@ export class Runtime {
     }
   }
 
-  enviar(mensaje: string) {
-    for (const m of this.manejadores) {
+  /** Avisa a todos los que escuchan ese mensaje y devuelve los hilos que arrancó. */
+  enviar(mensaje: string): Hilo[] {
+    const arrancados: Hilo[] = [];
+    for (const m of [...this.manejadores]) {
       if (m.programa.sombrero === 'evento_mensaje' && m.programa.campos.MENSAJE === mensaje) {
+        arrancados.push(this.arrancarHilo(m.actorId, m.programa));
+      }
+    }
+    return arrancados;
+  }
+
+  /** Cambia el escenario y despierta a los que esperan "cuando el escenario cambie a …". */
+  private cambiarFondo(id: string) {
+    if (!id || id === this.fondo) return;
+    this.fondo = id;
+    this.oyentes.alCambiarFondo?.(id);
+    for (const m of [...this.manejadores]) {
+      if (m.programa.sombrero === 'evento_fondo' && m.programa.campos.FONDO === id) {
         this.arrancarHilo(m.actorId, m.programa);
       }
+    }
+  }
+
+  /** Vigila los "cuando <condición>": arrancan una vez al pasar de falso a verdadero. */
+  private vigilarCondiciones() {
+    for (const m of [...this.manejadores]) {
+      const cond = m.programa.condicion;
+      if (m.programa.sombrero !== 'evento_cuando' || !cond) continue;
+      const a = this.actores.get(m.actorId);
+      if (!a) continue;
+      const ahora = this.aBooleano(this.evaluar(cond, a));
+      if (ahora && !m.previo) this.arrancarHilo(m.actorId, m.programa);
+      m.previo = ahora;
     }
   }
 
@@ -310,6 +375,7 @@ export class Runtime {
   tick(dt: number) {
     if (this.modo !== 'corriendo') return;
     this.reloj += dt;
+    this.vigilarCondiciones();
     for (const h of [...this.hilos]) this.avanzarHilo(h, false);
     this.limpiarTerminados();
   }
@@ -419,6 +485,50 @@ export class Runtime {
         return this.respuesta;
       case 'volumen':
         return a.volumen ?? 100;
+      case 'tamano':
+        return Math.round(a.tamano);
+      case 'fondo-num':
+        return this.listaFondos.indexOf(this.fondo) + 1;
+      case 'tocando-raton':
+        return a.visible && Math.hypot(a.x - this.raton.x, a.y - this.raton.y) < this.radio(a);
+      case 'fecha': {
+        const d = this.ahora();
+        switch (param) {
+          case 'anio':
+            return d.getFullYear();
+          case 'mes':
+            return d.getMonth() + 1;
+          case 'dia':
+            return d.getDate();
+          case 'semana':
+            return d.getDay() + 1; // domingo = 1, como en Scratch
+          case 'hora':
+            return d.getHours();
+          case 'minuto':
+            return d.getMinutes();
+          default:
+            return d.getSeconds();
+        }
+      }
+      case 'de': {
+        const [quien, prop] = (param ?? '|').split('|');
+        const o = this.actores.get(quien);
+        if (!o) return 0;
+        switch (prop) {
+          case 'x':
+            return Math.round(o.x);
+          case 'y':
+            return Math.round(o.y);
+          case 'dir':
+            return Math.round(o.direccion);
+          case 'tamano':
+            return Math.round(o.tamano);
+          case 'disfraz':
+            return o.disfrazActual + 1;
+          default:
+            return 0;
+        }
+      }
       case 'disfraz-num':
         return a.disfrazActual + 1;
       case 'disfraz-nombre':
@@ -619,21 +729,32 @@ export class Runtime {
       case 'mov_apuntar':
         a.direccion = normalizar(this.num(s, 'DIR', a));
         break;
-      case 'mov_cambiar_x':
-        this.posicionar(a, a.x + this.num(s, 'N', a), a.y);
+      case 'mov_fijar_x':
+        this.posicionar(a, this.num(s, 'N', a), a.y);
         break;
-      case 'mov_cambiar_y':
-        this.posicionar(a, a.x, a.y + this.num(s, 'N', a));
+      case 'mov_fijar_y':
+        this.posicionar(a, a.x, this.num(s, 'N', a));
         break;
-      case 'mov_rebotar':
-        this.mantenerDentro(a, true);
+      case 'mov_ir_a_obj': {
+        const p = this.puntoDe(s.campos.OBJ, a);
+        if (p) this.posicionar(a, p.x, p.y);
         break;
+      }
+      case 'mov_apuntar_obj': {
+        const p = this.puntoDe(s.campos.OBJ, a, false);
+        if (p) a.direccion = normalizar((Math.atan2(p.x - a.x, p.y - a.y) * 180) / Math.PI);
+        break;
+      }
+      case 'mov_deslizar_obj':
       case 'mov_deslizar': {
+        const obj = s.tipo === 'mov_deslizar_obj';
         const dur = Math.max(0, this.num(s, 'SEG', a)) * 1000;
         const x0 = a.x;
         const y0 = a.y;
-        const x1 = this.num(s, 'X', a);
-        const y1 = this.num(s, 'Y', a);
+        const destino = obj ? this.puntoDe(s.campos.OBJ, a) : null;
+        if (obj && !destino) break;
+        const x1 = destino ? destino.x : this.num(s, 'X', a);
+        const y1 = destino ? destino.y : this.num(s, 'Y', a);
         const inicio = this.reloj;
         if (dur === 0) {
           this.posicionar(a, x1, y1, false);
@@ -647,6 +768,15 @@ export class Runtime {
         }
         break;
       }
+      case 'mov_cambiar_x':
+        this.posicionar(a, a.x + this.num(s, 'N', a), a.y);
+        break;
+      case 'mov_cambiar_y':
+        this.posicionar(a, a.x, a.y + this.num(s, 'N', a));
+        break;
+      case 'mov_rebotar':
+        this.mantenerDentro(a, true);
+        break;
 
       // ----- Apariencia -----
       case 'ap_decir':
@@ -680,18 +810,24 @@ export class Runtime {
       case 'ap_fijar_tamano':
         a.tamano = Math.min(500, Math.max(10, this.num(s, 'N', a)));
         break;
+      case 'ap_transparencia_fijar':
+        a.transparencia = Math.min(100, Math.max(0, this.num(s, 'N', a)));
+        break;
+      case 'ap_transparencia_cambiar':
+        a.transparencia = Math.min(100, Math.max(0, (a.transparencia ?? 0) + this.num(s, 'N', a)));
+        break;
       case 'ap_mostrar':
         a.visible = true;
         break;
       case 'ap_ocultar':
         a.visible = false;
         break;
-      case 'ap_fondo': {
-        const id = s.campos.FONDO ?? '';
-        if (id && id !== this.fondo) {
-          this.fondo = id;
-          this.oyentes.alCambiarFondo?.(id);
-        }
+      case 'ap_fondo':
+        this.cambiarFondo(s.campos.FONDO ?? '');
+        break;
+      case 'ap_sig_fondo': {
+        const n = this.listaFondos.length;
+        if (n) this.cambiarFondo(this.listaFondos[(this.listaFondos.indexOf(this.fondo) + 1) % n]);
         break;
       }
 
@@ -752,8 +888,20 @@ export class Runtime {
         this.lapiz(a.id).abajo = false;
         break;
       case 'lap_color':
-        if (esColor(s.campos.COLOR ?? '')) this.lapiz(a.id).color = s.campos.COLOR;
+        if (esColor(s.campos.COLOR ?? '')) {
+          const l = this.lapiz(a.id);
+          l.color = s.campos.COLOR;
+          l.tono = tonoDeColor(l.color);
+        }
         break;
+      case 'lap_tono':
+      case 'lap_cambiar_tono': {
+        const l = this.lapiz(a.id);
+        const n = this.num(s, 'N', a);
+        l.tono = (((s.tipo === 'lap_tono' ? n : l.tono + n) % 100) + 100) % 100;
+        l.color = colorDeTono(l.tono);
+        break;
+      }
       case 'lap_grosor':
         this.lapiz(a.id).grosor = Math.min(50, Math.max(1, this.num(s, 'N', a)));
         break;
@@ -903,6 +1051,15 @@ export class Runtime {
       case 'ev_enviar':
         this.enviar(s.campos.MENSAJE ?? '');
         break;
+      case 'ev_enviar_espera': {
+        const lanzados = this.enviar(s.campos.MENSAJE ?? '');
+        while (
+          lanzados.some((h) => !h.terminado && this.hilos.includes(h)) &&
+          this.modo !== 'detenido'
+        )
+          yield { k: 'cuadro' };
+        break;
+      }
 
       // ----- Control -----
       case 'ctrl_esperar':
@@ -940,7 +1097,34 @@ export class Runtime {
       case 'ctrl_detener':
         this.detener();
         return;
+      case 'ctrl_detener_este':
+        if (this.hiloActual) this.hiloActual.terminado = true;
+        yield { k: 'cuadro' };
+        return;
+      case 'ctrl_detener_otros':
+        for (const h of this.hilos)
+          if (h.actorId === actorId && h !== this.hiloActual) h.terminado = true;
+        break;
     }
+  }
+
+  /** Lugar al que apunta un menú "azar / ratón / actor". Con `azar` falso, el azar no cuenta. */
+  private puntoDe(
+    obj: string | undefined,
+    a: EstadoActor,
+    azar = true,
+  ): { x: number; y: number } | null {
+    if (obj === '__raton__') return { x: this.raton.x, y: this.raton.y };
+    if (obj === '__azar__') {
+      if (!azar) return null;
+      const { maxX, maxY } = this.limites(a);
+      return {
+        x: Math.round((this.aleatorio() * 2 - 1) * maxX),
+        y: Math.round((this.aleatorio() * 2 - 1) * maxY),
+      };
+    }
+    const o = this.actores.get(obj ?? '');
+    return o ? { x: o.x, y: o.y } : null;
   }
 
   /** Mueve al actor (recortando al escenario) y, si el lápiz está abajo, deja el trazo. */
@@ -967,7 +1151,7 @@ export class Runtime {
   private lapiz(id: string) {
     let l = this.lapices.get(id);
     if (!l) {
-      l = { abajo: false, color: COLOR_LAPIZ, grosor: 2 };
+      l = { abajo: false, color: COLOR_LAPIZ, grosor: 2, tono: tonoDeColor(COLOR_LAPIZ) };
       this.lapices.set(id, l);
     }
     return l;

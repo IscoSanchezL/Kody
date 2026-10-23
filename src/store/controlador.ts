@@ -8,6 +8,7 @@ import { teclaABloque } from '../blocks/opciones';
 import { instantanea, proyectoInicial, useProyecto } from './proyecto';
 import { aEstado, disfrazActivo, validarProyecto } from './proyectoModelo';
 import { t } from '../i18n';
+import { FONDOS } from '../stage/biblioteca';
 import { uriPersonaje } from '../stage/uris';
 import { useApp } from './useApp';
 
@@ -59,6 +60,7 @@ function sincronizar() {
   const { actores, fondo } = useProyecto.getState();
   runtime.reemplazarActores(actores.map(aEstado));
   runtime.fijarFondoInicial(fondo);
+  runtime.fijarListaFondos(FONDOS.map((f) => f.id));
 }
 sincronizar();
 

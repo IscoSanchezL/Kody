@@ -31,6 +31,8 @@ interface Vista3D {
   ultimaY: number;
   giro: number;
   inclinacion: number;
+  /** Transparencia ya aplicada a los materiales (0–100). */
+  transp: number;
 }
 
 const ACENTO = '#4f46e5';
@@ -476,6 +478,7 @@ export class Escenario3D {
       globo: null,
       claveGlobo: '',
       fase: Math.random() * 6,
+      transp: 0,
       ultimaX: a.x,
       ultimaY: a.y,
       giro: 0,
@@ -527,6 +530,18 @@ export class Escenario3D {
     v.modelo.variantes[0].visible = variante === 0;
     v.modelo.variantes[1].visible = variante === 1;
     v.modelo.animar?.(this.tiempo);
+    const transp = Math.round(a.transparencia ?? 0);
+    if (transp !== v.transp) {
+      v.transp = transp;
+      v.cuerpo.traverse((o) => {
+        const mat = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+        for (const x of Array.isArray(mat) ? mat : mat ? [mat] : []) {
+          x.transparent = true;
+          x.opacity = 1 - transp / 100;
+          x.needsUpdate = true;
+        }
+      });
+    }
 
     v.sombra.visible = a.visible;
     v.sombra.position.set(a.x, a.y - 47 * escala, -6);

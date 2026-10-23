@@ -25,6 +25,8 @@ export const SOMBREROS = new Set([
   'evento_tecla',
   'evento_clic_actor',
   'evento_mensaje',
+  'evento_cuando',
+  'evento_fondo',
   'evento_clon',
   'fun_definir',
 ]);
@@ -115,6 +117,20 @@ function compilarExpr(b: BloqueJSON | undefined): Expr {
         tipo: 'sensor',
         nombre: b.fields?.MODO === 'nombre' ? 'disfraz-nombre' : 'disfraz-num',
       };
+    case 'ap_tamano':
+      return { tipo: 'sensor', nombre: 'tamano' };
+    case 'ap_fondo_num':
+      return { tipo: 'sensor', nombre: 'fondo-num' };
+    case 'sen_tocando_raton':
+      return { tipo: 'sensor', nombre: 'tocando-raton' };
+    case 'sen_fecha':
+      return { tipo: 'sensor', nombre: 'fecha', param: String(b.fields?.FECHA ?? '') };
+    case 'sen_de':
+      return {
+        tipo: 'sensor',
+        nombre: 'de',
+        param: `${String(b.fields?.ACTOR ?? '')}|${String(b.fields?.PROP ?? '')}`,
+      };
     case 'son_volumen':
       return { tipo: 'sensor', nombre: 'volumen' };
     case 'sen_respuesta':
@@ -193,6 +209,7 @@ export function compilar(entrada: object): Programa[] {
       sombrero: raiz.type,
       id: idDe(raiz),
       campos: camposDe(raiz),
+      ...(raiz.type === 'evento_cuando' ? { condicion: compilarEntrada(raiz, 'COND') } : {}),
       cuerpo: compilarPila(raiz.next?.block),
     });
   }
