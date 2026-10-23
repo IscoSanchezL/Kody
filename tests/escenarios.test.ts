@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { FONDOS, PERSONAJES } from '../src/stage/biblioteca';
 
 describe('escenarios', () => {
-  it('hay 8 escenarios con nombre', () => {
-    expect(FONDOS).toHaveLength(8);
+  it('hay 16 escenarios con nombre', () => {
+    expect(FONDOS).toHaveLength(16);
     for (const f of FONDOS) expect(f.nombre.length).toBeGreaterThan(2);
   });
   for (const f of FONDOS) {

@@ -6,14 +6,14 @@ import { azar } from './azar';
  * Cada escenario mide 480×360 lógicos y se rasteriza a 960×720. Todo es propio, sin archivos externos.
  */
 
-const n1 = (n: number) => Number(n.toFixed(1));
+export const n1 = (n: number) => Number(n.toFixed(1));
 
 /** Envuelve un escenario. */
-const lienzo = (defs: string, cuerpo: string) =>
+export const lienzo = (defs: string, cuerpo: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 480 360"><defs>${defs}</defs>${cuerpo}</svg>`;
 
-type Parada = [number, string, number?];
-const paradas = (p: Parada[]) =>
+export type Parada = [number, string, number?];
+export const paradas = (p: Parada[]) =>
   p
     .map(
       ([o, c, a]) =>
@@ -21,25 +21,31 @@ const paradas = (p: Parada[]) =>
     )
     .join('');
 /** Degradado vertical (arriba → abajo). */
-const vert = (id: string, ...p: Parada[]) =>
+export const vert = (id: string, ...p: Parada[]) =>
   `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${paradas(p)}</linearGradient>`;
 /** Degradado de izquierda a derecha. */
-const horiz = (id: string, ...p: Parada[]) =>
+export const horiz = (id: string, ...p: Parada[]) =>
   `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0">${paradas(p)}</linearGradient>`;
-const radial = (id: string, cx: number, cy: number, r: number, ...p: Parada[]) =>
+export const radial = (id: string, cx: number, cy: number, r: number, ...p: Parada[]) =>
   `<radialGradient id="${id}" cx="${cx}" cy="${cy}" r="${r}">${paradas(p)}</radialGradient>`;
-const borroso = (id: string, d: number) =>
+export const borroso = (id: string, d: number) =>
   `<filter id="${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${d}"/></filter>`;
 
 /** Grano fino de película y viñeta suave: dan aspecto de fotografía. */
-const EFECTOS = `
+export const EFECTOS = `
   <filter id="grano" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 1.3 -.4"/></filter>
   <radialGradient id="vig" cx=".5" cy=".5" r=".78"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></radialGradient>`;
-const acabado = (grano = 0.09, vigneta = 1) =>
+export const acabado = (grano = 0.09, vigneta = 1) =>
   `<rect width="480" height="360" fill="url(#vig)" opacity="${vigneta}"/><rect width="480" height="360" filter="url(#grano)" opacity="${grano}"/>`;
 
 /** Nubes de ruido fractal: blancas arriba y con la panza gris azulada. */
-const nubes = (id: string, semilla: number, freq = '.006 .016', alto = 5.2, sombra = '#8ea9cc') =>
+export const nubes = (
+  id: string,
+  semilla: number,
+  freq = '.006 .016',
+  alto = 5.2,
+  sombra = '#8ea9cc',
+) =>
   `<filter id="${id}" x="0" y="0" width="100%" height="100%">
     <feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="5" seed="${semilla}" result="r"/>
     <feColorMatrix in="r" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 11 -${alto}" result="m"/>

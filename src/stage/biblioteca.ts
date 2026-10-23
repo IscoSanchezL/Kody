@@ -1,6 +1,7 @@
 import { tDinamica } from '../i18n';
 import { kodySVG, zorroSVG } from './disfraces';
 import { desierto, espacio, nieve, noche, oceano, pradera } from './escenarios';
+import { aula, bosque, carretera, castillo, cielo, ciudad, granja, playa } from './escenarios2';
 
 /**
  * Biblioteca de Kody: personajes (2 disfraces cada uno) y escenarios, todos en SVG propio.
@@ -199,6 +200,14 @@ export const FONDOS: Fondo[] = [
   nuevoFondo('noche', noche()),
   nuevoFondo('desierto', desierto()),
   nuevoFondo('nieve', nieve()),
+  nuevoFondo('playa', playa()),
+  nuevoFondo('bosque', bosque()),
+  nuevoFondo('granja', granja()),
+  nuevoFondo('ciudad', ciudad()),
+  nuevoFondo('castillo', castillo()),
+  nuevoFondo('aula', aula()),
+  nuevoFondo('carretera', carretera()),
+  nuevoFondo('cielo', cielo()),
   nuevoFondo('cuadricula', cuadricula()),
   nuevoFondo('blanco', blanco),
 ];
